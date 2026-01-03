@@ -1,0 +1,209 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Balance Sheet{% endblock %}
+{% block page_title %}Balance Sheet Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-balance-scale me-2 text-primary-teal"></i>
+                    Balance Sheet
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" id="export-excel-btn">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Date Filter -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-8">
+                                <label for="as_of_date" class="form-label">As of Date</label>
+                                <input type="date" class="form-control" id="as_of_date" name="as_of_date" value="{{ as_of_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary-teal">
+                                        <i class="fas fa-search me-1"></i>Generate
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Report Header -->
+                <div class="text-center mb-4">
+                    <h4>Balance Sheet</h4>
+                    <p class="text-muted">As of {{ as_of_date }}</p>
+                </div>
+
+                <!-- Balance Sheet Content -->
+                <div class="row">
+                    <div class="col-lg-6">
+                        <!-- ASSETS -->
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">ASSETS</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="text-success">Current Assets</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Cash and Cash Equivalents</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Loans Receivable</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Other Current Assets</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Total Current Assets</strong></td>
+                                        <td class="text-end"><strong>₹{{ total_assets|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </table>
+
+                                <h6 class="text-success mt-3">Fixed Assets</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Property, Plant & Equipment</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Less: Accumulated Depreciation</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Net Fixed Assets</strong></td>
+                                        <td class="text-end"><strong>₹0.00</strong></td>
+                                    </tr>
+                                </table>
+
+                                <table class="table table-bordered mt-3">
+                                    <tr class="table-success">
+                                        <td><strong>TOTAL ASSETS</strong></td>
+                                        <td class="text-end"><strong>₹{{ total_assets|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <!-- LIABILITIES & EQUITY -->
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">LIABILITIES & EQUITY</h6>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="text-danger">Current Liabilities</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Accounts Payable</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Accrued Expenses</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Short-term Borrowings</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Total Current Liabilities</strong></td>
+                                        <td class="text-end"><strong>₹{{ total_liabilities|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </table>
+
+                                <h6 class="text-primary-teal mt-3">Equity</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Share Capital</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Retained Earnings</td>
+                                        <td class="text-end">₹0.00</td>
+                                    </tr>
+                                    <tr class="table-light">
+                                        <td><strong>Total Equity</strong></td>
+                                        <td class="text-end"><strong>₹{{ total_equity|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </table>
+
+                                <table class="table table-bordered mt-3">
+                                    <tr class="table-danger">
+                                        <td><strong>TOTAL LIABILITIES & EQUITY</strong></td>
+                                        <td class="text-end"><strong>₹{{ total_liabilities|add:total_equity|floatformat:2 }}</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Balance Check -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="alert {% if total_assets == total_liabilities|add:total_equity %}alert-success{% else %}alert-warning{% endif %}">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Balance Check:</strong>
+                            {% if total_assets == total_liabilities|add:total_equity %}
+                                Balance sheet is balanced ✓
+                            {% else %}
+                                Balance sheet is not balanced. Please review your accounts.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Export to Excel functionality
+    $('#export-excel-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'excel');
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .form-control, .form-label {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,423 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Assets - Golam Financial Services{% endblock %}
+{% block page_title %}Assets{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assets-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .filters-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-input, .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        height: fit-content;
+    }
+    
+    .assets-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .table th {
+        background: #f9fafb;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .asset-id {
+        font-family: monospace;
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .asset-name {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .asset-category {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .amount-cell {
+        text-align: right;
+        font-family: monospace;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-inactive {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-under_maintenance {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .status-disposed {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .condition-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .condition-excellent {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .condition-good {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .condition-fair {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .condition-poor {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #374151;
+    }
+    
+    .pagination a:hover {
+        background: #f3f4f6;
+    }
+    
+    .pagination .current {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+    
+    @media (max-width: 768px) {
+        .assets-container {
+            margin: 1rem;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="assets-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'assets:dashboard' %}" class="btn-action secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{% url 'assets:add_asset' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Add Asset
+        </a>
+        <a href="{% url 'assets:asset_reports' %}" class="btn-action secondary">
+            <i class="fas fa-chart-bar"></i> Reports
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <form method="get" class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Search</label>
+                <input type="text" name="search" value="{{ search_query }}" 
+                       placeholder="Search assets..." class="filter-input">
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Category</label>
+                <select name="category" class="filter-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_id == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select name="status" class="filter-select">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_label in asset_statuses %}
+                        <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Condition</label>
+                <select name="condition" class="filter-select">
+                    <option value="">All Conditions</option>
+                    {% for condition_value, condition_label in asset_conditions %}
+                        <option value="{{ condition_value }}" {% if condition_filter == condition_value %}selected{% endif %}>
+                            {{ condition_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="assets-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Asset ID</th>
+                    <th>Asset Name</th>
+                    <th>Category</th>
+                    <th>Purchase Value</th>
+                    <th>Current Value</th>
+                    <th>Status</th>
+                    <th>Condition</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                <tr>
+                    <td class="asset-id">{{ asset.asset_id }}</td>
+                    <td class="asset-name">
+                        <a href="{% url 'assets:asset_detail' asset.id %}" style="text-decoration: none; color: inherit;">
+                            {{ asset.asset_name }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="asset-category">{{ asset.category.name }}</span>
+                    </td>
+                    <td class="amount-cell">₹{{ asset.purchase_value|floatformat:2 }}</td>
+                    <td class="amount-cell">₹{{ asset.current_value|floatformat:2 }}</td>
+                    <td>
+                        <span class="status-badge status-{{ asset.status }}">
+                            {{ asset.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="condition-badge condition-{{ asset.condition }}">
+                            {{ asset.get_condition_display }}
+                        </span>
+                    </td>
+                    <td>{{ asset.location|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'assets:asset_detail' asset.id %}" class="btn-action secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: #6b7280;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No assets found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if assets.has_other_pages %}
+    <div class="pagination">
+        {% if assets.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if condition_filter %}&condition={{ condition_filter }}{% endif %}">&laquo; First</a>
+            <a href="?page={{ assets.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if condition_filter %}&condition={{ condition_filter }}{% endif %}">Previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ assets.number }} of {{ assets.paginator.num_pages }}
+        </span>
+        
+        {% if assets.has_next %}
+            <a href="?page={{ assets.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if condition_filter %}&condition={{ condition_filter }}{% endif %}">Next</a>
+            <a href="?page={{ assets.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if condition_filter %}&condition={{ condition_filter }}{% endif %}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form on filter change
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,1 @@
+URGENT: Dear {{ borrower_name }}, your loan {{ loan_number }} payment of ₹{{ outstanding_amount|floatformat:0 }} is {{ days_overdue }} days overdue. Please contact us immediately or make payment to avoid further action. - {{ organization_name }}

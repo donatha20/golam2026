@@ -1,0 +1,93 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Penalty Configurations - Golam Financial Services{% endblock %}
+{% block page_title %}Penalty Configurations{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-primary-teal"></i>
+                    Penalty Configurations
+                </h5>
+                <button type="button" class="btn btn-primary-teal">
+                    <i class="fas fa-plus me-1"></i>Add Penalty
+                </button>
+            </div>
+            <div class="card-body">
+                {% if penalties %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Rate/Amount</th>
+                                    <th>Grace Period</th>
+                                    <th>Max Penalty</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for penalty in penalties %}
+                                <tr>
+                                    <td>{{ penalty.name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ penalty.get_penalty_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if penalty.penalty_type == 'percentage' %}
+                                            {{ penalty.percentage_rate }}%
+                                        {% elif penalty.penalty_type == 'fixed' %}
+                                            ₹{{ penalty.fixed_amount|floatformat:0 }}
+                                        {% else %}
+                                            ₹{{ penalty.daily_rate|floatformat:2 }}/day
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ penalty.grace_period_days }} days</td>
+                                    <td>
+                                        {% if penalty.max_penalty_amount %}
+                                            ₹{{ penalty.max_penalty_amount|floatformat:0 }}
+                                        {% else %}
+                                            No limit
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if penalty.is_active %}success{% else %}danger{% endif %}">
+                                            {% if penalty.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                        <h5>No Penalty Configurations Found</h5>
+                        <p class="text-muted">Configure penalties for late payments and other violations.</p>
+                        <button type="button" class="btn btn-primary-teal">
+                            <i class="fas fa-plus me-1"></i>Add First Penalty
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

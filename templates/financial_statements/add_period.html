@@ -1,0 +1,199 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Accounting Period{% endblock %}
+{% block page_title %}Add Accounting Period{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2 text-primary-teal"></i>
+                    Add New Accounting Period
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_name" class="form-label">Period Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="id_name" name="name" 
+                                       placeholder="e.g., Q1 2024, January 2024, FY 2024" 
+                                       value="{{ form.name.value|default:'' }}" required>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="id_start_date" name="start_date" 
+                                       value="{{ form.start_date.value|date:'Y-m-d'|default:'' }}" required>
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="id_end_date" name="end_date" 
+                                       value="{{ form.end_date.value|date:'Y-m-d'|default:'' }}" required>
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_status" class="form-label">Status</label>
+                                <select class="form-control" id="id_status" name="status">
+                                    <option value="open" {% if form.status.value == 'open' %}selected{% endif %}>Open</option>
+                                    <option value="closed" {% if form.status.value == 'closed' %}selected{% endif %}>Closed</option>
+                                    <option value="locked" {% if form.status.value == 'locked' %}selected{% endif %}>Locked</option>
+                                </select>
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check mt-4">
+                                    <input type="checkbox" class="form-check-input" id="id_is_current" name="is_current" 
+                                           {% if form.is_current.value %}checked{% endif %}>
+                                    <label class="form-check-label" for="id_is_current">
+                                        Set as Current Period
+                                    </label>
+                                </div>
+                                <small class="text-muted">Only one period can be current at a time</small>
+                                {% if form.is_current.errors %}
+                                    <div class="text-danger small">{{ form.is_current.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_description" class="form-label">Description</label>
+                                <textarea class="form-control" id="id_description" name="description" rows="3" 
+                                          placeholder="Optional description for this accounting period">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'financial_statements:manage_periods' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Create Period
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>
+                    About Accounting Periods
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Accounting periods</strong> help organize your financial data by time periods for reporting and analysis.</p>
+                <ul class="mb-0">
+                    <li><strong>Open:</strong> Transactions can be posted to this period</li>
+                    <li><strong>Closed:</strong> No new transactions, but can be reopened</li>
+                    <li><strong>Locked:</strong> Permanently closed, cannot be modified</li>
+                    <li><strong>Current Period:</strong> The active period for new transactions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('id_start_date');
+    const endDateInput = document.getElementById('id_end_date');
+    const nameField = document.getElementById('id_name');
+
+    // Validate date range
+    function validateDateRange() {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (startDate && endDate) {
+            if (new Date(startDate) >= new Date(endDate)) {
+                alert('End date must be after start date');
+                endDateInput.focus();
+            }
+        }
+    }
+
+    // Auto-generate period name based on dates
+    function generatePeriodName() {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        
+        if (startDate && endDate && !nameField.value) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            // Generate name based on date range
+            if (start.getFullYear() === end.getFullYear()) {
+                if (start.getMonth() === end.getMonth()) {
+                    // Same month
+                    nameField.value = start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                } else {
+                    // Different months, same year
+                    nameField.value = start.toLocaleDateString('en-US', { month: 'short' }) + ' - ' + 
+                                     end.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }
+            } else {
+                // Different years
+                nameField.value = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) + ' - ' + 
+                                 end.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            }
+        }
+    }
+
+    // Event listeners
+    startDateInput.addEventListener('change', validateDateRange);
+    endDateInput.addEventListener('change', validateDateRange);
+    startDateInput.addEventListener('change', generatePeriodName);
+    endDateInput.addEventListener('change', generatePeriodName);
+});
+</script>
+{% endblock %}

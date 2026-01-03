@@ -1,0 +1,395 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Trial Balance - Golam Financial Services{% endblock %}
+{% block page_title %}Trial Balance{% endblock %}
+
+{% block extra_css %}
+<style>
+    .statement-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .statement-header {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .company-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 0.5rem;
+    }
+    
+    .statement-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .statement-period {
+        font-size: 1rem;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    .statement-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+    
+    .statement-table {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .trial-balance-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .trial-balance-table th {
+        background: #f9fafb;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .trial-balance-table th.amount-col {
+        text-align: right;
+        width: 150px;
+    }
+    
+    .trial-balance-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .trial-balance-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .account-code {
+        font-family: monospace;
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .account-name {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .account-type {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .amount-cell {
+        text-align: right;
+        font-family: monospace;
+        font-weight: 600;
+    }
+    
+    .debit-amount {
+        color: #374151;
+    }
+    
+    .credit-amount {
+        color: #374151;
+    }
+    
+    .total-row {
+        background: #f9fafb;
+        border-top: 2px solid #2b7a76;
+        font-weight: 700;
+    }
+    
+    .total-row td {
+        border-bottom: 2px solid #2b7a76;
+        padding: 1rem;
+    }
+    
+    .balance-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+    
+    .balance-status.balanced {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    
+    .balance-status.unbalanced {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    @media (max-width: 768px) {
+        .statement-container {
+            margin: 1rem;
+        }
+        
+        .statement-header,
+        .statement-table {
+            padding: 1rem;
+        }
+        
+        .statement-info {
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+        
+        .trial-balance-table {
+            font-size: 0.8rem;
+        }
+        
+        .trial-balance-table th,
+        .trial-balance-table td {
+            padding: 0.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+    
+    @media print {
+        .action-buttons {
+            display: none;
+        }
+        
+        .statement-container {
+            margin: 0;
+        }
+        
+        .statement-header,
+        .statement-table {
+            box-shadow: none;
+            border: 1px solid #000;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="statement-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'financial_statements:dashboard' %}" class="btn-action secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{% url 'financial_statements:generate_statement' %}" class="btn-action secondary">
+            <i class="fas fa-plus"></i> Generate New Statement
+        </a>
+        <button onclick="window.print()" class="btn-action">
+            <i class="fas fa-print"></i> Print
+        </button>
+        <a href="{% url 'financial_statements:export_pdf' run.id %}" class="btn-action">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+        <a href="{% url 'financial_statements:export_excel' run.id %}" class="btn-action">
+            <i class="fas fa-file-excel"></i> Export Excel
+        </a>
+    </div>
+
+    <!-- Statement Header -->
+    <div class="statement-header">
+        <div class="company-name">Golam Financial Services</div>
+        <div class="statement-title">Trial Balance</div>
+        <div class="statement-period">
+            As of {{ data.period.end_date|date:"F d, Y" }}
+        </div>
+        
+        <div class="statement-info">
+            <div>Generated on: {{ data.generated_at|date:"M d, Y H:i" }}</div>
+            <div>Run ID: {{ run.id }}</div>
+            <div>Period: {{ data.period.name }}</div>
+        </div>
+    </div>
+
+    <!-- Trial Balance Table -->
+    <div class="statement-table">
+        <table class="trial-balance-table">
+            <thead>
+                <tr>
+                    <th>Account Code</th>
+                    <th>Account Name</th>
+                    <th>Account Type</th>
+                    <th class="amount-col">Debit Balance</th>
+                    <th class="amount-col">Credit Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in data.accounts %}
+                <tr>
+                    <td class="account-code">{{ account.account_code }}</td>
+                    <td class="account-name">{{ account.account_name }}</td>
+                    <td>
+                        <span class="account-type">{{ account.account_type }}</span>
+                    </td>
+                    <td class="amount-cell debit-amount">
+                        {% if account.debit_balance > 0 %}
+                            ₹{{ account.debit_balance|floatformat:2 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="amount-cell credit-amount">
+                        {% if account.credit_balance > 0 %}
+                            ₹{{ account.credit_balance|floatformat:2 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">
+                        No accounts with balances found for this period.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="3"><strong>TOTALS</strong></td>
+                    <td class="amount-cell"><strong>₹{{ data.total_debits|floatformat:2 }}</strong></td>
+                    <td class="amount-cell"><strong>₹{{ data.total_credits|floatformat:2 }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- Balance Status -->
+        <div class="balance-status {% if data.is_balanced %}balanced{% else %}unbalanced{% endif %}">
+            {% if data.is_balanced %}
+                <i class="fas fa-check-circle"></i>
+                Trial Balance is BALANCED
+            {% else %}
+                <i class="fas fa-exclamation-triangle"></i>
+                Trial Balance is UNBALANCED - Please review journal entries
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Information -->
+    <div class="statement-table">
+        <h3 style="margin-bottom: 1rem; color: #374151;">
+            <i class="fas fa-info-circle"></i> Summary Information
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Total Accounts</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #2b7a76;">{{ data.accounts|length }}</div>
+            </div>
+            
+            <div style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Total Debits</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #374151;">₹{{ data.total_debits|floatformat:2 }}</div>
+            </div>
+            
+            <div style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Total Credits</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: #374151;">₹{{ data.total_credits|floatformat:2 }}</div>
+            </div>
+            
+            <div style="padding: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Difference</div>
+                <div style="font-size: 1.25rem; font-weight: 700; color: {% if data.is_balanced %}#16a34a{% else %}#ef4444{% endif %};">
+                    ₹{{ data.total_debits|add:data.total_credits|add:"-"|add:data.total_credits|floatformat:2 }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript functionality here
+    console.log('Trial Balance loaded');
+    
+    // Auto-print functionality if needed
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === 'true') {
+        window.print();
+    }
+</script>
+{% endblock %}

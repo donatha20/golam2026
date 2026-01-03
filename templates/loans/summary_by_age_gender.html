@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Summary by Age or Gender</h2>
+<table class="table"><thead><tr><th>Group</th><th>Total Loans</th><th>Outstanding</th></tr></thead><tbody>{% for group in groups %}<tr><td>{{ group.name }}</td><td>{{ group.total_loans }}</td><td>{{ group.outstanding }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %} 

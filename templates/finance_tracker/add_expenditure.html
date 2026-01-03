@@ -1,0 +1,415 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Add Expenditure - Golam Financial Services{% endblock %}
+
+{% block page_title %}Add New Expenditure{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-1px);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    /* Recent Expenditures */
+    .recent-expenditures {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .recent-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .expenditure-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .expenditure-item:last-child {
+        border-bottom: none;
+    }
+    
+    .expenditure-info {
+        flex: 1;
+    }
+    
+    .expenditure-type {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+    
+    .expenditure-date {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    
+    .expenditure-amount {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #dc2626;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 1rem;
+    }
+    
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .status-approved {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    .status-paid {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .info-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-box h4 {
+        font-size: 0.9rem;
+        color: #0369a1;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        font-size: 0.8rem;
+        color: #0369a1;
+    }
+    
+    .info-box li {
+        margin-bottom: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <div class="info-box">
+                    <h4><i class="fas fa-minus-circle"></i> Expenditure Recording</h4>
+                    <ul>
+                        <li>Record all business expenditures with proper categorization</li>
+                        <li>Track vendor information and payment details</li>
+                        <li>Manage approval workflow for expenditure control</li>
+                        <li>Maintain invoice references and documentation</li>
+                    </ul>
+                </div>
+                
+                <form method="post" id="expenditureForm">
+                    {% csrf_token %}
+                    
+                    <!-- Expenditure Details -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-receipt"></i> Expenditure Details
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="expenditure_type" class="form-label required">Expenditure Type</label>
+                                <select id="expenditure_type" name="expenditure_type" class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    {% for value, label in expenditure_types %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="category" class="form-label">Category</label>
+                                <select id="category" name="category" class="form-select">
+                                    <option value="">Select Category (Optional)</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="amount" class="form-label required">Amount (TSh)</label>
+                                <input type="number" id="amount" name="amount" class="form-input" 
+                                       min="0.01" step="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label for="expenditure_date" class="form-label required">Expenditure Date</label>
+                                <input type="date" id="expenditure_date" name="expenditure_date" class="form-input" 
+                                       value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description" class="form-label required">Description</label>
+                            <textarea id="description" name="description" class="form-textarea" required
+                                      placeholder="Describe the expenditure purpose and details"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Vendor Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-building"></i> Vendor Information
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vendor_name" class="form-label required">Vendor/Supplier Name</label>
+                                <input type="text" id="vendor_name" name="vendor_name" class="form-input" required
+                                       placeholder="Name of vendor or supplier">
+                            </div>
+                            <div class="form-group">
+                                <label for="vendor_contact" class="form-label">Vendor Contact</label>
+                                <input type="text" id="vendor_contact" name="vendor_contact" class="form-input" 
+                                       placeholder="Phone, email, or address">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment & Documentation -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-file-invoice"></i> Payment & Documentation
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="payment_method" class="form-label">Payment Method</label>
+                                <input type="text" id="payment_method" name="payment_method" class="form-input" 
+                                       placeholder="Cash, Bank Transfer, Cheque, etc.">
+                            </div>
+                            <div class="form-group">
+                                <label for="status" class="form-label">Approval Status</label>
+                                <select id="status" name="status" class="form-select">
+                                    {% for value, label in approval_statuses %}
+                                    <option value="{{ value }}" {% if value == 'pending' %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="invoice_number" class="form-label">Invoice Number</label>
+                                <input type="text" id="invoice_number" name="invoice_number" class="form-input" 
+                                       placeholder="Invoice or bill number">
+                            </div>
+                            <div class="form-group">
+                                <label for="reference_number" class="form-label">Reference Number</label>
+                                <input type="text" id="reference_number" name="reference_number" class="form-input" 
+                                       placeholder="Payment reference or voucher number">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Record Expenditure</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="recent-expenditures">
+                <h3 class="recent-title">
+                    <i class="fas fa-history"></i> Recent Expenditures
+                </h3>
+                
+                {% for expenditure in recent_expenditures %}
+                <div class="expenditure-item">
+                    <div class="expenditure-info">
+                        <div class="expenditure-type">{{ expenditure.get_expenditure_type_display }}</div>
+                        <div class="expenditure-date">{{ expenditure.expenditure_date|date:"M d, Y" }}</div>
+                        <div class="expenditure-date">{{ expenditure.vendor_name }}</div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="expenditure-amount">
+                            TSh {{ expenditure.amount|floatformat:0 }}
+                        </div>
+                        <span class="status-badge status-{{ expenditure.status }}">
+                            {{ expenditure.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                    No recent expenditures
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('expenditureForm').addEventListener('submit', function(e) {
+        const expenditureType = document.getElementById('expenditure_type').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const description = document.getElementById('description').value.trim();
+        const expenditureDate = document.getElementById('expenditure_date').value;
+        const vendorName = document.getElementById('vendor_name').value.trim();
+        
+        if (!expenditureType || !amount || !description || !expenditureDate || !vendorName) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return;
+        }
+        
+        if (amount <= 0) {
+            e.preventDefault();
+            alert('Amount must be greater than zero.');
+            return;
+        }
+    });
+    
+    // Auto-format amount
+    document.getElementById('amount').addEventListener('input', function() {
+        let value = this.value.replace(/[^\d.]/g, '');
+        this.value = value;
+    });
+</script>
+{% endblock %}

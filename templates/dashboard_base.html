@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Golam Financial Services{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Django Tables2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+
+    <!-- Global Table Header Styling -->
+    <style>
+        /* Ensure all table headers use consistent teal styling */
+        table thead th {
+            background: white !important;
+            color: #2b7a76 !important;
+            border-bottom: 2px solid #2b7a76 !important;
+        }
+
+        table thead th:hover {
+            background: rgba(43, 122, 118, 0.05) !important;
+            color: #1f5d5a !important;
+        }
+
+        /* Override any Bootstrap or Django Tables2 default colors */
+        .table thead th {
+            background: white !important;
+            color: #2b7a76 !important;
+            border-bottom: 2px solid #2b7a76 !important;
+        }
+
+        .table thead th:hover {
+            background: rgba(43, 122, 118, 0.05) !important;
+            color: #1f5d5a !important;
+        }
+
+        /* Django Tables2 sortable column links - use teal shades */
+        table thead th a,
+        .table thead th a {
+            color: #16a085 !important; /* Lighter teal for sortable columns */
+            text-decoration: none !important; /* Remove underlines */
+            font-weight: 600 !important;
+        }
+
+        table thead th a:hover,
+        .table thead th a:hover {
+            color: #138d75 !important; /* Darker teal on hover */
+            text-decoration: none !important;
+        }
+
+        /* Currently sorted column */
+        table thead th.asc a,
+        table thead th.desc a,
+        .table thead th.asc a,
+        .table thead th.desc a {
+            color: #0e6b5d !important; /* Darkest teal for sorted column */
+            font-weight: 700 !important;
+        }
+
+        /* Sort indicators using teal */
+        table thead th.asc:after,
+        table thead th.desc:after {
+            color: #2b7a76 !important;
+        }
+
+        /* Override all blue colors with teal throughout the system */
+        a {
+            color: #2b7a76 !important;
+        }
+
+        a:hover {
+            color: #1f5d5a !important;
+        }
+
+        .btn-primary {
+            background-color: #2b7a76 !important;
+            border-color: #2b7a76 !important;
+        }
+
+        .btn-primary:hover {
+            background-color: #1f5d5a !important;
+            border-color: #1f5d5a !important;
+        }
+
+        .btn-outline-primary {
+            color: #2b7a76 !important;
+            border-color: #2b7a76 !important;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #2b7a76 !important;
+            border-color: #2b7a76 !important;
+            color: white !important;
+        }
+
+        /* Pagination controls */
+        .pagination .page-link {
+            color: #2b7a76 !important;
+        }
+
+        .pagination .page-link:hover {
+            color: #1f5d5a !important;
+            background-color: rgba(43, 122, 118, 0.1) !important;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #2b7a76 !important;
+            border-color: #2b7a76 !important;
+        }
+    </style>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: white;
+            height: 100vh;
+            width: 240px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-right: 1px solid #e5e7eb;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            color: #2b7a76;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-brand:hover {
+            color: #2b7a76;
+            text-decoration: none;
+        }
+
+        .sidebar-brand i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+        }
+
+        .nav-link i {
+            margin-right: 0.75rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .nav-link:hover {
+            color: #2b7a76;
+            background: rgba(43, 122, 118, 0.05);
+            border-left-color: #2b7a76;
+        }
+
+        .nav-link.active {
+            color: #2b7a76;
+            background: rgba(43, 122, 118, 0.08);
+            border-left-color: #2b7a76;
+            font-weight: 700; /* Bold the active menu item */
+        }
+
+        .nav-link:hover {
+            text-decoration: none;
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .nav-submenu.show {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Custom scrollbar for submenu */
+        .nav-submenu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .nav-submenu::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .nav-submenu::-webkit-scrollbar-thumb {
+            background: rgba(43, 122, 118, 0.3);
+            border-radius: 3px;
+        }
+
+        .nav-submenu::-webkit-scrollbar-thumb:hover {
+            background: rgba(43, 122, 118, 0.5);
+        }
+
+        .nav-submenu .nav-link {
+            padding-left: 3rem;
+            font-size: 0.85rem;
+            border-left: none;
+        }
+
+        .nav-submenu .nav-link:hover {
+            background: rgba(43, 122, 118, 0.08);
+        }
+
+        .nav-submenu .nav-link.active {
+            color: #2b7a76;
+            background: rgba(43, 122, 118, 0.1);
+            font-weight: 700; /* Bold active submenu items */
+        }
+
+        .nav-toggle {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .nav-toggle.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* Custom Scrollbar for Sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(43, 122, 118, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(43, 122, 118, 0.5);
+        }
+        
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(43, 122, 118, 0.2);
+            border-radius: 2px;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: rgba(43, 122, 118, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2b7a76;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-bar input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 20px;
+            background: #f9fafb;
+            font-size: 0.9rem;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #2b7a76;
+            box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #f9fafb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .notification-btn:hover {
+            background: #f3f4f6;
+            color: #2b7a76;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f9fafb;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(43, 122, 118, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2b7a76;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .logout-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #b91c1c;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-bar input {
+                width: 200px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% csrf_token %}
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <a href="{% url 'core:dashboard' %}" class="sidebar-brand">
+                <i class="fas fa-university"></i>
+                Golam Financial Services
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <a href="{% url 'core:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span><i class="fas fa-tachometer-alt"></i> Dashboard</span>
+                </a>
+            </div>
+            
+            {% if user.role == 'admin' %}
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('users-submenu')">
+                    <span><i class="fas fa-users-cog"></i> Users</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="users-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="users-submenu">
+                    <a href="{% url 'core:user_list' %}" class="nav-link">
+                        <span><i class="fas fa-users"></i> User List</span>
+                    </a>
+                    <a href="{% url 'core:user_logs' %}" class="nav-link">
+                        <span><i class="fas fa-history"></i> User Logs</span>
+                    </a>
+                    <a href="{% url 'core:add_user' %}" class="nav-link">
+                        <span><i class="fas fa-user-plus"></i> Add User</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('clients-submenu')">
+                    <span><i class="fas fa-users"></i> Clients</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="clients-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="clients-submenu">
+                    <a href="{% url 'borrowers:register_borrower' %}" class="nav-link">
+                        <span><i class="fas fa-user-plus"></i> Register Client</span>
+                    </a>
+                    <a href="{% url 'borrowers:borrower_list' %}" class="nav-link">
+                        <span><i class="fas fa-list"></i> Clients List</span>
+                    </a>
+                    <a href="{% url 'borrowers:registration_report' %}" class="nav-link">
+                        <span><i class="fas fa-chart-bar"></i> Registration Report</span>
+                    </a>
+                    <a href="{% url 'borrowers:borrowers_without_loans' %}" class="nav-link">
+                        <span><i class="fas fa-user-times"></i> Without Loans</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('groups-submenu')">
+                    <span><i class="fas fa-users-cog"></i> Groups</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="groups-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="groups-submenu">
+                    <a href="{% url 'borrowers:register_group' %}" class="nav-link">
+                        <span><i class="fas fa-plus-circle"></i> Register Group</span>
+                    </a>
+                    <a href="{% url 'borrowers:group_list' %}" class="nav-link">
+                        <span><i class="fas fa-list-ul"></i> View Groups</span>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('loans-submenu')">
+                    <span><i class="fas fa-money-bill-wave"></i> Loans</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="loans-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="loans-submenu">
+                    <!-- Loan Management -->
+                    <a href="{% url 'loans:add_loan' %}" class="nav-link">
+                        <span><i class="fas fa-plus-circle"></i> Add Loan</span>
+                    </a>
+                    <a href="{% url 'loans:add_group_loan' %}" class="nav-link">
+                        <span><i class="fas fa-users"></i> Add Group Loan</span>
+                    </a>
+                    <a href="{% url 'loans:pending_loans' %}" class="nav-link">
+                        <span><i class="fas fa-clipboard-check"></i> Loan Application Approval</span>
+                    </a>
+                    <a href="{% url 'loans:disbursed_loans' %}" class="nav-link">
+                        <span><i class="fas fa-list"></i> Disbursed Loans</span>
+                    </a>
+                    <a href="{% url 'loans:outstanding_loans' %}" class="nav-link">
+                        <span><i class="fas fa-clock"></i> Outstanding Loans</span>
+                    </a>
+                    <a href="{% url 'loans:fully_paid_loans' %}" class="nav-link">
+                        <span><i class="fas fa-check-circle"></i> Fully Paid Loans</span>
+                    </a>
+
+                    <!-- Repayments & Schedules -->
+                    <a href="{% url 'loans:expected_repayments' %}" class="nav-link">
+                        <span><i class="fas fa-calendar-check"></i> Expected Repayments</span>
+                    </a>
+                    <a href="{% url 'loans:loans_arrears' %}" class="nav-link">
+                        <span><i class="fas fa-exclamation-triangle"></i> Loans in Arrears</span>
+                    </a>
+                    <a href="{% url 'loans:defaulted_loans' %}" class="nav-link">
+                        <span><i class="fas fa-exclamation-circle"></i> Defaulted Loans</span>
+                    </a>
+                    <a href="{% url 'loans:missed_schedules' %}" class="nav-link">
+                        <span><i class="fas fa-calendar-times"></i> Missed Schedules</span>
+                    </a>
+                    <a href="{% url 'loans:missed_payments' %}" class="nav-link">
+                        <span><i class="fas fa-times-circle"></i> Missed Payments</span>
+                    </a>
+
+                    <!-- Analysis & Reports -->
+                    <a href="{% url 'loans:loans_ageing' %}" class="nav-link">
+                        <span><i class="fas fa-chart-line"></i> Loan Ageing</span>
+                    </a>
+                    <a href="{% url 'loans:portfolio_at_risk' %}" class="nav-link">
+                        <span><i class="fas fa-chart-area"></i> Portfolio at Risk</span>
+                    </a>
+                    <a href="{% url 'loans:interest_receivables' %}" class="nav-link">
+                        <span><i class="fas fa-percentage"></i> Interest Receivables</span>
+                    </a>
+                    <a href="{% url 'loans:customer_portfolio' %}" class="nav-link">
+                        <span><i class="fas fa-user-chart"></i> Customer Portfolio</span>
+                    </a>
+                    <a href="{% url 'loans:loans_graphs_summary' %}" class="nav-link">
+                        <span><i class="fas fa-chart-pie"></i> Loan Graphs & Summary</span>
+                    </a>
+
+                    <!-- Special Cases -->
+                    <a href="{% url 'loans:loans_approaching_last_installment' %}" class="nav-link">
+                        <span><i class="fas fa-trophy"></i> Nearing Completion</span>
+                    </a>
+                    <a href="{% url 'loans:written_off_loans' %}" class="nav-link">
+                        <span><i class="fas fa-times-circle"></i> Written Off Loans</span>
+                    </a>
+                    <a href="{% url 'loans:redisbursed_loans' %}" class="nav-link">
+                        <span><i class="fas fa-redo-alt"></i> Redisbursed Loans</span>
+                    </a>
+                    <a href="{% url 'loans:rollover_repayments' %}" class="nav-link">
+                        <span><i class="fas fa-sync-alt"></i> Rollover Repayments</span>
+                    </a>
+
+                    <!-- Penalties & Actions -->
+                    <a href="{% url 'loans:penalties' %}" class="nav-link">
+                        <span><i class="fas fa-gavel"></i> Penalties</span>
+                    </a>
+                    <a href="{% url 'loans:record_old_loans' %}" class="nav-link">
+                        <span><i class="fas fa-history"></i> Record Old Loans</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('repayments-submenu')">
+                    <span><i class="fas fa-credit-card"></i> Repayments</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="repayments-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="repayments-submenu">
+                    <a href="{% url 'repayments:record_repayment' %}" class="nav-link">
+                        <span><i class="fas fa-plus-circle"></i> Record Payment</span>
+                    </a>
+                    <a href="{% url 'repayments:payment_list' %}" class="nav-link">
+                        <span><i class="fas fa-list"></i> Payment History</span>
+                    </a>
+                    <a href="{% url 'repayments:dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-tachometer-alt"></i> Repayments Dashboard</span>
+                    </a>
+                    <a href="{% url 'repayments:overdue_payments' %}" class="nav-link">
+                        <span><i class="fas fa-exclamation-triangle"></i> Overdue Payments</span>
+                    </a>
+                    <a href="{% url 'repayments:bulk_payments' %}" class="nav-link">
+                        <span><i class="fas fa-layer-group"></i> Bulk Payments</span>
+                    </a>
+                    <a href="{% url 'repayments:payment_reports' %}" class="nav-link">
+                        <span><i class="fas fa-chart-bar"></i> Payment Reports</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('savings-submenu')">
+                    <span><i class="fas fa-piggy-bank"></i> Savings</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="savings-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="savings-submenu">
+                    <a href="{% url 'savings:open_account' %}" class="nav-link">
+                        <span><i class="fas fa-plus-circle"></i> Open Account</span>
+                    </a>
+                    <a href="{% url 'savings:account_list' %}" class="nav-link">
+                        <span><i class="fas fa-list"></i> Accounts List</span>
+                    </a>
+                    <a href="{% url 'savings:dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-tachometer-alt"></i> Savings Dashboard</span>
+                    </a>
+                    <a href="{% url 'savings:transaction_list' %}" class="nav-link">
+                        <span><i class="fas fa-exchange-alt"></i> Transactions</span>
+                    </a>
+                    <a href="{% url 'savings:interest_calculation' %}" class="nav-link">
+                        <span><i class="fas fa-percentage"></i> Interest Calculation</span>
+                    </a>
+                    <a href="{% url 'savings:reports' %}" class="nav-link">
+                        <span><i class="fas fa-chart-bar"></i> Savings Reports</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('sms-submenu')">
+                    <span><i class="fas fa-sms"></i> SMS Management</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="sms-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="sms-submenu">
+                    <a href="{% url 'sms:dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-tachometer-alt"></i> SMS Dashboard</span>
+                    </a>
+                    <a href="{% url 'sms:send_sms' %}" class="nav-link">
+                        <span><i class="fas fa-paper-plane"></i> Send SMS</span>
+                    </a>
+                    <a href="{% url 'sms:bulk_sms' %}" class="nav-link">
+                        <span><i class="fas fa-broadcast-tower"></i> Bulk SMS</span>
+                    </a>
+                    <a href="{% url 'sms:logs' %}" class="nav-link">
+                        <span><i class="fas fa-list"></i> SMS Logs</span>
+                    </a>
+                    <a href="{% url 'sms:templates' %}" class="nav-link">
+                        <span><i class="fas fa-file-alt"></i> Templates</span>
+                    </a>
+                    <a href="{% url 'sms:settings' %}" class="nav-link">
+                        <span><i class="fas fa-cog"></i> SMS Settings</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('capital-submenu')">
+                    <span><i class="fas fa-university"></i> Capital Management</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="capital-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="capital-submenu">
+                    <a href="{% url 'finance_tracker:shareholder_list' %}" class="nav-link">
+                        <span><i class="fas fa-users-cog"></i> View Shareholders</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:add_shareholder' %}" class="nav-link">
+                        <span><i class="fas fa-user-plus"></i> Register Shareholder</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:add_capital' %}" class="nav-link">
+                        <span><i class="fas fa-coins"></i> Record Capital</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:withdraw_capital' %}" class="nav-link">
+                        <span><i class="fas fa-money-bill-alt"></i> Withdraw Capital</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:capital_approval_list' %}" class="nav-link">
+                        <span><i class="fas fa-clipboard-check"></i> Approve Capital</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:retained_earnings' %}" class="nav-link">
+                        <span><i class="fas fa-chart-line"></i> Retained Earnings</span>
+                    </a>
+                </div>
+            </div>
+            
+          
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('income-expenditure-submenu')">
+                    <span><i class="fas fa-chart-pie"></i> Income & Expenditure</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="income-expenditure-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="income-expenditure-submenu">
+                    <a href="#" class="nav-link" onclick="toggleSubmenu('income-sub-submenu')">
+                        <span><i class="fas fa-plus-circle"></i> Income</span>
+                        <i class="fas fa-chevron-down nav-toggle" id="income-sub-toggle"></i>
+                    </a>
+                    <div class="nav-submenu" id="income-sub-submenu" style="margin-left: 1rem;">
+                        <a href="{% url 'finance_tracker:add_income' %}" class="nav-link">
+                            <span><i class="fas fa-plus"></i> Add Income</span>
+                        </a>
+                        <a href="{% url 'finance_tracker:view_income' %}" class="nav-link">
+                            <span><i class="fas fa-list"></i> View Income</span>
+                        </a>
+                    </div>
+                    <a href="#" class="nav-link" onclick="toggleSubmenu('expenditure-sub-submenu')">
+                        <span><i class="fas fa-minus-circle"></i> Expenditure</span>
+                        <i class="fas fa-chevron-down nav-toggle" id="expenditure-sub-toggle"></i>
+                    </a>
+                    <div class="nav-submenu" id="expenditure-sub-submenu" style="margin-left: 1rem;">
+                        <a href="{% url 'finance_tracker:add_expenditure' %}" class="nav-link">
+                            <span><i class="fas fa-minus"></i> Add Expenditure</span>
+                        </a>
+                        <a href="{% url 'finance_tracker:view_expenditures' %}" class="nav-link">
+                            <span><i class="fas fa-list-alt"></i> View Expenditures</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('reports-submenu')">
+                    <span><i class="fas fa-chart-bar"></i> Reports</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="reports-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="reports-submenu">
+                    <a href="{% url 'financial_statements:dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-file-alt"></i> Financial Statements</span>
+                    </a>
+                    <a href="{% url 'financial_statements:trial_balance_report' %}" class="nav-link">
+                        <span><i class="fas fa-balance-scale"></i> Trial Balance</span>
+                    </a>
+                    <a href="{% url 'financial_statements:income_statement_report' %}" class="nav-link">
+                        <span><i class="fas fa-chart-line"></i> Income Statement</span>
+                    </a>
+                    <a href="{% url 'financial_statements:balance_sheet_report' %}" class="nav-link">
+                        <span><i class="fas fa-clipboard-list"></i> Balance Sheet</span>
+                    </a>
+                    <a href="{% url 'financial_statements:portfolio_analysis_report' %}" class="nav-link">
+                        <span><i class="fas fa-chart-pie"></i> Portfolio Analysis</span>
+                    </a>
+                    <a href="{% url 'financial_statements:loan_aging_report' %}" class="nav-link">
+                        <span><i class="fas fa-clock"></i> Loan Aging</span>
+                    </a>
+                    <a href="{% url 'financial_statements:collection_summary_report' %}" class="nav-link">
+                        <span><i class="fas fa-coins"></i> Collection Summary</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('general-ledger-submenu')">
+                    <span><i class="fas fa-book"></i> General Ledger</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="general-ledger-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="general-ledger-submenu">
+                    <a href="{% url 'financial_statements:manage_classifications' %}" class="nav-link">
+                        <span><i class="fas fa-sitemap"></i> Chart of Accounts</span>
+                    </a>
+                    <a href="{% url 'financial_statements:trial_balance_report' %}" class="nav-link">
+                        <span><i class="fas fa-balance-scale"></i> Trial Balance</span>
+                    </a>
+                    <a href="{% url 'financial_statements:statement_runs' %}" class="nav-link">
+                        <span><i class="fas fa-journal-whills"></i> Journal Entries</span>
+                    </a>
+                    <a href="{% url 'financial_statements:manage_periods' %}" class="nav-link">
+                        <span><i class="fas fa-calendar-alt"></i> Account Balances</span>
+                    </a>
+                    <a href="{% url 'financial_statements:dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-file-invoice"></i> Ledger Reports</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-link" onclick="toggleSubmenu('settings-submenu')">
+                    <span><i class="fas fa-cog"></i> Settings</span>
+                    <i class="fas fa-chevron-down nav-toggle" id="settings-toggle"></i>
+                </a>
+                <div class="nav-submenu" id="settings-submenu">
+                    <a href="{% url 'core:settings_dashboard' %}" class="nav-link">
+                        <span><i class="fas fa-tachometer-alt"></i> Settings Dashboard</span>
+                    </a>
+                    <a href="{% url 'core:company_profile' %}" class="nav-link">
+                        <span><i class="fas fa-building"></i> Company Profile</span>
+                    </a>
+                    <a href="{% url 'core:system_settings' %}" class="nav-link">
+                        <span><i class="fas fa-sliders-h"></i> System Settings</span>
+                    </a>
+                    <a href="{% url 'core:user_list' %}" class="nav-link">
+                        <span><i class="fas fa-users"></i> User Management</span>
+                    </a>
+                    <a href="{% url 'core:branch_management' %}" class="nav-link">
+                        <span><i class="fas fa-map-marker-alt"></i> Branch Management</span>
+                    </a>
+                    <a href="{% url 'core:loan_categories' %}" class="nav-link">
+                        <span><i class="fas fa-tags"></i> Loan Categories</span>
+                    </a>
+                    <a href="{% url 'core:penalty_configurations' %}" class="nav-link">
+                        <span><i class="fas fa-exclamation-triangle"></i> Penalty Settings</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            
+            <div class="header-actions">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                
+                <button class="notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">
+                        {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.get_full_name }}</div>
+                        <div class="user-role">{{ user.get_role_display }}</div>
+                    </div>
+                    <a href="#" onclick="confirmLogout()" class="logout-btn" title="Logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+
+        
+        // Auto-expand active submenu and remember state
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore scroll position
+            const savedScrollPosition = localStorage.getItem('sidebarScrollPosition');
+            const sidebar = document.querySelector('.sidebar-nav');
+            if (savedScrollPosition && sidebar) {
+                sidebar.scrollTop = parseInt(savedScrollPosition);
+            }
+
+            // Restore submenu states from localStorage
+            const openSubmenus = JSON.parse(localStorage.getItem('openSubmenus') || '[]');
+            openSubmenus.forEach(submenuId => {
+                const submenu = document.getElementById(submenuId);
+                const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
+                if (submenu && toggle) {
+                    submenu.classList.add('show');
+                    toggle.classList.add('rotated');
+                }
+            });
+
+            // Auto-expand submenu containing active link
+            const activeLink = document.querySelector('.nav-submenu .nav-link.active');
+            if (activeLink) {
+                const submenu = activeLink.closest('.nav-submenu');
+                const submenuId = submenu.id;
+                const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
+
+                submenu.classList.add('show');
+                toggle.classList.add('rotated');
+
+                // Save this submenu as open
+                if (!openSubmenus.includes(submenuId)) {
+                    openSubmenus.push(submenuId);
+                    localStorage.setItem('openSubmenus', JSON.stringify(openSubmenus));
+                }
+
+                // Scroll to active link after a short delay to ensure submenu is expanded
+                setTimeout(() => {
+                    const sidebarNav = document.querySelector('.sidebar-nav');
+                    const activeRect = activeLink.getBoundingClientRect();
+                    const sidebarRect = sidebarNav.getBoundingClientRect();
+
+                    // Calculate if the active link is visible
+                    const isVisible = activeRect.top >= sidebarRect.top &&
+                                     activeRect.bottom <= sidebarRect.bottom;
+
+                    if (!isVisible) {
+                        // Calculate scroll position to center the active link
+                        const scrollTop = sidebarNav.scrollTop +
+                                         (activeRect.top - sidebarRect.top) -
+                                         (sidebarRect.height / 2) +
+                                         (activeRect.height / 2);
+
+                        sidebarNav.scrollTo({
+                            top: scrollTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 200);
+            }
+
+            // Save scroll position when scrolling
+            if (sidebar) {
+                sidebar.addEventListener('scroll', function() {
+                    localStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+                });
+            }
+        });
+
+        // Modified toggleSubmenu to remember state
+        function toggleSubmenu(submenuId) {
+            const submenu = document.getElementById(submenuId);
+            const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
+
+            submenu.classList.toggle('show');
+            toggle.classList.toggle('rotated');
+
+            // Update localStorage
+            const openSubmenus = JSON.parse(localStorage.getItem('openSubmenus') || '[]');
+            const index = openSubmenus.indexOf(submenuId);
+
+            if (submenu.classList.contains('show')) {
+                if (index === -1) {
+                    openSubmenus.push(submenuId);
+                }
+            } else {
+                if (index > -1) {
+                    openSubmenus.splice(index, 1);
+                }
+            }
+
+            localStorage.setItem('openSubmenus', JSON.stringify(openSubmenus));
+        }
+
+        // Save scroll position when clicking on navigation links
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.nav-link') && e.target.closest('.nav-submenu')) {
+                const sidebar = document.querySelector('.sidebar-nav');
+                if (sidebar) {
+                    localStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+                }
+            }
+        });
+
+        // Logout confirmation function
+        function confirmLogout() {
+            // Create custom confirmation modal
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'modal fade';
+            confirmModal.id = 'logoutConfirmModal';
+            confirmModal.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #2b7a76, #4a9b96); color: white;">
+                            <h5 class="modal-title">
+                                <i class="fas fa-sign-out-alt me-2"></i>Confirm Logout
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center" style="padding: 30px;">
+                            <div style="font-size: 48px; color: #2b7a76; margin-bottom: 20px;">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <h5 style="color: #333; margin-bottom: 15px;">Are you sure you want to logout?</h5>
+                            <p style="color: #666; margin-bottom: 0;">You will be redirected to the login page.</p>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 20px;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 10px 20px;">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="performLogout()" style="padding: 10px 20px; background: linear-gradient(135deg, #dc3545, #c82333); border: none;">
+                                <i class="fas fa-sign-out-alt me-1"></i>Yes, Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(confirmModal);
+            
+            const modal = new bootstrap.Modal(confirmModal);
+            modal.show();
+            
+            // Remove modal from DOM when hidden
+            confirmModal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(confirmModal);
+            });
+        }
+
+        // Perform actual logout
+        function performLogout() {
+            // Show loading state
+            const body = document.body;
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(43, 122, 118, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                color: white;
+                font-size: 18px;
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div>Logging out...</div>
+                    <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;">Please wait while we securely log you out</div>
+                </div>
+            `;
+            
+            body.appendChild(loadingOverlay);
+            
+            // Create a form and submit it for logout
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "logout" %}';
+            
+            // Add CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken.value;
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            
+            // Small delay for better UX
+            setTimeout(() => {
+                form.submit();
+            }, 1000);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

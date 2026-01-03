@@ -1,0 +1,21 @@
+loan_management_system/
+├── apps/                          # Django applications
+│   ├── core/                      # Core utilities & SMS service
+│   ├── accounts/                  # User management
+│   ├── borrowers/                 # Borrower management
+│   ├── loans/                     # Loan processing
+│   ├── repayments/                # Payment management
+│   ├── savings/                   # Savings accounts
+│   ├── assets/                    # Asset tracking
+│   ├── finance_tracker/           # Income/Expenditure
+│   ├── accounting/                # Double-entry accounting
+│   └── financial_statements/      # Financial reports
+├── microfinance_system/           # Django project settings
+├── templates/                     # HTML templates
+├── static/                        # Static files (CSS, JS)
+├── media/                         # User uploads
+├── logs/                          # Application logs
+├── venv/                          # Virtual environment
+├── manage.py                      # Django management
+├── requirements.txt               # Dependencies
+└── Documentation files

@@ -1,0 +1,460 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Loan Penalties - Golam Financial Services{% endblock %}
+
+{% block page_title %}Loan Penalties{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .penalties-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1200px;
+        width: 100%;
+    }
+
+    .penalties-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .penalties-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .penalties-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .penalties-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .status-paid {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-waived {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+    
+    .status-written-off {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    /* Penalty Type Styling */
+    .penalty-type {
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: rgba(147, 51, 234, 0.1);
+        color: #7c3aed;
+    }
+
+    /* Amount Formatting */
+    .amount-cell {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .amount-penalty {
+        color: #dc2626;
+    }
+
+    .amount-paid {
+        color: #16a34a;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.penalty {
+        border-left: 4px solid #dc2626;
+    }
+
+    .stat-card.collected {
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value.penalty {
+        color: #dc2626;
+    }
+
+    .stat-value.collected {
+        color: #16a34a;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .stat-negative {
+        color: #dc2626;
+    }
+
+    .stat-positive {
+        color: #16a34a;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+        background: #1f5d5a;
+    }
+
+    .btn-clear {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-clear:hover {
+        background: #4b5563;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .btn-pay {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+    
+    .btn-pay:hover {
+        background: rgba(34, 197, 94, 0.2);
+    }
+    
+    .btn-waive {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+    
+    .btn-waive:hover {
+        background: rgba(99, 102, 241, 0.2);
+    }
+    
+    .btn-edit {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .btn-edit:hover {
+        background: rgba(245, 158, 11, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card penalty">
+        <div class="stat-title">Total Penalties</div>
+        <div class="stat-value penalty">₹{{ total_penalties|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-negative">{{ total_penalty_count|default:"0" }} penalties</div>
+    </div>
+    <div class="stat-card collected">
+        <div class="stat-title">Penalties Collected</div>
+        <div class="stat-value collected">₹{{ penalties_collected|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-positive">{{ collection_rate|floatformat:1|default:"0" }}% collection rate</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Pending Penalties</div>
+        <div class="stat-value">₹{{ penalties_pending|floatformat:0|default:"0" }}</div>
+        <div class="stat-change">{{ pending_count|default:"0" }} pending</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Average Penalty</div>
+        <div class="stat-value">₹{{ average_penalty|floatformat:0|default:"0" }}</div>
+        <div class="stat-change">Per incident</div>
+    </div>
+</div>
+
+<!-- Penalty Breakdown -->
+<div class="filters-section">
+    <h3 class="filters-title">Penalty Status Breakdown</h3>
+    <div class="filters-grid">
+        <div class="filter-group">
+            <span class="filter-label">Pending</span>
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #d97706;">
+                ₹{{ penalties_pending|floatformat:0|default:"0" }}
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Paid</span>
+            <div style="background: rgba(34, 197, 94, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #16a34a;">
+                ₹{{ penalties_paid|floatformat:0|default:"0" }}
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Waived</span>
+            <div style="background: rgba(99, 102, 241, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #6366f1;">
+                ₹{{ penalties_waived|floatformat:0|default:"0" }}
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">Written Off</span>
+            <div style="background: rgba(107, 114, 128, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #6b7280;">
+                ₹{{ penalties_written_off|floatformat:0|default:"0" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <h3 class="filters-title">Filter Penalties</h3>
+    <form method="get" class="filters-form">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="borrower" class="filter-label">Borrower</label>
+                {{ filter.form.borrower }}
+            </div>
+            <div class="filter-group">
+                <label for="loan" class="filter-label">Loan</label>
+                {{ filter.form.loan }}
+            </div>
+            <div class="filter-group">
+                <label for="penalty_type" class="filter-label">Penalty Type</label>
+                {{ filter.form.penalty_type }}
+            </div>
+            <div class="filter-group">
+                <label for="status" class="filter-label">Status</label>
+                {{ filter.form.status }}
+            </div>
+            <div class="filter-group">
+                <label for="date_imposed_after" class="filter-label">From Date</label>
+                {{ filter.form.date_imposed_after }}
+            </div>
+            <div class="filter-group">
+                <label for="date_imposed_before" class="filter-label">To Date</label>
+                {{ filter.form.date_imposed_before }}
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+            </div>
+            <div class="filter-group">
+                <a href="{% url 'loans:penalties' %}" class="btn-clear">Clear All</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Action Buttons -->
+<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Add Penalty
+    </a>
+    <a href="{% url 'loans:clear_penalties' %}" class="btn btn-success">
+        <i class="fas fa-check-circle"></i> Clear Penalties
+    </a>
+    <a href="{% url 'loans:loans_arrears' %}" class="btn btn-danger">
+        <i class="fas fa-exclamation-triangle"></i> View Arrears
+    </a>
+</div>
+
+<!-- Penalties Table -->
+<div class="table-container">
+    {% if table.data %}
+        {% render_table table %}
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-gavel" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3>No Penalties Found</h3>
+            <p>No penalties match your criteria. This could be good news!</p>
+            <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-plus-circle"></i> Add New Penalty
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Penalty Actions Modal would go here -->
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Penalties pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Previous</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Last</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %} 

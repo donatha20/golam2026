@@ -1,0 +1,202 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Loan Aging Report{% endblock %}
+{% block page_title %}Loan Aging Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-primary-teal"></i>
+                    Loan Aging Report
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" id="export-excel-btn">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Report Header -->
+                <div class="text-center mb-4">
+                    <h4>Loan Aging Analysis</h4>
+                    <p class="text-muted">As of {{ report_date }}</p>
+                </div>
+
+                <!-- Aging Summary -->
+                <div class="row mb-4">
+                    {% for bucket_name, bucket_data in aging_buckets.items %}
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title 
+                                    {% if bucket_name == 'current' %}text-success
+                                    {% elif bucket_name == '1_30_days' %}text-info
+                                    {% elif bucket_name == '31_60_days' %}text-warning
+                                    {% elif bucket_name == '61_90_days' %}text-danger
+                                    {% else %}text-dark
+                                    {% endif %}">
+                                    {{ bucket_data.loans|length }}
+                                </h5>
+                                <p class="card-text small">
+                                    {% if bucket_name == 'current' %}Current
+                                    {% elif bucket_name == '1_30_days' %}1-30 Days
+                                    {% elif bucket_name == '31_60_days' %}31-60 Days
+                                    {% elif bucket_name == '61_90_days' %}61-90 Days
+                                    {% else %}90+ Days
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Detailed Aging Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Aging Category</th>
+                                <th class="text-center">Number of Loans</th>
+                                <th class="text-end">Total Amount Due</th>
+                                <th class="text-center">Percentage</th>
+                                <th>Action Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bucket_name, bucket_data in aging_buckets.items %}
+                            <tr>
+                                <td>
+                                    <span class="badge 
+                                        {% if bucket_name == 'current' %}bg-success
+                                        {% elif bucket_name == '1_30_days' %}bg-info
+                                        {% elif bucket_name == '31_60_days' %}bg-warning
+                                        {% elif bucket_name == '61_90_days' %}bg-danger
+                                        {% else %}bg-dark
+                                        {% endif %}">
+                                        {% if bucket_name == 'current' %}Current
+                                        {% elif bucket_name == '1_30_days' %}1-30 Days Overdue
+                                        {% elif bucket_name == '31_60_days' %}31-60 Days Overdue
+                                        {% elif bucket_name == '61_90_days' %}61-90 Days Overdue
+                                        {% else %}Over 90 Days Overdue
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ bucket_data.loans|length }}</td>
+                                <td class="text-end">
+                                    {% comment %}Calculate total amount for this bucket{% endcomment %}
+                                    ₹0.00
+                                </td>
+                                <td class="text-center">
+                                    {% comment %}Calculate percentage{% endcomment %}
+                                    0%
+                                </td>
+                                <td>
+                                    {% if bucket_name == 'current' %}
+                                        <span class="text-success">No action required</span>
+                                    {% elif bucket_name == '1_30_days' %}
+                                        <span class="text-info">Follow up call</span>
+                                    {% elif bucket_name == '31_60_days' %}
+                                        <span class="text-warning">Send notice</span>
+                                    {% elif bucket_name == '61_90_days' %}
+                                        <span class="text-danger">Legal notice</span>
+                                    {% else %}
+                                        <span class="text-dark">Recovery action</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Detailed Loan List -->
+                {% if aging_buckets %}
+                <div class="mt-4">
+                    <h6 class="text-primary-teal border-bottom pb-2">Overdue Loans Detail</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Loan Number</th>
+                                    <th>Borrower</th>
+                                    <th>Due Date</th>
+                                    <th>Days Overdue</th>
+                                    <th class="text-end">Amount Due</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bucket_name, bucket_data in aging_buckets.items %}
+                                    {% for schedule in bucket_data.loans %}
+                                    <tr>
+                                        <td>{{ schedule.loan.loan_number }}</td>
+                                        <td>{{ schedule.loan.borrower.get_full_name }}</td>
+                                        <td>{{ schedule.due_date }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if bucket_name == 'current' %}bg-success
+                                                {% elif bucket_name == '1_30_days' %}bg-info
+                                                {% elif bucket_name == '31_60_days' %}bg-warning
+                                                {% elif bucket_name == '61_90_days' %}bg-danger
+                                                {% else %}bg-dark
+                                                {% endif %}">
+                                                {{ schedule.due_date|timesince }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">{{ schedule.total_amount|floatformat:2 }}</td>
+                                        <td>{{ schedule.loan.get_status_display }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No overdue loans found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Export to Excel functionality
+    $('#export-excel-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'excel');
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .form-control, .form-label {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

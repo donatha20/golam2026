@@ -1,0 +1,796 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Golam Financial Services{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Simple Dashboard Cards Styling */
+    .dashboard-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .dashboard-card:hover {
+        box-shadow: 0 4px 12px rgba(43, 122, 118, 0.1);
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 8px 25px rgba(43, 122, 118, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+
+    .card-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: rgba(43, 122, 118, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2b7a76;
+        font-size: 1.2rem;
+        margin-left: auto;
+    }
+
+    /* Quick Action Buttons Hover Effects */
+    .btn-outline-primary:hover,
+    .btn-outline-success:hover,
+    .btn-outline-info:hover,
+    .btn-outline-warning:hover,
+    .btn-outline-danger:hover,
+    .btn-outline-secondary:hover,
+    .btn-outline-dark:hover {
+        background-color: #2b7a76 !important;
+        border-color: #2b7a76 !important;
+        color: white !important;
+        transition: all 0.3s ease;
+    }
+
+    /* Ensure smooth transition on all outline buttons */
+    .btn-outline-primary,
+    .btn-outline-success,
+    .btn-outline-info,
+    .btn-outline-warning,
+    .btn-outline-danger,
+    .btn-outline-secondary,
+    .btn-outline-dark {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Quick Actions Above Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-xl-4 col-md-6 d-flex justify-content-center">
+        <a href="{% url 'borrowers:register_borrower' %}" class="btn btn-outline-primary w-100">
+            <i class="fas fa-user-plus me-1"></i>
+            Add Client
+        </a>
+    </div>
+    <div class="col-xl-4 col-md-6 d-flex justify-content-center">
+        <a href="{% url 'loans:add_loan' %}" class="btn btn-outline-success w-100">
+            <i class="fas fa-money-bill-wave me-1"></i>
+            New Loan
+        </a>
+    </div>
+    <div class="col-xl-4 col-md-6 d-flex justify-content-center">
+        <a href="{% url 'repayments:record_repayment' %}" class="btn btn-outline-success w-100">
+            <i class="fas fa-credit-card me-1"></i>
+            Record Payment
+        </a>
+    </div>
+</div>
+ <!--
+    <div class="col-xl-2 col-md-4 col-sm-6 text-center mb-2">
+        <a href="{% url 'finance_tracker:add_income' %}" class="btn btn-outline-warning btn-sm">
+            <i class="fas fa-chart-line me-1"></i>
+            Add Income
+        </a>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 text-center mb-2">
+        <a href="{% url 'financial_statements:trial_balance_report' %}" class="btn btn-outline-dark btn-sm">
+            <i class="fas fa-book me-1"></i>
+            General Ledger
+        </a>
+    </div>
+    <div class="col-xl-2 col-md-4 col-sm-6 text-center mb-2">
+        <a href="{% url 'financial_statements:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-chart-bar me-1"></i>
+            Reports
+        </a>
+    </div>
+</div> -->
+
+<!-- Dashboard Cards - 3 columns x 2 rows -->
+<div class="row mb-4">
+    <!-- Total Clients -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">{{ stats.total_borrowers|default:0 }}</h3>
+                        <p class="card-label mb-0">Total Clients</p>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            {{ stats.new_borrowers_this_month|default:0 }} this month
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Loans -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">{{ stats.active_loans|default:0 }}</h3>
+                        <p class="card-label mb-0">Active Loans</p>
+                        <small class="text-muted">
+                            <i class="fas fa-money-bill-wave me-1"></i>
+                            TSh {{ stats.total_active_amount|floatformat:0|default:0 }}
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collections Today -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">TSh {{ stats.collections_today|floatformat:0|default:0 }}</h3>
+                        <p class="card-label mb-0">Collections Today</p>
+                        <small class="text-success">
+                            <i class="fas fa-credit-card me-1"></i>
+                            {{ stats.payments_today|default:0 }} payments
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Loans -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">{{ stats.overdue_loans|default:0 }}</h3>
+                        <p class="card-label mb-0">Overdue Loans</p>
+                        <small class="text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            TSh {{ stats.overdue_amount|floatformat:0|default:0 }}
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Savings -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">TSh {{ stats.total_savings|floatformat:0|default:0 }}</h3>
+                        <p class="card-label mb-0">Total Savings</p>
+                        <small class="text-info">
+                            <i class="fas fa-wallet me-1"></i>
+                            {{ stats.savings_accounts|default:0 }} accounts
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Applications -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <a href="{% url 'loans:pending_loans' %}" class="text-decoration-none">
+            <div class="card dashboard-card hover-shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="card-value">{{ stats.pending_applications|default:0 }}</h3>
+                            <p class="card-label mb-0">Pending Applications</p>
+                            <small class="text-warning">
+                                <i class="fas fa-hourglass-half me-1"></i>
+                                Awaiting review
+                            </small>
+                        </div>
+                        <div class="col-4">
+                            <div class="card-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Additional Module Cards 
+<div class="row mb-4">
+    <!-- Monthly Income 
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">₹{{ stats.monthly_income|floatformat:0|default:0 }}</h3>
+                        <p class="card-label mb-0">Monthly Income</p>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            This month
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Monthly Expenses 
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">₹{{ stats.monthly_expenses|floatformat:0|default:0 }}</h3>
+                        <p class="card-label mb-0">Monthly Expenses</p>
+                        <small class="text-danger">
+                            <i class="fas fa-arrow-down me-1"></i>
+                            This month
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Total Capital 
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">₹{{ stats.total_capital|floatformat:0|default:0 }}</h3>
+                        <p class="card-label mb-0">Total Capital</p>
+                        <small class="text-info">
+                            <i class="fas fa-users me-1"></i>
+                            {{ stats.total_shareholders|default:0 }} shareholders
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Active Grants 
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-8">
+                        <h3 class="card-value">{{ stats.active_grants|default:0 }}</h3>
+                        <p class="card-label mb-0">Active Grants</p>
+                        <small class="text-primary">
+                            <i class="fas fa-gift me-1"></i>
+                            In progress
+                        </small>
+                    </div>
+                    <div class="col-4">
+                        <div class="card-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- Module Navigation Cards 
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-th-large me-2 text-primary-teal"></i>
+                    System Modules
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Borrowers Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'borrowers:borrower_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-primary">
+                                <div class="card-body">
+                                    <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Borrowers</h6>
+                                    <p class="card-text small">{{ stats.total_borrowers }} active</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> 
+
+                    <!-- Loans Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'loans:loan_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-success">
+                                <div class="card-body">
+                                    <i class="fas fa-money-bill-wave fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">Loans</h6>
+                                    <p class="card-text small">{{ stats.active_loans }} active</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- Repayments Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'repayments:payment_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-info">
+                                <div class="card-body">
+                                    <i class="fas fa-credit-card fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Payments</h6>
+                                    <p class="card-text small">{{ stats.payments_today }} today</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- Savings Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'savings:dashboard' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-warning">
+                                <div class="card-body">
+                                    <i class="fas fa-piggy-bank fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Savings</h6>
+                                    <p class="card-text small">{{ stats.savings_accounts }} accounts</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- Finance Tracker Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'finance_tracker:dashboard' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-danger">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-line fa-2x text-danger mb-2"></i>
+                                    <h6 class="card-title">Finance</h6>
+                                    <p class="card-text small">Income & Expenses</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- General Ledger Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <div class="dropdown">
+                            <div class="card h-100 text-center border-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <i class="fas fa-book fa-2x text-dark mb-2"></i>
+                                    <h6 class="card-title">General Ledger</h6>
+                                    <p class="card-text small">Chart of Accounts</p>
+                                </div>
+                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:manage_classifications' %}">Chart of Accounts</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:trial_balance_report' %}">Trial Balance</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:statement_runs' %}">Journal Entries</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:manage_periods' %}">Account Balances</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:dashboard' %}">Ledger Reports</a></li>
+                            </ul>
+                        </div>
+                    </div> -->
+
+                    <!-- Reports Module 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <div class="dropdown">
+                            <div class="card h-100 text-center border-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <i class="fas fa-chart-bar fa-2x text-secondary mb-2"></i>
+                                    <h6 class="card-title">Reports</h6>
+                                    <p class="card-text small">Financial Statements</p>
+                                </div>
+                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:dashboard' %}">Financial Statements</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:trial_balance_report' %}">Trial Balance</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:income_statement_report' %}">Income Statement</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:balance_sheet_report' %}">Balance Sheet</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:portfolio_analysis_report' %}">Portfolio Analysis</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:loan_aging_report' %}">Loan Aging</a></li>
+                                <li><a class="dropdown-item" href="{% url 'financial_statements:collection_summary_report' %}">Collection Summary</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div> -->
+
+                <!-- Second Row of Modules 
+                <div class="row">
+                    <!-- Capital Management 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'finance_tracker:capital_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-primary">
+                                <div class="card-body">
+                                    <i class="fas fa-coins fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">Capital</h6>
+                                    <p class="card-text small">{{ stats.pending_capital }} pending</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- Shareholders 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'finance_tracker:shareholder_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-info">
+                                <div class="card-body">
+                                    <i class="fas fa-user-tie fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">Shareholders</h6>
+                                    <p class="card-text small">{{ stats.total_shareholders }} total</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- Settings 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <div class="dropdown">
+                            <div class="card h-100 text-center border-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">Settings</h6>
+                                    <p class="card-text small">{{ stats.total_branches }} branches</p>
+                                </div>
+                            </div>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'core:settings_dashboard' %}">Settings Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:company_profile' %}">Company Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:system_settings' %}">System Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'core:user_list' %}">User Management</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:branch_management' %}">Branch Management</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:loan_categories' %}">Loan Categories</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:penalty_configurations' %}">Penalty Settings</a></li>
+                            </ul>
+                        </div>
+                    </div> -->
+
+                    <!-- User Management 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <a href="{% url 'core:user_list' %}" class="text-decoration-none">
+                            <div class="card h-100 text-center border-danger">
+                                <div class="card-body">
+                                    <i class="fas fa-users-cog fa-2x text-danger mb-2"></i>
+                                    <h6 class="card-title">Users</h6>
+                                    <p class="card-text small">User Management</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div> -->
+
+                    <!-- System Status 
+                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                        <div class="card h-100 text-center border-secondary">
+                            <div class="card-body">
+                                <i class="fas fa-server fa-2x text-secondary mb-2"></i>
+                                <h6 class="card-title">System</h6>
+                                <p class="card-text small">{{ stats.system_settings }} settings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
+   
+<!-- Charts and Analytics -->
+<div class="row mb-4">
+    <!-- Loan Portfolio Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary-teal"></i>
+                    Loan Portfolio Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="portfolioChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan Status Distribution -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary-red"></i>
+                    Loan Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities and Quick Actions -->
+<div class="row">
+    <!-- Recent Loan Applications -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-primary-teal"></i>
+                    Recent Loan Applications
+                </h5>
+                <a href="{% url 'loans:loan_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Borrower</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in recent_loans %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-teal-lightest rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-user text-primary-teal"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">{{ loan.borrower.get_full_name }}</div>
+                                            <small class="text-muted">{{ loan.loan_number }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">TSh {{ loan.amount_requested|floatformat:0 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-status-{{ loan.status }}">
+                                        {{ loan.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ loan.application_date|date:"M d, Y" }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-3 d-block"></i>
+                                    No recent loan applications
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Collections -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-check-alt me-2 text-primary-red"></i>
+                    Today's Collections
+                </h5>
+                <a href="{% url 'repayments:record_repayment' %}" class="btn btn-sm btn-primary-red">Record Payment</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Borrower</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in todays_payments %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-red-lightest rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-user text-primary-red"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">{{ payment.borrower.get_full_name }}</div>
+                                            <small class="text-muted">{{ payment.payment_reference }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-medium text-success">TSh {{ payment.amount|floatformat:0 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ payment.get_payment_method_display }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ payment.processed_date|time:"H:i" }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <i class="fas fa-credit-card fa-2x mb-3 d-block"></i>
+                                    No payments recorded today
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Portfolio Chart
+const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+const portfolioChart = new Chart(portfolioCtx, {
+    type: 'line',
+    data: {
+        labels: {{ portfolio_labels|safe }},
+        datasets: [{
+            label: 'Loan Disbursements',
+            data: {{ portfolio_data|safe }},
+            borderColor: '#1e7570',
+            backgroundColor: 'rgba(30, 117, 112, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ status_labels|safe }},
+        datasets: [{
+            data: {{ status_data|safe }},
+            backgroundColor: [
+                '#1e7570',
+                '#c7392c',
+                '#28a745',
+                '#ffc107',
+                '#6c757d'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

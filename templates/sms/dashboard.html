@@ -1,0 +1,342 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}SMS Management{% endblock %}
+{% block page_title %}SMS Management Dashboard{% endblock %}
+
+{% block content %}
+<!-- SMS Status Alert -->
+<div class="row mb-4">
+    <div class="col-12">
+        {% if not sms_enabled %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>SMS Service Disabled:</strong> SMS functionality is currently disabled. 
+            <a href="{% url 'sms:settings' %}" class="alert-link">Configure SMS settings</a> to enable.
+        </div>
+        {% else %}
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>SMS Service Active:</strong> Using {{ current_provider|title }} provider.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-primary-teal">{{ total_sms|default:0 }}</h5>
+                        <p class="card-text">Total SMS</p>
+                    </div>
+                    <i class="fas fa-sms fa-2x text-primary-teal"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-success">{{ sent_today|default:0 }}</h5>
+                        <p class="card-text">Sent Today</p>
+                    </div>
+                    <i class="fas fa-calendar-day fa-2x text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-info">{{ sent_this_week|default:0 }}</h5>
+                        <p class="card-text">This Week</p>
+                    </div>
+                    <i class="fas fa-calendar-week fa-2x text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title text-warning">{{ sent_this_month|default:0 }}</h5>
+                        <p class="card-text">This Month</p>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-2x text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary-teal"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'sms:send_sms' %}" class="btn btn-primary-teal w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Send SMS
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'sms:bulk_sms' %}" class="btn btn-success w-100">
+                            <i class="fas fa-broadcast-tower me-2"></i>Bulk SMS
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'sms:logs' %}" class="btn btn-info w-100">
+                            <i class="fas fa-list me-2"></i>View Logs
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button type="button" class="btn btn-warning w-100" onclick="testSMS()">
+                            <i class="fas fa-vial me-2"></i>Test SMS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Status Breakdown -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary-teal"></i>
+                    SMS Status Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if status_stats %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th class="text-center">Count</th>
+                                <th class="text-center">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in status_stats %}
+                            <tr>
+                                <td>
+                                    <span class="badge 
+                                        {% if stat.status == 'sent' %}bg-success
+                                        {% elif stat.status == 'failed' %}bg-danger
+                                        {% elif stat.status == 'delivered' %}bg-primary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ stat.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ stat.count }}</td>
+                                <td class="text-center">
+                                    {% if total_sms > 0 %}
+                                        {% widthratio stat.count total_sms 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No SMS data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Template Usage -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-primary-teal"></i>
+                    Popular Templates
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if template_stats %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Template</th>
+                                <th class="text-center">Usage Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in template_stats %}
+                            <tr>
+                                <td>{{ stat.template_name|title }}</td>
+                                <td class="text-center">{{ stat.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No template usage data</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent SMS Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-primary-teal"></i>
+                    Recent SMS Activity
+                </h5>
+                <a href="{% url 'sms:logs' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_sms %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Phone Number</th>
+                                <th>Message</th>
+                                <th>Template</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sms in recent_sms %}
+                            <tr>
+                                <td>{{ sms.phone_number }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ sms.message }}">
+                                        {{ sms.message }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if sms.template_name %}
+                                        <span class="badge bg-secondary">{{ sms.template_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if sms.status == 'sent' %}bg-success
+                                        {% elif sms.status == 'failed' %}bg-danger
+                                        {% elif sms.status == 'delivered' %}bg-primary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ sms.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ sms.sent_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No recent SMS activity</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test SMS Modal -->
+<div class="modal fade" id="testSMSModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Test SMS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testSMSForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="testPhoneNumber" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="testPhoneNumber" 
+                               placeholder="+91 9876543210" required>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will send a test SMS to verify your SMS configuration.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendTestSMS()">Send Test SMS</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function testSMS() {
+    $('#testSMSModal').modal('show');
+}
+
+function sendTestSMS() {
+    const phoneNumber = $('#testPhoneNumber').val();
+    
+    if (!phoneNumber) {
+        alert('Please enter a phone number');
+        return;
+    }
+    
+    $.ajax({
+        url: '{% url "sms:test_sms" %}',
+        method: 'POST',
+        data: {
+            'phone_number': phoneNumber,
+            'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+            if (response.success) {
+                alert('Test SMS sent successfully!');
+                $('#testSMSModal').modal('hide');
+            } else {
+                alert('Failed to send test SMS: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('Error sending test SMS');
+        }
+    });
+}
+</script>
+{% endblock %}

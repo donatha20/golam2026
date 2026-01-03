@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resend Activation Email - Golam Financial Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resend-activation-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .form-title {
+        color: #2b7a76;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .form-subtitle {
+        color: #666;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #374151;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .btn-primary {
+        width: 100%;
+        background: linear-gradient(135deg, #2b7a76, #4a9b96);
+        border: none;
+        padding: 15px;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1f5d5a, #3a8b86);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(43, 122, 118, 0.3);
+    }
+    
+    .alert {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-danger {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .back-link a {
+        color: #2b7a76;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .info-box {
+        background: rgba(43, 122, 118, 0.1);
+        border-left: 4px solid #2b7a76;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="resend-activation-container">
+    <h1 class="form-title">Resend Activation Email</h1>
+    <p class="form-subtitle">Enter your email address to receive a new activation link</p>
+    
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>Note:</strong> If you've already activated your account, you don't need to use this form. Simply go to the login page.
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}" class="form-label">
+                Email Address <span style="color: #dc3545;">*</span>
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.email.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-paper-plane"></i> Send Activation Email
+        </button>
+    </form>
+    
+    <div class="back-link">
+        <a href="{% url 'login' %}">
+            <i class="fas fa-arrow-left"></i> Back to Login
+        </a>
+    </div>
+</div>
+{% endblock %}

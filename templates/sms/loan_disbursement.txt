@@ -1,0 +1,1 @@
+Loan disbursed! ₹{{ disbursed_amount|floatformat:0 }} for loan {{ loan_number }} on {{ disbursement_date|date:"M d, Y" }}. First payment due: {{ first_payment_date|date:"M d, Y" }}. Thank you for choosing us! - {{ organization_name }}

@@ -1,0 +1,531 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Register Group - Golam Financial Services{% endblock %}
+
+{% block page_title %}Register New Group{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0 0 2rem 0;
+        text-align: center;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        margin-right: 1rem;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .info-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-box h4 {
+        font-size: 0.9rem;
+        color: #0369a1;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        font-size: 0.8rem;
+        color: #0369a1;
+    }
+    
+    .info-box li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .group-requirements {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .group-requirements h4 {
+        font-size: 0.9rem;
+        color: #92400e;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .group-requirements ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        font-size: 0.8rem;
+        color: #92400e;
+    }
+    
+    .leader-selection {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .leader-selection h4 {
+        font-size: 0.9rem;
+        color: #15803d;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .leader-selection p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: #15803d;
+    }
+    
+    .meeting-schedule {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .meeting-schedule {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-secondary {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <h1 class="page-title">Register New Borrower Group</h1>
+        
+        <div class="info-box">
+            <h4><i class="fas fa-info-circle"></i> Group Loan Benefits</h4>
+            <ul>
+                <li>Shared responsibility and peer support for loan repayment</li>
+                <li>Lower individual risk through group guarantee</li>
+                <li>Access to larger loan amounts through collective borrowing</li>
+                <li>Financial education and business development opportunities</li>
+                <li>Community building and social support network</li>
+            </ul>
+        </div>
+        
+        <form method="post" id="groupForm">
+            {% csrf_token %}
+            
+            <!-- Registration Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-clipboard-list"></i> Registration Information
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="formation_date" class="form-label required">Formation Date</label>
+                        <input type="date" id="formation_date" name="formation_date" class="form-input"
+                               value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registered_by" class="form-label">Registered By</label>
+                        <input type="text" id="registered_by" name="registered_by" class="form-input"
+                               value="{{ user.get_full_name }}" readonly>
+                        <div class="form-help">Current logged-in officer</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="branch" class="form-label required">Branch</label>
+                        <select id="branch" name="branch" class="form-select" required>
+                            <option value="">Select Branch</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}" {% if branch == user.branch %}selected{% endif %}>
+                                {{ branch.name }} - {{ branch.location }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-users"></i> Group Information
+                </h3>
+                
+                <div class="form-group">
+                    <label for="group_name" class="form-label required">Group Name</label>
+                    <input type="text" id="group_name" name="group_name" class="form-input" required 
+                           placeholder="e.g., Umoja Women's Group, Kilimo Farmers Association">
+                    <div class="form-help">Choose a unique, meaningful name that represents your group</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description" class="form-label">Group Description</label>
+                    <textarea id="description" name="description" class="form-textarea" 
+                              placeholder="Describe the group's purpose, activities, and goals..."></textarea>
+                    <div class="form-help">Optional - Provide details about the group's objectives and activities</div>
+                </div>
+            </div>
+            
+            <!-- Group Leadership -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user-tie"></i> Group Leadership
+                </h3>
+                
+                <div class="form-group">
+                    <label for="group_leader" class="form-label required">Group Leader</label>
+                    <select id="group_leader" name="group_leader" class="form-select" required>
+                        <option value="">Select Group Leader</option>
+                        {% for borrower in available_borrowers %}
+                        <option value="{{ borrower.id }}">
+                            {{ borrower.get_full_name }} ({{ borrower.borrower_id }}) - {{ borrower.phone_number }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div class="leader-selection">
+                        <h4>Leader Responsibilities:</h4>
+                        <p>The group leader will coordinate meetings, communicate with the microfinance institution, 
+                           and help ensure group cohesion and loan repayment compliance.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Group Settings -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-cogs"></i> Group Settings
+                </h3>
+                
+                <div class="group-requirements">
+                    <h4>Group Size Requirements:</h4>
+                    <ul>
+                        <li>Minimum members required for loan eligibility</li>
+                        <li>Maximum members to maintain group effectiveness</li>
+                        <li>Current setting allows 5-20 members per group</li>
+                    </ul>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="minimum_members" class="form-label required">Minimum Members</label>
+                        <input type="number" id="minimum_members" name="minimum_members" class="form-input" 
+                               value="5" min="3" max="10" required>
+                        <div class="form-help">Minimum members needed for loan eligibility</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="maximum_members" class="form-label required">Maximum Members</label>
+                        <input type="number" id="maximum_members" name="maximum_members" class="form-input" 
+                               value="20" min="10" max="50" required>
+                        <div class="form-help">Maximum group size for effective management</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Group Members Selection -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-users-cog"></i> Group Members
+                </h3>
+                
+                <div class="info-box">
+                    <h4>Member Selection:</h4>
+                    <ul>
+                        <li>Select existing registered borrowers to join this group</li>
+                        <li>Each member must be an active borrower in the system</li>
+                        <li>Members can only belong to one group at a time</li>
+                        <li>You can add more members later after group registration</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group">
+                    <label for="selected_members" class="form-label">Select Group Members</label>
+                    <select id="selected_members" name="selected_members" class="form-select" multiple size="8">
+                        {% for borrower in available_borrowers %}
+                        <option value="{{ borrower.id }}">
+                            {{ borrower.get_full_name }} ({{ borrower.borrower_id }}) - {{ borrower.phone_number }} - {{ borrower.branch }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-help">Hold Ctrl (Cmd on Mac) to select multiple members. You can add more members later.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="number_of_members" class="form-label required">Number of Members</label>
+                    <input type="number" id="number_of_members" name="number_of_members" class="form-input" 
+                           value="0" min="0" readonly>
+                    <div class="form-help">This will update automatically as you select members above</div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'borrowers:group_list' %}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">Register Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('groupForm').addEventListener('submit', function(e) {
+        const minMembers = parseInt(document.getElementById('minimum_members').value);
+        const maxMembers = parseInt(document.getElementById('maximum_members').value);
+        const selectedMembers = document.getElementById('selected_members').selectedOptions.length;
+        
+        // Validate member limits
+        if (minMembers >= maxMembers) {
+            e.preventDefault();
+            alert('Maximum members must be greater than minimum members.');
+            return;
+        }
+        
+        if (minMembers < 3) {
+            e.preventDefault();
+            alert('Minimum members cannot be less than 3.');
+            return;
+        }
+        
+        if (maxMembers > 50) {
+            e.preventDefault();
+            alert('Maximum members cannot exceed 50 for effective group management.');
+            return;
+        }
+        
+        // Validate group leader is selected
+        const groupLeader = document.getElementById('group_leader').value;
+        if (!groupLeader) {
+            e.preventDefault();
+            alert('Please select a group leader.');
+            return;
+        }
+        
+        // Check if group leader is in selected members
+        const selectedMemberIds = Array.from(document.getElementById('selected_members').selectedOptions).map(option => option.value);
+        if (selectedMembers > 0 && !selectedMemberIds.includes(groupLeader)) {
+            e.preventDefault();
+            alert('The group leader must be included in the selected members.');
+            return;
+        }
+    });
+    
+    // Auto-adjust maximum when minimum changes
+    document.getElementById('minimum_members').addEventListener('change', function() {
+        const minValue = parseInt(this.value);
+        const maxInput = document.getElementById('maximum_members');
+        const maxValue = parseInt(maxInput.value);
+        
+        if (maxValue <= minValue) {
+            maxInput.value = minValue + 5;
+        }
+    });
+    
+    // Auto-capitalize group name
+    document.getElementById('group_name').addEventListener('input', function() {
+        this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+    });
+    
+    // Update member count when selection changes
+    document.getElementById('selected_members').addEventListener('change', function() {
+        const selectedCount = this.selectedOptions.length;
+        document.getElementById('number_of_members').value = selectedCount;
+        
+        // Update validation feedback
+        const minMembers = parseInt(document.getElementById('minimum_members').value);
+        const maxMembers = parseInt(document.getElementById('maximum_members').value);
+        const countInput = document.getElementById('number_of_members');
+        
+        if (selectedCount < minMembers) {
+            countInput.style.borderColor = '#ef4444';
+            countInput.nextElementSibling.textContent = `Need at least ${minMembers} members (currently ${selectedCount})`;
+            countInput.nextElementSibling.style.color = '#ef4444';
+        } else if (selectedCount > maxMembers) {
+            countInput.style.borderColor = '#ef4444';
+            countInput.nextElementSibling.textContent = `Too many members selected (max ${maxMembers}, currently ${selectedCount})`;
+            countInput.nextElementSibling.style.color = '#ef4444';
+        } else {
+            countInput.style.borderColor = '#10b981';
+            countInput.nextElementSibling.textContent = `${selectedCount} members selected (within range)`;
+            countInput.nextElementSibling.style.color = '#10b981';
+        }
+    });
+    
+    // Filter members in leader dropdown based on selection
+    document.getElementById('selected_members').addEventListener('change', function() {
+        const selectedMemberIds = Array.from(this.selectedOptions).map(option => option.value);
+        const leaderSelect = document.getElementById('group_leader');
+        
+        // Reset leader selection if current leader is not in selected members
+        if (selectedMemberIds.length > 0 && !selectedMemberIds.includes(leaderSelect.value)) {
+            leaderSelect.value = '';
+        }
+        
+        // Update leader dropdown options
+        Array.from(leaderSelect.options).forEach(option => {
+            if (option.value === '') return; // Keep the default option
+            
+            if (selectedMemberIds.length === 0) {
+                // If no members selected, show all borrowers
+                option.style.display = '';
+                option.disabled = false;
+            } else if (selectedMemberIds.includes(option.value)) {
+                // Show only selected members
+                option.style.display = '';
+                option.disabled = false;
+            } else {
+                // Hide non-selected members
+                option.style.display = 'none';
+                option.disabled = true;
+            }
+        });
+    });
+</script>
+{% endblock %}

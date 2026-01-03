@@ -1,0 +1,534 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}View Accounts - Golam Financial Services{% endblock %}
+{% block page_title %}Savings Accounts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accounts-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .filter-control {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .filter-control:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 2px rgba(43, 122, 118, 0.1);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-apply {
+        background: #2b7a76;
+        color: white;
+    }
+
+    .btn-apply:hover {
+        background: #1f5f5b;
+    }
+
+    .btn-clear {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-clear:hover {
+        background: #4b5563;
+    }
+
+    .accounts-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .table-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .table-stats {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th {
+        background: #f9fafb;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.875rem;
+    }
+
+    .table td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.875rem;
+    }
+
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .account-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .account-number {
+        font-weight: 600;
+        color: #2b7a76;
+        text-decoration: none;
+    }
+
+    .account-number:hover {
+        text-decoration: underline;
+    }
+
+    .borrower-name {
+        color: #374151;
+        font-weight: 500;
+    }
+
+    .borrower-phone {
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .balance-amount {
+        font-weight: 600;
+        font-family: monospace;
+        color: #16a34a;
+    }
+
+    .balance-currency {
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .status-closed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .status-suspended {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .product-name {
+        color: #7c3aed;
+        font-weight: 500;
+    }
+
+    .date-info {
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .pagination-wrapper {
+        padding: 1rem 1.5rem;
+        background: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .pagination a {
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    .pagination a:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+    }
+
+    .pagination .current {
+        background: #2b7a76;
+        color: white;
+        border: 1px solid #2b7a76;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+
+    .no-results i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .accounts-container {
+            margin: 1rem;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .table {
+            font-size: 0.8rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.5rem;
+        }
+
+        .pagination-wrapper {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="accounts-container">
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <div class="filters-title">
+                <i class="fas fa-filter"></i>
+                Filter Accounts
+            </div>
+        </div>
+
+        <form method="get" id="filterForm">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        class="filter-control" 
+                        placeholder="Account number, name, phone..."
+                        value="{{ search_query }}"
+                    >
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Product</label>
+                    <select name="product" class="filter-control">
+                        <option value="">All Products</option>
+                        {% for product in products %}
+                            <option value="{{ product.id }}" {% if product.id|stringformat:"s" == product_id %}selected{% endif %}>
+                                {{ product.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-control">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_label in account_statuses %}
+                            <option value="{{ status_code }}" {% if status_code == status_filter %}selected{% endif %}>
+                                {{ status_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Min Balance</label>
+                    <input 
+                        type="number" 
+                        name="min_balance" 
+                        class="filter-control" 
+                        placeholder="0.00"
+                        step="0.01"
+                        value="{{ min_balance }}"
+                    >
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Max Balance</label>
+                    <input 
+                        type="number" 
+                        name="max_balance" 
+                        class="filter-control" 
+                        placeholder="No limit"
+                        step="0.01"
+                        value="{{ max_balance }}"
+                    >
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter btn-apply">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'savings:view_accounts' %}" class="btn-filter btn-clear">
+                    <i class="fas fa-times"></i> Clear All
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="accounts-table">
+        <div class="table-header">
+            <div class="table-title">
+                <i class="fas fa-piggy-bank"></i>
+                Savings Accounts
+            </div>
+            <div class="table-stats">
+                {{ accounts.paginator.count }} account{{ accounts.paginator.count|pluralize }} found
+            </div>
+        </div>
+
+        {% if accounts %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Account Details</th>
+                        <th>Borrower Information</th>
+                        <th>Product</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Opened Date</th>
+                        <th>Last Transaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in accounts %}
+                        <tr>
+                            <td>
+                                <div class="account-info">
+                                    <a href="{% url 'savings:account_detail' account.id %}" class="account-number">
+                                        {{ account.account_number }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="account-info">
+                                    <div class="borrower-name">{{ account.borrower.get_full_name }}</div>
+                                    <div class="borrower-phone">{{ account.borrower.phone_number }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if account.savings_product %}
+                                    <div class="product-name">{{ account.savings_product.name }}</div>
+                                {% else %}
+                                    <span class="date-info">No product</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="balance-amount">₹{{ account.balance|floatformat:2 }}</div>
+                                {% if account.available_balance != account.balance %}
+                                    <div class="balance-currency">Available: ₹{{ account.available_balance|floatformat:2 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ account.status }}">
+                                    {{ account.get_status_display }}
+                                </span>
+                                {% if account.is_dormant %}
+                                    <div class="date-info">Dormant</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="date-info">{{ account.opened_date|date:"M d, Y" }}</div>
+                                <div class="date-info">by {{ account.opened_by.get_full_name }}</div>
+                            </td>
+                            <td>
+                                {% if account.last_transaction_date %}
+                                    <div class="date-info">{{ account.last_transaction_date|date:"M d, Y" }}</div>
+                                {% else %}
+                                    <div class="date-info">No transactions</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if accounts.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <div class="pagination">
+                        {% if accounts.has_previous %}
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">&laquo; First</a>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ accounts.previous_page_number }}">&lsaquo; Previous</a>
+                        {% endif %}
+
+                        <span class="current">
+                            Page {{ accounts.number }} of {{ accounts.paginator.num_pages }}
+                        </span>
+
+                        {% if accounts.has_next %}
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ accounts.next_page_number }}">Next &rsaquo;</a>
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ accounts.paginator.num_pages }}">Last &raquo;</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>No Accounts Found</h3>
+                <p>No savings accounts match your current filters.</p>
+                <a href="{% url 'savings:view_accounts' %}" class="btn-filter btn-clear" style="margin-top: 1rem;">
+                    Clear Filters
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form on filter changes (optional)
+    const filterInputs = document.querySelectorAll('#filterForm input, #filterForm select');
+    
+    filterInputs.forEach(input => {
+        if (input.type === 'text') {
+            let timeout;
+            input.addEventListener('input', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    // Auto-submit after 1 second of no typing
+                    // document.getElementById('filterForm').submit();
+                }, 1000);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

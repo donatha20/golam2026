@@ -1,0 +1,1 @@
+Payment received! ₹{{ amount|floatformat:0 }} for loan {{ loan_number }} on {{ payment_date|date:"M d, Y" }}. Remaining balance: ₹{{ remaining_balance|floatformat:0 }}. Ref: {{ payment_reference }}. Thank you! - {{ organization_name }}

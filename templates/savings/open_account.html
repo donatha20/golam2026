@@ -1,0 +1,444 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Open Savings Account - Golam Financial Services{% endblock %}
+{% block page_title %}Open New Savings Account{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e7570;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-control:focus {
+        outline: 0;
+        border-color: #1e7570;
+        box-shadow: 0 0 0 0.2rem rgba(30, 117, 112, 0.25);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background-color: white;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .form-select:focus {
+        outline: 0;
+        border-color: #1e7570;
+        box-shadow: 0 0 0 0.2rem rgba(30, 117, 112, 0.25);
+    }
+
+    .required {
+        color: #dc3545;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2d8a82 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #16635d 0%, #1e7570 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .info-card {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-title {
+        font-weight: 600;
+        color: #1e7570;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-text {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .borrower-info {
+        background: #e8f5f3;
+        border: 1px solid #1e7570;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .borrower-info.show {
+        display: block;
+    }
+
+    .borrower-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .borrower-detail {
+        text-align: center;
+    }
+
+    .borrower-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .borrower-value {
+        font-weight: 600;
+        color: #1e7570;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .button-group {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="post" id="openAccountForm">
+        {% csrf_token %}
+        
+        <!-- Borrower Selection -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-user me-2"></i>
+                Borrower Information
+            </h3>
+            
+            <div class="info-card">
+                <div class="info-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Account Opening Guidelines
+                </div>
+                <p class="info-text">
+                    Select an active borrower to open a new savings account. Only borrowers with active status can have new accounts opened.
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label for="borrower" class="form-label">
+                    Select Borrower <span class="required">*</span>
+                </label>
+                <select name="borrower" id="borrower" class="form-select" required>
+                    <option value="">-- Select Borrower --</option>
+                    {% for borrower in borrowers %}
+                        <option value="{{ borrower.id }}" 
+                                data-name="{{ borrower.get_full_name }}"
+                                data-phone="{{ borrower.phone_number }}"
+                                data-id="{{ borrower.borrower_id }}">
+                            {{ borrower.borrower_id }} - {{ borrower.get_full_name }} ({{ borrower.phone_number }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="borrower-info" id="borrowerInfo">
+                <div class="borrower-details">
+                    <div class="borrower-detail">
+                        <div class="borrower-label">Full Name</div>
+                        <div class="borrower-value" id="borrowerName">-</div>
+                    </div>
+                    <div class="borrower-detail">
+                        <div class="borrower-label">Borrower ID</div>
+                        <div class="borrower-value" id="borrowerId">-</div>
+                    </div>
+                    <div class="borrower-detail">
+                        <div class="borrower-label">Phone Number</div>
+                        <div class="borrower-value" id="borrowerPhone">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Details -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-piggy-bank me-2"></i>
+                Account Details
+            </h3>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="savings_product" class="form-label">
+                        Savings Product <span class="required">*</span>
+                    </label>
+                    <select name="savings_product" id="savings_product" class="form-select" required>
+                        <option value="">-- Select Product --</option>
+                        {% for product in products %}
+                            <option value="{{ product.id }}"
+                                    data-min-balance="{{ product.minimum_balance }}"
+                                    data-interest-rate="{{ product.annual_interest_rate }}"
+                                    data-description="{{ product.description }}">
+                                {{ product.name }} (Min: ₹{{ product.minimum_balance|floatformat:0 }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="initial_deposit" class="form-label">
+                        Initial Deposit Amount <span class="required">*</span>
+                    </label>
+                    <input type="number" 
+                           name="initial_deposit" 
+                           id="initial_deposit" 
+                           class="form-control" 
+                           step="0.01" 
+                           min="0" 
+                           placeholder="Enter initial deposit amount"
+                           required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="purpose" class="form-label">
+                    Purpose of Account
+                </label>
+                <select name="purpose" id="purpose" class="form-select">
+                    <option value="">-- Select Purpose --</option>
+                    <option value="general_savings">General Savings</option>
+                    <option value="emergency_fund">Emergency Fund</option>
+                    <option value="business_savings">Business Savings</option>
+                    <option value="loan_security">Loan Security</option>
+                    <option value="investment">Investment</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">
+                    Additional Notes
+                </label>
+                <textarea name="notes" 
+                          id="notes" 
+                          class="form-control" 
+                          rows="3" 
+                          placeholder="Enter any additional notes or comments"></textarea>
+            </div>
+        </div>
+
+        <!-- Product Information Display -->
+        <div class="form-section" id="productInfo" style="display: none;">
+            <h3 class="section-title">
+                <i class="fas fa-info-circle me-2"></i>
+                Product Information
+            </h3>
+            
+            <div class="info-card">
+                <div class="info-title" id="productName">Product Details</div>
+                <p class="info-text" id="productDescription">-</p>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <strong>Minimum Balance:</strong> ₹<span id="productMinBalance">0</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Interest Rate:</strong> <span id="productInterestRate">0</span>% per annum
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="button-group">
+            <a href="{% url 'savings:account_list' %}" class="btn-secondary">
+                <i class="fas fa-times me-2"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save me-2"></i>
+                Open Account
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const borrowerSelect = document.getElementById('borrower');
+    const borrowerInfo = document.getElementById('borrowerInfo');
+    const productSelect = document.getElementById('savings_product');
+    const productInfo = document.getElementById('productInfo');
+    const initialDepositInput = document.getElementById('initial_deposit');
+
+    // Handle borrower selection
+    borrowerSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            document.getElementById('borrowerName').textContent = selectedOption.dataset.name;
+            document.getElementById('borrowerId').textContent = selectedOption.dataset.id;
+            document.getElementById('borrowerPhone').textContent = selectedOption.dataset.phone;
+            borrowerInfo.classList.add('show');
+        } else {
+            borrowerInfo.classList.remove('show');
+        }
+    });
+
+    // Handle product selection
+    productSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            document.getElementById('productName').textContent = selectedOption.textContent;
+            document.getElementById('productDescription').textContent = selectedOption.dataset.description || 'No description available';
+            document.getElementById('productMinBalance').textContent = parseFloat(selectedOption.dataset.minBalance).toLocaleString();
+            document.getElementById('productInterestRate').textContent = selectedOption.dataset.interestRate;
+            
+            // Set minimum deposit amount
+            initialDepositInput.min = selectedOption.dataset.minBalance;
+            initialDepositInput.placeholder = `Minimum: ₹${parseFloat(selectedOption.dataset.minBalance).toLocaleString()}`;
+            
+            productInfo.style.display = 'block';
+        } else {
+            productInfo.style.display = 'none';
+            initialDepositInput.min = '0';
+            initialDepositInput.placeholder = 'Enter initial deposit amount';
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('openAccountForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        
+        // Disable submit button
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        // Here you would typically submit the form via AJAX
+        // For now, we'll just simulate the submission
+        setTimeout(() => {
+            alert('Account opening form submitted! (This is a simulation - actual form submission will be implemented with Django forms)');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save me-2"></i>Open Account';
+        }, 2000);
+    });
+
+    // Real-time validation for initial deposit
+    initialDepositInput.addEventListener('input', function() {
+        const minBalance = parseFloat(productSelect.options[productSelect.selectedIndex]?.dataset.minBalance || 0);
+        const currentValue = parseFloat(this.value || 0);
+        
+        if (minBalance > 0 && currentValue < minBalance) {
+            this.style.borderColor = '#dc3545';
+            this.setCustomValidity(`Minimum deposit amount is ₹${minBalance.toLocaleString()}`);
+        } else {
+            this.style.borderColor = '#d1d5db';
+            this.setCustomValidity('');
+        }
+    });
+});
+</script>
+{% endblock %}

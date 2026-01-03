@@ -1,0 +1,612 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Customer Portfolio - Golam Financial Services{% endblock %}
+{% block page_title %}Customer Loan Portfolio Summary{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .summary-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 120px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .summary-card:hover {
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.15);
+        transform: translateY(-2px);
+        border-color: #2b7a76;
+    }
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+    .summary-card:hover::before {
+        width: 6px;
+    }
+    .summary-card.customers::before {
+        background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+    }
+    .summary-card.active::before {
+        background: linear-gradient(180deg, #10b981 0%, #34d399 100%);
+    }
+    .summary-card.at-risk::before {
+        background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
+    }
+    .summary-card.defaulted::before {
+        background: linear-gradient(180deg, #ef4444 0%, #f87171 100%);
+    }
+    .summary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .summary-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    .summary-icon.customers { background: #eff6ff; color: #3b82f6; }
+    .summary-icon.active { background: #f0fdf4; color: #10b981; }
+    .summary-icon.at-risk { background: #fffbeb; color: #f59e0b; }
+    .summary-icon.defaulted { background: #fef2f2; color: #ef4444; }
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+    .summary-subtitle {
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: #64748b;
+    }
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .filter-input, .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    .portfolio-table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .table-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .table-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .portfolio-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .portfolio-table thead tr {
+        background-color: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .portfolio-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .portfolio-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    .portfolio-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .customer-name {
+        font-weight: 600;
+        color: #2b7a76;
+        cursor: pointer;
+    }
+    .customer-name:hover {
+        text-decoration: underline;
+    }
+    .customer-details {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .portfolio-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-end;
+    }
+    .metric-value {
+        font-weight: 600;
+    }
+    .metric-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    .risk-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .risk-low { background: #f0fdf4; color: #166534; }
+    .risk-medium { background: #fffbeb; color: #92400e; }
+    .risk-high { background: #fef2f2; color: #991b1b; }
+    .portfolio-progress {
+        width: 100%;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+    .progress-bar {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+    .progress-excellent { background: #10b981; }
+    .progress-good { background: #3b82f6; }
+    .progress-warning { background: #f59e0b; }
+    .progress-danger { background: #ef4444; }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #236b67;
+        transform: translateY(-1px);
+    }
+    .btn-outline {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    .btn-outline:hover {
+        background: #f9fafb;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+    .pagination {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    @media (max-width: 768px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        .table-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        .portfolio-table {
+            font-size: 0.8rem;
+        }
+        .portfolio-table th,
+        .portfolio-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-user-chart"></i>
+            Customer Portfolio
+        </h1>
+        <p class="page-subtitle">Comprehensive loan portfolio analysis by customer</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card customers">
+            <div class="summary-title">Total Customers</div>
+            <div class="summary-value">{{ total_customers|default:0 }}</div>
+            <div class="summary-subtitle">
+                <i class="fas fa-users"></i> Active borrowers
+            </div>
+        </div>
+
+        <div class="summary-card active">
+            <div class="summary-title">Active Portfolios</div>
+            <div class="summary-value">{{ active_portfolios|default:0 }}</div>
+            <div class="summary-subtitle">
+                <i class="fas fa-chart-line"></i> With outstanding loans
+            </div>
+        </div>
+
+        <div class="summary-card at-risk">
+            <div class="summary-title">At Risk</div>
+            <div class="summary-value">{{ at_risk_customers|default:0 }}</div>
+            <div class="summary-subtitle">
+                <i class="fas fa-exclamation-triangle"></i> PAR > 30 days
+            </div>
+        </div>
+
+        <div class="summary-card defaulted">
+            <div class="summary-title">Default Risk</div>
+            <div class="summary-value">{{ defaulted_customers|default:0 }}</div>
+            <div class="summary-subtitle">
+                <i class="fas fa-exclamation-circle"></i> High risk customers
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search Customer</label>
+                    <input type="text" name="search" value="{{ request.GET.search }}" 
+                           placeholder="Enter customer name..." class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Portfolio Status</label>
+                    <select name="status" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="at_risk" {% if request.GET.status == 'at_risk' %}selected{% endif %}>At Risk</option>
+                        <option value="defaulted" {% if request.GET.status == 'defaulted' %}selected{% endif %}>Defaulted</option>
+                        <option value="excellent" {% if request.GET.status == 'excellent' %}selected{% endif %}>Excellent</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Outstanding Range</label>
+                    <select name="outstanding_range" class="filter-select">
+                        <option value="">All Amounts</option>
+                        <option value="small" {% if request.GET.outstanding_range == 'small' %}selected{% endif %}>< TZS 100,000</option>
+                        <option value="medium" {% if request.GET.outstanding_range == 'medium' %}selected{% endif %}>TZS 100,000 - 500,000</option>
+                        <option value="large" {% if request.GET.outstanding_range == 'large' %}selected{% endif %}>TZS 500,000 - 1,000,000</option>
+                        <option value="xlarge" {% if request.GET.outstanding_range == 'xlarge' %}selected{% endif %}>> TZS 1,000,000</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select name="sort" class="filter-select">
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Customer Name</option>
+                        <option value="outstanding" {% if request.GET.sort == 'outstanding' %}selected{% endif %}>Outstanding Amount</option>
+                        <option value="loans_count" {% if request.GET.sort == 'loans_count' %}selected{% endif %}>Number of Loans</option>
+                        <option value="risk_score" {% if request.GET.sort == 'risk_score' %}selected{% endif %}>Risk Score</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="btn btn-outline">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Portfolio Table -->
+    <div class="portfolio-table-container">
+        <div class="table-header">
+            <h2 class="table-title">
+                <i class="fas fa-list"></i>
+                Customer Portfolios ({{ customers.count }})
+            </h2>
+            <div class="table-actions">
+                <a href="#" onclick="exportCustomerPortfolio()" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Export
+                </a>
+                <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary">
+                    <i class="fas fa-chart-bar"></i> View Loans
+                </a>
+            </div>
+        </div>
+
+        {% if customers %}
+        <table class="portfolio-table">
+            <thead>
+                <tr>
+                    <th>Customer Details</th>
+                    <th>Loan Portfolio</th>
+                    <th>Outstanding Balance</th>
+                    <th>Payment Performance</th>
+                    <th>Risk Assessment</th>
+                    <th>Last Activity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name" onclick="viewCustomerDetails('{{ customer.id }}')">
+                                {{ customer.get_full_name }}
+                            </span>
+                            <div class="customer-details">
+                                <div>{{ customer.phone_number }}</div>
+                                <div>ID: {{ customer.id_number }}</div>
+                                <div>Member since: {{ customer.created_at|date:"M Y" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="portfolio-metrics">
+                            <div class="metric-value">{{ customer.total_loans|default:0 }}</div>
+                            <div class="metric-label">Total Loans</div>
+                        </div>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">
+                            <div>Active: {{ customer.active_loans|default:0 }}</div>
+                            <div>Completed: {{ customer.completed_loans|default:0 }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="portfolio-metrics">
+                            <div class="metric-value">TZS {{ customer.outstanding_balance|floatformat:0|default:0 }}</div>
+                            <div class="metric-label">Outstanding</div>
+                        </div>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">
+                            <div>Principal: TZS {{ customer.outstanding_principal|floatformat:0|default:0 }}</div>
+                            <div>Interest: TZS {{ customer.outstanding_interest|floatformat:0|default:0 }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="portfolio-metrics">
+                            <div class="metric-value">{{ customer.payment_rate|default:0 }}%</div>
+                            <div class="metric-label">On-time Rate</div>
+                        </div>
+                        <div class="portfolio-progress">
+                            {% with payment_rate=customer.payment_rate|default_if_none:0 %}
+                            <div class="progress-bar {% if payment_rate >= 95 %}progress-excellent{% elif payment_rate >= 85 %}progress-good{% elif payment_rate >= 70 %}progress-warning{% else %}progress-danger{% endif %}" 
+                                 data-width="{{ payment_rate|floatformat:0 }}"></div>
+                            {% endwith %}
+                        </div>
+                        <div style="margin-top: 0.25rem; font-size: 0.8rem; color: #6b7280;">
+                            Missed: {{ customer.missed_payments|default:0 }} payments
+                        </div>
+                    </td>
+                    <td>
+                        <span class="risk-indicator {% if customer.risk_level == 'Low' %}risk-low{% elif customer.risk_level == 'Medium' %}risk-medium{% else %}risk-high{% endif %}">
+                            {{ customer.risk_level|default:"Low" }}
+                        </span>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">
+                            <div>Score: {{ customer.risk_score|default:0 }}/100</div>
+                            {% if customer.days_overdue > 0 %}
+                                <div class="text-danger">{{ customer.days_overdue }} days overdue</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem;">
+                            <div>{{ customer.last_payment_date|date:"M d, Y"|default:"No payments" }}</div>
+                            <div class="text-muted">{{ customer.last_activity_date|date:"M d, Y" }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                            <a href="{% url 'borrowers:borrower_detail' customer.id %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'loans:disbursed_loans' %}?borrower={{ customer.id }}" class="btn btn-primary" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-list"></i> Loans
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div>
+                Showing {{ customers.start_index }}-{{ customers.end_index }} of {{ customers.paginator.count }} customers
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                {% if customers.has_previous %}
+                    <a href="?page={{ customers.previous_page_number }}" class="btn btn-outline">Previous</a>
+                {% endif %}
+                
+                <span style="padding: 0.5rem 1rem;">
+                    Page {{ customers.number }} of {{ customers.paginator.num_pages }}
+                </span>
+                
+                {% if customers.has_next %}
+                    <a href="?page={{ customers.next_page_number }}" class="btn btn-outline">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No Customer Portfolios Found</h3>
+            <p>No customers match your current filter criteria.</p>
+            <a href="{% url 'borrowers:register_borrower' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Customer
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function viewCustomerDetails(customerId) {
+    window.location.href = `/borrowers/${customerId}/`;
+}
+
+function exportCustomerPortfolio() {
+    // Get table data
+    const table = document.querySelector('.portfolio-table');
+    if (!table) {
+        alert('No data to export');
+        return;
+    }
+    
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csv = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => {
+            // Clean text content and escape quotes
+            return '"' + cell.textContent.trim().replace(/"/g, '""') + '"';
+        }).join(',');
+    }).join('\n');
+
+    // Create and download CSV file
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customer_portfolio_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Add chart for portfolio distribution
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize progress bars with animation
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.getAttribute('data-width') || 0;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width + '%';
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit {{ borrower.get_full_name }} - Borrower{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'borrowers:borrower_list' %}">Borrowers</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'borrowers:borrower_detail' borrower.id %}">{{ borrower.get_full_name }}</a></li>
+    <li class="breadcrumb-item active">Edit</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2 text-primary-teal"></i>
+                    Edit Borrower: {{ borrower.get_full_name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-user me-2"></i>Personal Information
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.last_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.middle_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.gender|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.date_of_birth|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.marital_status|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.occupation|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.photo|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-phone me-2"></i>Contact Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.phone_number|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Identification -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-id-card me-2"></i>Identification
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.id_type|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.id_number|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.id_issue_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.id_expiry_date|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.house_number|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.street|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.ward|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.district|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.region|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Next of Kin -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-users me-2"></i>Next of Kin
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.next_of_kin_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.next_of_kin_relationship|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.next_of_kin_phone|as_crispy_field }}
+                        </div>
+                        <div class="col-md-12">
+                            {{ form.next_of_kin_address|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- System Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-cog me-2"></i>System Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.branch|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.registration_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-12">
+                            {{ form.notes|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'borrowers:borrower_detail' borrower.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary-teal">
+                                    <i class="fas fa-save me-1"></i>Update Borrower
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize date pickers
+    $('input[type="date"]').each(function() {
+        if (!$(this).val()) {
+            $(this).val('');
+        }
+    });
+});
+</script>
+{% endblock %}

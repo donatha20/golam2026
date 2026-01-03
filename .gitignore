@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.env/
+venv/
+ENV/
+env/
+.venv/
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+db.sqlite3
+
+# Media uploads
+/media/
+*.tar
+*.zip
+
+# Migrations (optional to ignore if you want clean history)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+# Uncomment the line below to ignore migration files themselves (NOT recommended for production)
+# **/migrations/*.py
+
+# Static and compiled files
+/staticfiles/
+/static/
+/build/
+/dist/
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db

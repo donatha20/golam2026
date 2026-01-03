@@ -1,0 +1,286 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}SMS Templates{% endblock %}
+{% block page_title %}SMS Templates{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt me-2 text-primary-teal"></i>
+                    SMS Templates
+                </h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'sms:send_sms' %}" class="btn btn-primary-teal btn-sm">
+                        <i class="fas fa-paper-plane me-1"></i>Send SMS
+                    </a>
+                    <a href="{% url 'sms:bulk_sms' %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-broadcast-tower me-1"></i>Bulk SMS
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Template Usage Statistics -->
+                {% if template_stats %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h6 class="text-primary-teal">Template Usage Statistics</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Template Name</th>
+                                        <th class="text-center">Usage Count</th>
+                                        <th class="text-center">Last Used</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in template_stats %}
+                                    <tr>
+                                        <td>
+                                            <span class="fw-bold">{{ stat.template_name|title }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ stat.count }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <small class="text-muted">Recently</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">Active</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Available Templates -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-primary-teal mb-3">Available SMS Templates</h6>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Loan Approval Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Loan Approval
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>loan_approval.txt</code><br>
+                                    <strong>Usage:</strong> Sent when a loan is approved
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"Congratulations John Doe! Your loan application LN001 for ₹50,000 has been approved at 12% for 24 months. Please visit our office for disbursement. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, loan_number, loan_amount, interest_rate, tenure</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('loan_approval')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Reminder Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-bell me-2"></i>
+                                    Payment Reminder
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>payment_reminder.txt</code><br>
+                                    <strong>Usage:</strong> Sent to remind borrowers of upcoming payments
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"Dear John Doe, your loan payment of ₹5,000 for loan LN001 is due on Jan 15, 2024. Please make payment to avoid late charges. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, outstanding_amount, loan_number, next_due_date</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('payment_reminder')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overdue Reminder Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Overdue Reminder
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>overdue_reminder.txt</code><br>
+                                    <strong>Usage:</strong> Sent for overdue loan payments
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"URGENT: Dear John Doe, your loan LN001 payment of ₹5,000 is 5 days overdue. Please contact us immediately or make payment to avoid further action. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, loan_number, outstanding_amount, days_overdue</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('overdue_reminder')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Confirmation Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-receipt me-2"></i>
+                                    Payment Confirmation
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>payment_confirmation.txt</code><br>
+                                    <strong>Usage:</strong> Sent after successful payment
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"Thank you John Doe! Payment of ₹5,000 for loan LN001 received on Jan 15, 2024. Remaining balance: ₹45,000. Ref: PAY001. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, amount, loan_number, payment_date, remaining_balance</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('payment_confirmation')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Disbursement Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    Loan Disbursement
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>loan_disbursement.txt</code><br>
+                                    <strong>Usage:</strong> Sent when loan amount is disbursed
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"Dear John Doe, your loan LN001 amount of ₹50,000 has been disbursed on Jan 10, 2024. First payment due: Jan 25, 2024. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, loan_number, disbursed_amount, disbursement_date</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('loan_disbursement')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Savings Transaction Template -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-dark">
+                            <div class="card-header bg-dark text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-piggy-bank me-2"></i>
+                                    Savings Transaction
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Template:</strong> <code>savings_transaction.txt</code><br>
+                                    <strong>Usage:</strong> Sent for savings account transactions
+                                </p>
+                                <div class="bg-light p-2 rounded mb-3">
+                                    <small class="text-muted">Sample Message:</small><br>
+                                    <em>"Dear John Doe, Deposit of ₹1,000 to account SAV001 successful on Jan 15, 2024. Current balance: ₹15,000. - Golam Financial"</em>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Variables: borrower_name, transaction_type, amount, account_number, balance</small>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewTemplate('savings_transaction')">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Guidelines -->
+                <div class="card mt-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Template Guidelines
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Template Variables</h6>
+                                <ul class="small">
+                                    <li><code>{{ "{{ borrower_name }}" }}</code> - Full name of the borrower</li>
+                                    <li><code>{{ "{{ loan_number }}" }}</code> - Loan reference number</li>
+                                    <li><code>{{ "{{ amount }}" }}</code> - Transaction amount</li>
+                                    <li><code>{{ "{{ organization_name }}" }}</code> - Your organization name</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Best Practices</h6>
+                                <ul class="small">
+                                    <li>Keep messages under 160 characters when possible</li>
+                                    <li>Always include organization name</li>
+                                    <li>Use clear, professional language</li>
+                                    <li>Include relevant reference numbers</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewTemplate(templateName) {
+    // This would show the actual template content
+    alert('Template: ' + templateName + '\n\nThis feature can be enhanced to show the actual template file content and allow editing.');
+}
+</script>
+{% endblock %}

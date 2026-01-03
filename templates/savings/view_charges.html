@@ -1,0 +1,696 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}View Charges - Golam Financial Services{% endblock %}
+{% block page_title %}View Withdraw/Service Charges{% endblock %}
+
+{% block extra_css %}
+<style>
+    .charges-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .title-text h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .title-text p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .charges-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .charge-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .charge-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .charge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .charge-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+
+    .charge-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .charge-details {
+        margin-bottom: 1rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .detail-label {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: #374151;
+        font-weight: 600;
+        font-family: monospace;
+    }
+
+    .amount-value {
+        color: #dc2626;
+        font-size: 1rem;
+    }
+
+    .percentage-value {
+        color: #2563eb;
+    }
+
+    .charge-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f9fafb;
+        border-radius: 4px;
+        border-left: 3px solid #e5e7eb;
+    }
+
+    .charge-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1f5f5b;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        color: white;
+        text-decoration: none;
+    }
+
+    .filters-section {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .filters-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #374151;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-control {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .summary-section {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #166534;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #166534;
+        margin-bottom: 0.25rem;
+        font-family: monospace;
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        color: #166534;
+        font-weight: 500;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+
+    .close {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #6b7280;
+        cursor: pointer;
+        border: none;
+        background: none;
+    }
+
+    .close:hover {
+        color: #374151;
+    }
+
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .charges-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .charge-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="charges-container">
+    <!-- Header -->
+    <div class="header-section">
+        <div class="header-title">
+            <div class="header-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="title-text">
+                <h1>Withdraw/Service Charges</h1>
+                <p>Manage withdrawal and service charges configuration</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Charge
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+        <div class="summary-title">
+            <i class="fas fa-chart-pie"></i>
+            Charges Overview
+        </div>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-number">{{ total_charges }}</div>
+                <div class="summary-label">Total Charges</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">{{ active_charges }}</div>
+                <div class="summary-label">Active</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">{{ inactive_charges }}</div>
+                <div class="summary-label">Inactive</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">{{ fixed_charges }}</div>
+                <div class="summary-label">Fixed Amount</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number">{{ percentage_charges }}</div>
+                <div class="summary-label">Percentage</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filters-title">Filter Charges</div>
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Charge Type</label>
+                    <select name="charge_type" class="filter-control">
+                        <option value="">All Types</option>
+                        <option value="withdrawal" {% if request.GET.charge_type == "withdrawal" %}selected{% endif %}>Withdrawal Charges</option>
+                        <option value="service" {% if request.GET.charge_type == "service" %}selected{% endif %}>Service Charges</option>
+                        <option value="maintenance" {% if request.GET.charge_type == "maintenance" %}selected{% endif %}>Maintenance Charges</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Calculation Method</label>
+                    <select name="method" class="filter-control">
+                        <option value="">All Methods</option>
+                        <option value="fixed" {% if request.GET.method == "fixed" %}selected{% endif %}>Fixed Amount</option>
+                        <option value="percentage" {% if request.GET.method == "percentage" %}selected{% endif %}>Percentage</option>
+                        <option value="tiered" {% if request.GET.method == "tiered" %}selected{% endif %}>Tiered</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-control">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" name="search" class="filter-control" placeholder="Search charges..." value="{{ request.GET.search }}">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'savings:view_charges' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Charges Grid -->
+    {% if charges %}
+        <div class="charges-grid">
+            {% for charge in charges %}
+            <div class="charge-card">
+                <div class="charge-header">
+                    <h3 class="charge-title">{{ charge.name }}</h3>
+                    <span class="charge-status {% if charge.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if charge.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+
+                <div class="charge-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Charge Type:</span>
+                        <span class="detail-value">{{ charge.get_charge_type_display }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Calculation Method:</span>
+                        <span class="detail-value">{{ charge.get_calculation_method_display }}</span>
+                    </div>
+                    {% if charge.calculation_method == 'fixed' %}
+                    <div class="detail-row">
+                        <span class="detail-label">Fixed Amount:</span>
+                        <span class="detail-value amount-value">₹{{ charge.fixed_amount|floatformat:2 }}</span>
+                    </div>
+                    {% elif charge.calculation_method == 'percentage' %}
+                    <div class="detail-row">
+                        <span class="detail-label">Percentage:</span>
+                        <span class="detail-value percentage-value">{{ charge.percentage_rate|floatformat:2 }}%</span>
+                    </div>
+                    {% if charge.minimum_amount %}
+                    <div class="detail-row">
+                        <span class="detail-label">Minimum:</span>
+                        <span class="detail-value amount-value">₹{{ charge.minimum_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    {% if charge.maximum_amount %}
+                    <div class="detail-row">
+                        <span class="detail-label">Maximum:</span>
+                        <span class="detail-value amount-value">₹{{ charge.maximum_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    <div class="detail-row">
+                        <span class="detail-label">Created:</span>
+                        <span class="detail-value">{{ charge.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+
+                {% if charge.description %}
+                <div class="charge-description">
+                    {{ charge.description }}
+                </div>
+                {% endif %}
+
+                <div class="charge-actions">
+                    <a href="{% url 'savings:set_charges' %}?edit={{ charge.id }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% if charge.is_active %}
+                        <button class="btn btn-sm btn-secondary" onclick="toggleCharge('{{ charge.id }}', 'deactivate')">
+                            <i class="fas fa-pause"></i> Deactivate
+                        </button>
+                    {% else %}
+                        <button class="btn btn-sm btn-primary" onclick="toggleCharge('{{ charge.id }}', 'activate')">
+                            <i class="fas fa-play"></i> Activate
+                        </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-danger" onclick="deleteCharge('{{ charge.id }}', '{{ charge.name|escapejs }}')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <h3>No Charges Configured</h3>
+            <p>No charges have been set up yet. Create your first charge configuration.</p>
+            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add First Charge
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+            <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p id="modalMessage">Are you sure you want to perform this action?</p>
+        </div>
+        <div class="modal-footer" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-danger" id="confirmButton" onclick="confirmAction()">Confirm</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentAction = null;
+let currentChargeId = null;
+
+function toggleCharge(chargeId, action) {
+    currentChargeId = chargeId;
+    currentAction = action;
+    
+    const actionText = action === 'activate' ? 'activate' : 'deactivate';
+    document.getElementById('modalTitle').textContent = `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Charge`;
+    document.getElementById('modalMessage').textContent = `Are you sure you want to ${actionText} this charge?`;
+    document.getElementById('confirmButton').textContent = actionText.charAt(0).toUpperCase() + actionText.slice(1);
+    document.getElementById('confirmButton').className = action === 'activate' ? 'btn btn-primary' : 'btn btn-secondary';
+    
+    document.getElementById('confirmModal').style.display = 'block';
+}
+
+function deleteCharge(chargeId, chargeName) {
+    currentChargeId = chargeId;
+    currentAction = 'delete';
+    
+    document.getElementById('modalTitle').textContent = 'Delete Charge';
+    document.getElementById('modalMessage').textContent = `Are you sure you want to delete "${chargeName}"? This action cannot be undone.`;
+    document.getElementById('confirmButton').textContent = 'Delete';
+    document.getElementById('confirmButton').className = 'btn btn-danger';
+    
+    document.getElementById('confirmModal').style.display = 'block';
+}
+
+function confirmAction() {
+    if (currentAction && currentChargeId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "savings:view_charges" %}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = currentAction;
+        
+        const chargeIdInput = document.createElement('input');
+        chargeIdInput.type = 'hidden';
+        chargeIdInput.name = 'charge_id';
+        chargeIdInput.value = currentChargeId;
+        
+        form.appendChild(csrfToken);
+        form.appendChild(actionInput);
+        form.appendChild(chargeIdInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    closeModal();
+}
+
+function closeModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    currentAction = null;
+    currentChargeId = null;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('confirmModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}
+
+// Auto-submit filters on change
+document.querySelectorAll('.filter-control').forEach(function(element) {
+    element.addEventListener('change', function() {
+        if (this.type === 'text') {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        } else {
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

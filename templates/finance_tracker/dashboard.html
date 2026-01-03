@@ -1,0 +1,614 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Finance Dashboard - Golam Financial Services{% endblock %}
+{% block page_title %}Financial Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.income {
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-card.expenditure {
+        border-left: 4px solid #dc2626;
+    }
+
+    .stat-card.balance {
+        border-left: 4px solid #2b7a76;
+    }
+
+    .stat-card.net {
+        border-left: 4px solid #7c3aed;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .stat-icon.income {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .stat-icon.expenditure {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    .stat-icon.balance {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+    }
+
+    .stat-icon.net {
+        background: rgba(124, 58, 237, 0.1);
+        color: #7c3aed;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-change.positive {
+        color: #16a34a;
+    }
+
+    .stat-change.negative {
+        color: #dc2626;
+    }
+
+    .stat-change.neutral {
+        color: #6b7280;
+    }
+
+    /* Charts Section */
+    .charts-section {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    /* Recent Transactions */
+    .recent-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .recent-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .recent-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .recent-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+    }
+
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-info {
+        flex: 1;
+    }
+
+    .recent-name {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .recent-date {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .recent-amount {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .recent-amount.income {
+        color: #16a34a;
+    }
+
+    .recent-amount.expenditure {
+        color: #dc2626;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    /* Top Categories */
+    .category-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .category-item:last-child {
+        border-bottom: none;
+    }
+
+    .category-name {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .category-amount {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .category-amount.income {
+        color: #16a34a;
+    }
+
+    .category-amount.expenditure {
+        color: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            margin: 1rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .recent-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'finance_tracker:add_income' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Add Income
+        </a>
+        <a href="{% url 'finance_tracker:add_expenditure' %}" class="btn-action">
+            <i class="fas fa-minus"></i> Add Expenditure
+        </a>
+        <a href="{% url 'finance_tracker:view_income' %}" class="btn-action secondary">
+            <i class="fas fa-list"></i> View Income
+        </a>
+        <a href="{% url 'finance_tracker:view_expenditures' %}" class="btn-action secondary">
+            <i class="fas fa-list"></i> View Expenditures
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card balance">
+            <div class="stat-header">
+                <div class="stat-title">Available Balance</div>
+                <div class="stat-icon balance">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ account_balances.total_liquid_assets|floatformat:0 }}</div>
+            <div class="stat-change neutral">
+                <i class="fas fa-info-circle"></i>
+                Cash + Bank Balance
+            </div>
+        </div>
+
+        <div class="stat-card income">
+            <div class="stat-header">
+                <div class="stat-title">Total Income</div>
+                <div class="stat-icon income">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ income_stats.this_month|floatformat:0 }}</div>
+            <div class="stat-change {% if income_stats.this_month >= income_stats.last_month %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-{% if income_stats.this_month >= income_stats.last_month %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                This Month
+            </div>
+        </div>
+
+        <div class="stat-card expenditure">
+            <div class="stat-header">
+                <div class="stat-title">Total Expenditure</div>
+                <div class="stat-icon expenditure">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ expenditure_stats.this_month|floatformat:0 }}</div>
+            <div class="stat-change {% if expenditure_stats.this_month <= expenditure_stats.last_month %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-{% if expenditure_stats.this_month <= expenditure_stats.last_month %}arrow-down{% else %}arrow-up{% endif %}"></i>
+                This Month
+            </div>
+        </div>
+
+        <div class="stat-card net">
+            <div class="stat-header">
+                <div class="stat-title">Net Income</div>
+                <div class="stat-icon net">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ net_income.this_month|floatformat:0 }}</div>
+            <div class="stat-change {% if net_income.this_month >= 0 %}positive{% else %}negative{% endif %}">
+                <i class="fas fa-{% if net_income.this_month >= 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                {% if net_income.this_month >= 0 %}Profit{% else %}Loss{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="fas fa-chart-bar"></i>
+                Monthly Income vs Expenditure
+            </div>
+            <div class="chart-container">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-title">
+                <i class="fas fa-chart-pie"></i>
+                Account Balance Breakdown
+            </div>
+            <div class="chart-container">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="recent-section">
+        <div class="recent-card">
+            <div class="recent-title">
+                <span><i class="fas fa-arrow-up"></i> Recent Income</span>
+                <a href="{% url 'finance_tracker:view_income' %}" class="btn-action secondary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">View All</a>
+            </div>
+            <div class="recent-list">
+                {% if recent_income %}
+                    {% for income in recent_income %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">{{ income.get_source_display }}</div>
+                                <div class="recent-date">{{ income.income_date|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="recent-amount income">₹{{ income.amount|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No income records yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="recent-card">
+            <div class="recent-title">
+                <span><i class="fas fa-arrow-down"></i> Recent Expenditures</span>
+                <a href="{% url 'finance_tracker:view_expenditures' %}" class="btn-action secondary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">View All</a>
+            </div>
+            <div class="recent-list">
+                {% if recent_expenditures %}
+                    {% for expenditure in recent_expenditures %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">{{ expenditure.get_expenditure_type_display }}</div>
+                                <div class="recent-date">{{ expenditure.expenditure_date|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="recent-amount expenditure">₹{{ expenditure.amount|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No expenditure records yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Categories -->
+    <div class="recent-section">
+        <div class="recent-card">
+            <div class="recent-title">
+                <span><i class="fas fa-tags"></i> Top Income Categories</span>
+            </div>
+            <div>
+                {% if top_income_categories %}
+                    {% for category in top_income_categories %}
+                        <div class="category-item">
+                            <div class="category-name">{{ category.category__name|default:"Uncategorized" }}</div>
+                            <div class="category-amount income">₹{{ category.total|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <p>No categories yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="recent-card">
+            <div class="recent-title">
+                <span><i class="fas fa-tags"></i> Top Expenditure Categories</span>
+            </div>
+            <div>
+                {% if top_expenditure_categories %}
+                    {% for category in top_expenditure_categories %}
+                        <div class="category-item">
+                            <div class="category-name">{{ category.category__name|default:"Uncategorized" }}</div>
+                            <div class="category-amount expenditure">₹{{ category.total|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <p>No categories yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Fetch financial data for charts
+    fetch('{% url "finance_tracker:financial_summary_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            // Monthly Income vs Expenditure Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: data.monthly_data.map(item => {
+                        const date = new Date(item.month + '-01');
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }),
+                    datasets: [{
+                        label: 'Income',
+                        data: data.monthly_data.map(item => item.income),
+                        borderColor: '#16a34a',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Expenditure',
+                        data: data.monthly_data.map(item => item.expenditure),
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Balance Breakdown Chart
+            const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+            new Chart(balanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'Bank'],
+                    datasets: [{
+                        data: [data.account_balances.cash_balance, data.account_balances.bank_balance],
+                        backgroundColor: ['#16a34a', '#2b7a76'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ₹' + context.parsed.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching financial data:', error);
+        });
+</script>
+{% endblock %}

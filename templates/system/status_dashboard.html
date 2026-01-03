@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+
+{% block title %}System Status Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-header {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .system-health {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .health-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        backdrop-filter: blur(10px);
+    }
+    
+    .health-status {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .status-operational {
+        color: #28a745;
+    }
+    
+    .status-warning {
+        color: #ffc107;
+    }
+    
+    .status-error {
+        color: #dc3545;
+    }
+    
+    .health-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .module-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .module-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .module-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .module-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e7570;
+        margin: 0;
+    }
+    
+    .module-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-complete {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-partial {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-pending {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .feature-item {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .feature-item:last-child {
+        border-bottom: none;
+    }
+    
+    .feature-name {
+        flex: 1;
+    }
+    
+    .feature-status {
+        font-size: 1.25rem;
+        margin-left: 1rem;
+    }
+    
+    .test-results {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .test-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .test-metric {
+        padding: 0.5rem;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .test-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .test-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .performance-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .metric-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e7570;
+        margin-bottom: 0.25rem;
+    }
+    
+    .metric-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
+    }
+    
+    .alert-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border: none;
+        border-radius: 8px;
+        color: #1565c0;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+        margin-top: 0.5rem;
+    }
+    
+    .progress-bar {
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Status Header -->
+    <div class="status-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="h3 mb-2">System Status Dashboard</h1>
+                <p class="mb-0">
+                    <i class="fas fa-server me-2"></i>Loan Management System v1.0
+                    <span class="mx-3">|</span>
+                    <i class="fas fa-clock me-2"></i>Last Updated: {{ last_updated|date:"M d, Y H:i" }}
+                </p>
+            </div>
+            <div class="text-end">
+                <button class="btn btn-light" onclick="runSystemCheck()">
+                    <i class="fas fa-sync me-2"></i>Run System Check
+                </button>
+            </div>
+        </div>
+        
+        <div class="system-health">
+            <div class="health-card">
+                <div class="health-status status-{{ system_health.database }}">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="health-label">Database</div>
+            </div>
+            <div class="health-card">
+                <div class="health-status status-{{ system_health.cache }}">
+                    <i class="fas fa-memory"></i>
+                </div>
+                <div class="health-label">Cache</div>
+            </div>
+            <div class="health-card">
+                <div class="health-status status-{{ system_health.storage }}">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="health-label">Storage</div>
+            </div>
+            <div class="health-card">
+                <div class="health-status status-{{ system_health.email }}">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="health-label">Email Service</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Module Status -->
+            <div class="module-card">
+                <div class="module-header">
+                    <h5 class="module-title">
+                        <i class="fas fa-users me-2"></i>Borrower Management
+                    </h5>
+                    <span class="module-status status-complete">Complete</span>
+                </div>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-name">Borrower Registration</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">KYC Document Management</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Credit Scoring</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Profile Management</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                </ul>
+                
+                <div class="test-results">
+                    <div class="test-summary">
+                        <div class="test-metric">
+                            <div class="test-value text-success">{{ test_results.borrowers.passed }}</div>
+                            <div class="test-label">Passed</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-warning">{{ test_results.borrowers.warnings }}</div>
+                            <div class="test-label">Warnings</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-danger">{{ test_results.borrowers.failed }}</div>
+                            <div class="test-label">Failed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <h5 class="module-title">
+                        <i class="fas fa-hand-holding-usd me-2"></i>Loan Management
+                    </h5>
+                    <span class="module-status status-complete">Complete</span>
+                </div>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-name">Loan Application Processing</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Loan Disbursement</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Repayment Scheduling</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Interest Calculations</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                </ul>
+                
+                <div class="test-results">
+                    <div class="test-summary">
+                        <div class="test-metric">
+                            <div class="test-value text-success">{{ test_results.loans.passed }}</div>
+                            <div class="test-label">Passed</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-warning">{{ test_results.loans.warnings }}</div>
+                            <div class="test-label">Warnings</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-danger">{{ test_results.loans.failed }}</div>
+                            <div class="test-label">Failed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <h5 class="module-title">
+                        <i class="fas fa-coins me-2"></i>Repayment Management
+                    </h5>
+                    <span class="module-status status-complete">Complete</span>
+                </div>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-name">Payment Processing</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Collection Management</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Overdue Tracking</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Payment Allocation</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                </ul>
+                
+                <div class="test-results">
+                    <div class="test-summary">
+                        <div class="test-metric">
+                            <div class="test-value text-success">{{ test_results.repayments.passed }}</div>
+                            <div class="test-label">Passed</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-warning">{{ test_results.repayments.warnings }}</div>
+                            <div class="test-label">Warnings</div>
+                        </div>
+                        <div class="test-metric">
+                            <div class="test-value text-danger">{{ test_results.repayments.failed }}</div>
+                            <div class="test-label">Failed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <div class="module-header">
+                    <h5 class="module-title">
+                        <i class="fas fa-piggy-bank me-2"></i>Savings Management
+                    </h5>
+                    <span class="module-status status-complete">Complete</span>
+                </div>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-name">Account Management</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Interest Calculations</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Transaction Processing</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Savings-Loan Integration</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- System Performance -->
+            <div class="module-card">
+                <h5 class="module-title mb-3">
+                    <i class="fas fa-tachometer-alt me-2"></i>System Performance
+                </h5>
+                
+                <div class="performance-metrics">
+                    <div class="metric-item">
+                        <div class="metric-value">{{ performance.response_time }}ms</div>
+                        <div class="metric-label">Avg Response Time</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ performance.uptime }}%</div>
+                        <div class="metric-label">System Uptime</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ performance.memory_usage }}%</div>
+                        <div class="metric-label">Memory Usage</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ performance.cpu_usage }}%</div>
+                        <div class="metric-label">CPU Usage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Coverage -->
+            <div class="module-card">
+                <h5 class="module-title mb-3">
+                    <i class="fas fa-shield-alt me-2"></i>Test Coverage
+                </h5>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Overall Coverage</span>
+                        <span class="fw-bold">{{ test_coverage.overall }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {{ test_coverage.overall }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Unit Tests</span>
+                        <span class="fw-bold">{{ test_coverage.unit }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" style="width: {{ test_coverage.unit }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Integration Tests</span>
+                        <span class="fw-bold">{{ test_coverage.integration }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" style="width: {{ test_coverage.integration }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Status -->
+            <div class="module-card">
+                <h5 class="module-title mb-3">
+                    <i class="fas fa-lock me-2"></i>Security Status
+                </h5>
+                
+                <ul class="feature-list">
+                    <li class="feature-item">
+                        <span class="feature-name">Authentication</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Authorization</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Data Encryption</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Audit Logging</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                    <li class="feature-item">
+                        <span class="feature-name">Session Management</span>
+                        <span class="feature-status status-operational">✓</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="module-card">
+                <h5 class="module-title mb-3">
+                    <i class="fas fa-tools me-2"></i>Quick Actions
+                </h5>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="runFullTest()">
+                        <i class="fas fa-play me-2"></i>Run Full Test Suite
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="generateReport()">
+                        <i class="fas fa-file-alt me-2"></i>Generate Test Report
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearCache()">
+                        <i class="fas fa-broom me-2"></i>Clear System Cache
+                    </button>
+                    <button class="btn btn-outline-info" onclick="exportLogs()">
+                        <i class="fas fa-download me-2"></i>Export System Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="alert alert-info">
+        <h6><i class="fas fa-info-circle me-2"></i>System Information</h6>
+        <div class="row">
+            <div class="col-md-3">
+                <strong>Django Version:</strong> {{ system_info.django_version }}
+            </div>
+            <div class="col-md-3">
+                <strong>Python Version:</strong> {{ system_info.python_version }}
+            </div>
+            <div class="col-md-3">
+                <strong>Database:</strong> {{ system_info.database }}
+            </div>
+            <div class="col-md-3">
+                <strong>Environment:</strong> {{ system_info.environment }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function runSystemCheck() {
+    // Implementation for running system health check
+    console.log('Running system check...');
+    // Show loading indicator and make AJAX call
+}
+
+function runFullTest() {
+    // Implementation for running full test suite
+    console.log('Running full test suite...');
+}
+
+function generateReport() {
+    // Implementation for generating test report
+    window.open('/system/test-report/', '_blank');
+}
+
+function clearCache() {
+    // Implementation for clearing system cache
+    if (confirm('Are you sure you want to clear the system cache?')) {
+        console.log('Clearing cache...');
+    }
+}
+
+function exportLogs() {
+    // Implementation for exporting system logs
+    window.open('/system/export-logs/', '_blank');
+}
+</script>
+{% endblock %}

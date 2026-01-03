@@ -1,0 +1,375 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Outstanding Balances - Golam Financial Services{% endblock %}
+
+{% block page_title %}Outstanding Balances{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .balances-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1400px;
+        width: 100%;
+    }
+
+    .balances-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .balances-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .balances-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .balances-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+    
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-current {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    .status-critical {
+        background: rgba(127, 29, 29, 0.1);
+        color: #7f1d1d;
+    }
+    
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        border-left: 4px solid #2b7a76;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+    
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    /* Info Section */
+    .info-section {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-message {
+        color: #78350f;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Info Section -->
+    <div class="info-section">
+        <h2 class="info-title">
+            <i class="fas fa-balance-scale"></i>
+            Outstanding Loan Balances
+        </h2>
+        <p class="info-message">
+            Monitor all outstanding loan balances including principal, interest, penalties, and fees. Track overdue amounts and payment schedules.
+        </p>
+    </div>
+    
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'repayments:record_repayment' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus-circle"></i> Record Payment
+            </a>
+            <a href="{% url 'repayments:overdue_payments' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-exclamation-triangle"></i> Overdue Payments
+            </a>
+            <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_stats.count|default:0 }}</div>
+            <div class="stat-label">Total Loans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_stats.total_outstanding|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Outstanding</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_stats.total_principal|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Principal Outstanding</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_stats.total_interest|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Interest Outstanding</div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ balances|length|default:0 }} outstanding balances
+            </div>
+            <div class="table-actions">
+                <form method="GET" class="d-flex gap-2">
+                    <input type="text" name="search" class="search-input" placeholder="Search loans..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+        
+        <table class="table balances-table" id="balances-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Borrower</th>
+                    <th>Principal Outstanding</th>
+                    <th>Interest Outstanding</th>
+                    <th>Penalty Outstanding</th>
+                    <th>Total Outstanding</th>
+                    <th>Days Overdue</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for balance in balances %}
+                <tr>
+                    <td>
+                        <div class="loan-number">{{ balance.loan.loan_number }}</div>
+                    </td>
+                    <td>
+                        <div class="borrower-full-name">{{ balance.loan.borrower.get_full_name }}</div>
+                        <div class="borrower-id">ID: {{ balance.loan.borrower.borrower_id }}</div>
+                    </td>
+                    <td class="text-end">${{ balance.principal_outstanding|floatformat:2 }}</td>
+                    <td class="text-end">${{ balance.interest_outstanding|floatformat:2 }}</td>
+                    <td class="text-end">${{ balance.penalty_outstanding|floatformat:2 }}</td>
+                    <td class="text-end"><strong>${{ balance.total_outstanding|floatformat:2 }}</strong></td>
+                    <td class="text-center">
+                        {% if balance.days_overdue > 0 %}
+                            {{ balance.days_overdue }} days
+                        {% else %}
+                            <span class="text-muted">Current</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if balance.days_overdue > 90 %}
+                            <span class="status-badge status-critical">Critical</span>
+                        {% elif balance.days_overdue > 0 %}
+                            <span class="status-badge status-overdue">Overdue</span>
+                        {% else %}
+                            <span class="status-badge status-current">Current</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'repayments:loan_repayments' balance.loan.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'repayments:record_repayment' %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-money-bill"></i> Pay
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-2x mb-2" style="color: #16a34a;"></i><br>
+                        No outstanding balances found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if balances.has_other_pages %}
+    <div class="d-flex justify-content-center mt-3">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if balances.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ balances.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ balances.number }} of {{ balances.paginator.num_pages }}</span>
+                </li>
+                
+                {% if balances.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ balances.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('balances-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'outstanding_balances.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

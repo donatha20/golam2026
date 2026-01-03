@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Golam Financial Services</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: #666666;
+            background: #eaeff4;
+        }
+
+        .wrapper {
+            margin: 0 auto;
+            width: 100%;
+            max-width: 1140px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            display: flex;
+            background: #ffffff;
+            box-shadow: 0 0 5px #999999;
+        }
+
+        .login .col-left,
+        .login .col-right {
+            padding: 30px;
+            display: flex;
+        }
+
+        .login .col-left {
+            width: 45%;
+            background: linear-gradient(135deg, #1e7570 0%, #2a8a85 50%, #4a9b96 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login .col-right {
+            padding: 60px 40px;
+            width: 55%;
+            background: white;
+        }
+
+        @media(max-width: 575px) {
+            .login .container {
+                flex-direction: column;
+                box-shadow: none;
+            }
+            .login .col-left,
+            .login .col-right {
+                width: 100%;
+                margin: 0;
+                clip-path: none;
+            }
+            .login .col-right {
+                padding: 30px;
+            }
+        }
+
+        .login .login-text {
+            position: relative;
+            width: 100%;
+            color: #ffffff;
+        }
+
+        .login .login-text h2 {
+            margin: 0 0 15px 0;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .login .login-text p {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 22px;
+        }
+
+        .login .login-text .btn {
+            display: inline-block;
+            font-family: 'Poppins';
+            padding: 7px 20px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            text-decoration: none;
+            border-radius: 30px;
+            color: #ffffff;
+            outline: none;
+            border: 1px solid #ffffff;
+            box-shadow: inset 0 0 0 0 #ffffff;
+            transition: .3s;
+        }
+
+        .login .login-text .btn:hover {
+            color: #1e7570;
+            box-shadow: inset 150px 0 0 0 #ffffff;
+        }
+
+        .login .login-form {
+            position: relative;
+            width: 100%;
+        }
+
+        .login .login-form h2 {
+            margin: 0 0 15px 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .login .login-form p {
+            margin: 0 0 10px 0;
+            text-align: left;
+            color: #666666;
+            font-size: 15px;
+        }
+
+        .login .login-form p:last-child {
+            margin: 0;
+            padding-top: 3px;
+        }
+
+        .login .login-form p a {
+            color: #1e7570;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .login .login-form label {
+            display: block;
+            width: 100%;
+            margin-bottom: 2px;
+            letter-spacing: .5px;
+        }
+
+        .login .login-form label span {
+            color: #c7392c;
+            padding-left: 2px;
+        }
+
+        .login .login-form input {
+            display: block;
+            width: 100%;
+            height: 35px;
+            padding: 0 10px;
+            outline: none;
+            border: 1px solid #cccccc;
+            border-radius: 30px;
+        }
+
+        .login .login-form input:focus {
+            border-color: #1e7570;
+            box-shadow: 0 0 0 3px rgba(30, 117, 112, 0.1);
+        }
+
+        .login .login-form button,
+        .login .login-form input[type=submit] {
+            display: inline-block;
+            width: 100%;
+            height: 45px;
+            margin-top: 15px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #1e7570, #4a9b96);
+            border: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .login .login-form button:hover,
+        .login .login-form input[type=submit]:hover {
+            background: linear-gradient(135deg, #165d59, #3a8b86);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 117, 112, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper login">
+        <div class="container">
+            <div class="col-left">
+                <div class="login-text">
+                    <h2>Welcome!</h2>
+                    <p>Access Golam Financial Services<br>Management System</p>
+                    <a href="{% url 'register' %}" class="btn">Create Account</a>
+                </div>
+            </div>
+
+            <div class="col-right">
+                <div class="login-form">
+                    <h2>Staff Login</h2>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p style="color: {% if message.tags == 'success' %}#28a745{% else %}#c7392c{% endif %}; margin-bottom: 15px;">
+                                {{ message }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if form.errors %}
+                        <p style="color: #c7392c; margin-bottom: 15px;">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <label for="{{ form.username.id_for_label }}">Username <span>*</span></label>
+                        <input type="text"
+                               id="{{ form.username.id_for_label }}"
+                               name="{{ form.username.name }}"
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="Enter your username"
+                               required>
+
+                        <label for="{{ form.password.id_for_label }}">Password <span>*</span></label>
+                        <input type="password"
+                               id="{{ form.password.id_for_label }}"
+                               name="{{ form.password.name }}"
+                               placeholder="Enter your password"
+                               required>
+
+                        <input type="submit" value="Sign In">
+                    </form>
+
+                    <p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+                    <p style="margin-top: 20px; font-size: 12px; color: #1e7570;">
+                        <i class="fas fa-map-marker-alt"></i> Nanenane - Morogoro, Tanzania
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus username field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('{{ form.username.id_for_label }}').focus();
+        });
+    </script>
+</body>
+</html>

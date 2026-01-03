@@ -1,0 +1,1 @@
+Congratulations {{ borrower_name }}! Your loan application {{ loan_number }} for ₹{{ loan_amount|floatformat:0 }} has been approved at {{ interest_rate }}% for {{ tenure }} months. Please visit our office for disbursement. - {{ organization_name }}

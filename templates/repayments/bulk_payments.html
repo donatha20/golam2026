@@ -1,0 +1,550 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Bulk Payments - Golam Financial Services{% endblock %}
+
+{% block page_title %}Bulk Payments{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bulk-payment-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: #f9fafb;
+    }
+    
+    .upload-area:hover {
+        border-color: #1e7570;
+        background: rgba(30, 117, 112, 0.05);
+    }
+    
+    .upload-area.dragover {
+        border-color: #1e7570;
+        background: rgba(30, 117, 112, 0.1);
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-preview-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table thead th {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600;
+        padding: 1rem;
+    }
+    
+    .validation-status {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-valid {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+    
+    .status-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .status-warning {
+        background: rgba(251, 191, 36, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+    
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .summary-card.valid {
+        border-left: 4px solid #16a34a;
+    }
+    
+    .summary-card.error {
+        border-left: 4px solid #dc2626;
+    }
+    
+    .summary-card.warning {
+        border-left: 4px solid #d97706;
+    }
+    
+    .summary-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+    
+    .progress-container {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .progress {
+        height: 1rem;
+        border-radius: 8px;
+        background: #f3f4f6;
+    }
+    
+    .progress-bar {
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+    }
+    
+    .alert-info {
+        background: linear-gradient(135deg, #e0f2fe 0%, #f3e5f5 100%);
+        border: 1px solid rgba(14, 165, 233, 0.2);
+        border-radius: 8px;
+        color: #0369a1;
+    }
+    
+    .sample-format {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.875rem;
+        white-space: pre-line;
+    }
+    
+    .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        color: #dc2626;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .processing-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .processing-content {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        max-width: 400px;
+    }
+    
+    .spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #1e7570;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-layer-group me-2 text-primary"></i>
+                Bulk Payments
+            </h1>
+            <p class="text-muted">Process multiple payments efficiently using CSV upload</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'repayments:record_repayment' %}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-2"></i>Single Payment
+            </a>
+            <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="alert alert-info mb-4">
+        <h6><i class="fas fa-info-circle me-2"></i>Instructions</h6>
+        <ol class="mb-0">
+            <li>Download the sample CSV template or prepare your file with the required format</li>
+            <li>Upload your CSV file using the area below</li>
+            <li>Review and validate the payment data</li>
+            <li>Process the bulk payments</li>
+        </ol>
+    </div>
+
+    <!-- Sample Format -->
+    <div class="bulk-payment-card">
+        <h5 class="mb-3">
+            <i class="fas fa-file-csv me-2"></i>
+            CSV Format Requirements
+        </h5>
+        <p class="text-muted mb-3">Your CSV file should have the following columns:</p>
+        <div class="sample-format">loan_id,amount,payment_date,payment_method,receipt_number,notes
+LN001,5000.00,2025-08-05,cash,RCP001,Regular monthly payment
+LN002,3000.00,2025-08-05,bank_transfer,RCP002,Partial payment
+LN003,10000.00,2025-08-05,mobile_money,RCP003,Full settlement</div>
+        <div class="mt-3">
+            <a href="{% url 'repayments:download_template' %}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Download Template
+            </a>
+        </div>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="bulk-payment-card">
+        <h5 class="mb-3">
+            <i class="fas fa-upload me-2"></i>
+            Upload Payment File
+        </h5>
+        
+        <form id="upload-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h5>Drag & Drop your CSV file here</h5>
+                <p class="text-muted">or click to browse files</p>
+                <input type="file" id="file-input" name="csv_file" accept=".csv" style="display: none;">
+                <div class="mt-3">
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                    </button>
+                </div>
+            </div>
+            
+            <div id="file-info" class="mt-3" style="display: none;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <i class="fas fa-file-csv me-2 text-success"></i>
+                        <span id="file-name"></span>
+                        <span class="text-muted">(<span id="file-size"></span>)</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>Validate & Preview
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment Preview (shown after upload) -->
+    {% if payments_preview %}
+    <div class="summary-cards">
+        <div class="summary-card valid">
+            <div class="summary-value text-success">{{ validation_summary.valid_count }}</div>
+            <div class="summary-label">Valid Payments</div>
+        </div>
+        <div class="summary-card error">
+            <div class="summary-value text-danger">{{ validation_summary.error_count }}</div>
+            <div class="summary-label">Errors</div>
+        </div>
+        <div class="summary-card warning">
+            <div class="summary-value text-warning">{{ validation_summary.warning_count }}</div>
+            <div class="summary-label">Warnings</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value text-primary">₹{{ validation_summary.total_amount|floatformat:2 }}</div>
+            <div class="summary-label">Total Amount</div>
+        </div>
+    </div>
+
+    <div class="payment-preview-table">
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Payment Preview ({{ payments_preview|length }} records)
+            </h5>
+            {% if validation_summary.valid_count > 0 %}
+            <form method="post" action="{% url 'repayments:process_bulk_payments' %}" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="validated_data" value="{{ validated_data_json }}">
+                <button type="submit" class="btn btn-success" onclick="showProcessingOverlay()">
+                    <i class="fas fa-play me-2"></i>Process {{ validation_summary.valid_count }} Payments
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Row</th>
+                        <th>Loan ID</th>
+                        <th>Borrower</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Issues</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments_preview %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ payment.loan_id }}</td>
+                        <td>{{ payment.borrower_name|default:"N/A" }}</td>
+                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                        <td>{{ payment.payment_method|title }}</td>
+                        <td>
+                            <span class="validation-status status-{{ payment.validation_status }}">
+                                {{ payment.validation_status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if payment.validation_errors %}
+                                {% for error in payment.validation_errors %}
+                                <div class="error-message">{{ error }}</div>
+                                {% endfor %}
+                            {% else %}
+                            <span class="text-success">
+                                <i class="fas fa-check-circle"></i> No issues
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Processing Progress (shown during bulk processing) -->
+    {% if processing_status %}
+    <div class="progress-container">
+        <h5 class="mb-3">
+            <i class="fas fa-cogs me-2"></i>
+            Processing Payments...
+        </h5>
+        <div class="progress mb-3">
+            <div class="progress-bar" style="width: {{ processing_status.progress_percent }}%"></div>
+        </div>
+        <div class="text-center">
+            <span>{{ processing_status.processed_count }} of {{ processing_status.total_count }} payments processed</span>
+        </div>
+        
+        {% if processing_status.completed %}
+        <div class="mt-3 text-center">
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Bulk payment processing completed!
+                <strong>{{ processing_status.success_count }}</strong> payments processed successfully,
+                <strong>{{ processing_status.failed_count }}</strong> failed.
+            </div>
+            <a href="{% url 'repayments:payment_list' %}" class="btn btn-primary">
+                <i class="fas fa-list me-2"></i>View Payment History
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div class="bulk-payment-card">
+        <h5 class="mb-3">
+            <i class="fas fa-question-circle me-2"></i>
+            Common Issues & Solutions
+        </h5>
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Invalid Loan ID</h6>
+                <p class="text-muted small">Ensure loan IDs exist in the system and are active.</p>
+                
+                <h6>Amount Validation</h6>
+                <p class="text-muted small">Amounts should be positive numbers with up to 2 decimal places.</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Date Format</h6>
+                <p class="text-muted small">Use YYYY-MM-DD format (e.g., 2025-08-05).</p>
+                
+                <h6>Payment Method</h6>
+                <p class="text-muted small">Valid methods: cash, bank_transfer, mobile_money, check, online.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Overlay -->
+<div class="processing-overlay" id="processing-overlay">
+    <div class="processing-content">
+        <div class="spinner"></div>
+        <h5>Processing Payments...</h5>
+        <p class="text-muted">Please wait while we process your bulk payments.</p>
+    </div>
+</div>
+
+<script>
+// File upload handling
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const fileInfo = document.getElementById('file-info');
+const fileName = document.getElementById('file-name');
+const fileSize = document.getElementById('file-size');
+
+// Drag and drop
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFile(files[0]);
+    }
+});
+
+uploadArea.addEventListener('click', () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+    }
+});
+
+function handleFile(file) {
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+        alert('Please select a CSV file.');
+        return;
+    }
+    
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+    fileInfo.style.display = 'block';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function clearFile() {
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+}
+
+function showProcessingOverlay() {
+    document.getElementById('processing-overlay').style.display = 'flex';
+}
+
+// Auto-refresh for processing status
+{% if processing_status and not processing_status.completed %}
+setTimeout(() => {
+    window.location.reload();
+}, 3000);
+{% endif %}
+</script>
+{% endblock %}

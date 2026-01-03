@@ -1,0 +1,474 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Overdue Payments - Golam Financial Services{% endblock %}
+
+{% block page_title %}Overdue Payments{% endblock %}
+
+{% block extra_css %}
+<style>
+    .overdue-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #dc2626;
+        transition: all 0.3s ease;
+    }
+    
+    .overdue-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .urgent-overdue {
+        border-left-color: #b91c1c;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.02) 100%);
+    }
+    
+    .days-overdue {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    .overdue-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #dc2626;
+    }
+    
+    .borrower-info {
+        margin-bottom: 1rem;
+    }
+    
+    .borrower-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+    
+    .loan-details {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border-left: 4px solid #dc2626;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .priority-high {
+        border-left-color: #b91c1c;
+    }
+    
+    .priority-medium {
+        border-left-color: #ea580c;
+    }
+    
+    .priority-low {
+        border-left-color: #eab308;
+    }
+    
+    .contact-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .contact-item i {
+        width: 20px;
+        color: #6b7280;
+        margin-right: 0.5rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #eab308 0%, #d97706 100%);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-warning:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #1e7570;
+        color: #1e7570;
+        background: transparent;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #1e7570;
+        color: white;
+    }
+    
+    .alert-danger {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        border-radius: 8px;
+        color: #dc2626;
+    }
+    
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .payment-history {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.875rem;
+    }
+    
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    
+    .history-date {
+        color: #6b7280;
+    }
+    
+    .history-amount {
+        font-weight: 600;
+        color: #16a34a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                Overdue Payments
+            </h1>
+            <p class="text-muted">Manage and follow up on overdue loan payments</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'repayments:record_repayment' %}" class="btn btn-danger">
+                <i class="fas fa-plus me-2"></i>Record Payment
+            </a>
+            <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert for Critical Overdue -->
+    {% if critical_overdue_count > 0 %}
+    <div class="alert alert-danger mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Urgent Attention Required:</strong> 
+        {{ critical_overdue_count }} loan{{ critical_overdue_count|pluralize }} 
+        {{ critical_overdue_count|pluralize:"is,are" }} overdue by more than 30 days.
+    </div>
+    {% endif %}
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card priority-high">
+            <div class="stat-value">{{ stats.total_overdue_loans }}</div>
+            <div class="stat-label">Total Overdue Loans</div>
+        </div>
+        <div class="stat-card priority-high">
+            <div class="stat-value">₹{{ stats.total_overdue_amount|floatformat:2 }}</div>
+            <div class="stat-label">Total Overdue Amount</div>
+        </div>
+        <div class="stat-card priority-medium">
+            <div class="stat-value">{{ stats.avg_days_overdue|floatformat:0 }}</div>
+            <div class="stat-label">Average Days Overdue</div>
+        </div>
+        <div class="stat-card priority-low">
+            <div class="stat-value">{{ stats.overdue_this_week }}</div>
+            <div class="stat-label">Became Overdue This Week</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <h5 class="mb-3">
+            <i class="fas fa-filter me-2"></i>Filters
+        </h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Days Overdue (Min)</label>
+                <input type="number" name="min_days" class="form-control" 
+                       value="{{ request.GET.min_days }}" placeholder="e.g., 7" min="1">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Days Overdue (Max)</label>
+                <input type="number" name="max_days" class="form-control" 
+                       value="{{ request.GET.max_days }}" placeholder="e.g., 30" min="1">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Amount Range (Min)</label>
+                <input type="number" name="min_amount" class="form-control" 
+                       value="{{ request.GET.min_amount }}" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High (30+ days)</option>
+                    <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium (15-29 days)</option>
+                    <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low (1-14 days)</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'repayments:overdue_payments' %}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Overdue Loans List -->
+    <div class="row">
+        {% for loan in overdue_loans %}
+        <div class="col-lg-6">
+            <div class="overdue-card {% if loan.days_overdue > 30 %}urgent-overdue{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="borrower-info">
+                        <div class="borrower-name">{{ loan.borrower.get_full_name }}</div>
+                        <div class="loan-details">
+                            <strong>Loan ID:</strong> {{ loan.loan_id }} |
+                            <strong>Type:</strong> {{ loan.get_loan_type_display }}
+                        </div>
+                    </div>
+                    <div class="days-overdue">
+                        {{ loan.days_overdue }} day{{ loan.days_overdue|pluralize }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <div class="overdue-amount">₹{{ loan.overdue_amount|floatformat:2 }}</div>
+                        <small class="text-muted">Overdue Amount</small>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="fs-5 fw-bold text-dark">₹{{ loan.outstanding_balance|floatformat:2 }}</div>
+                        <small class="text-muted">Total Outstanding</small>
+                    </div>
+                </div>
+                
+                <div class="loan-details mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Due Date:</strong> {{ loan.next_due_date|date:"M d, Y" }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Installment:</strong> ₹{{ loan.installment_amount|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="contact-info">
+                    <h6 class="mb-2">Contact Information</h6>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ loan.borrower.phone_number|default:"N/A" }}</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ loan.borrower.email|default:"N/A" }}</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ loan.borrower.address|default:"N/A" }}</span>
+                    </div>
+                </div>
+                
+                <!-- Recent Payment History -->
+                {% if loan.recent_payments %}
+                <div class="payment-history">
+                    <h6 class="mb-2">Recent Payments</h6>
+                    {% for payment in loan.recent_payments %}
+                    <div class="history-item">
+                        <span class="history-date">{{ payment.payment_date|date:"M d" }}</span>
+                        <span class="history-amount">₹{{ payment.amount|floatformat:2 }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons mt-3">
+                    <a href="{% url 'repayments:record_repayment' %}?loan={{ loan.id }}" 
+                       class="btn btn-danger btn-sm">
+                        <i class="fas fa-money-bill-wave me-1"></i>Record Payment
+                    </a>
+                    <a href="{% url 'loans:loan_detail' loan.id %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Loan
+                    </a>
+                    <a href="{% url 'repayments:repayment_schedule' loan.id %}" 
+                       class="btn btn-warning btn-sm">
+                        <i class="fas fa-calendar-alt me-1"></i>Schedule
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                            onclick="sendReminder({{ loan.id }})">
+                        <i class="fas fa-bell me-1"></i>Send Reminder
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="overdue-card text-center">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h5>No Overdue Payments!</h5>
+                <p class="text-muted">All loans are up to date with their payments.</p>
+                <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav aria-label="Overdue loans pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.min_days %}&min_days={{ request.GET.min_days }}{% endif %}{% if request.GET.max_days %}&max_days={{ request.GET.max_days }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.min_days %}&min_days={{ request.GET.min_days }}{% endif %}{% if request.GET.max_days %}&max_days={{ request.GET.max_days }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Previous</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.min_days %}&min_days={{ request.GET.min_days }}{% endif %}{% if request.GET.max_days %}&max_days={{ request.GET.max_days }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.min_days %}&min_days={{ request.GET.min_days }}{% endif %}{% if request.GET.max_days %}&max_days={{ request.GET.max_days }}{% endif %}{% if request.GET.min_amount %}&min_amount={{ request.GET.min_amount }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Last</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+function sendReminder(loanId) {
+    // This would integrate with your SMS service
+    fetch(`/repayments/api/send-reminder/${loanId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Reminder sent successfully!');
+        } else {
+            alert('Failed to send reminder: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send reminder');
+    });
+}
+</script>
+{% endblock %}

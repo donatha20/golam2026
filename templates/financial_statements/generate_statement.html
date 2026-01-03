@@ -1,0 +1,391 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Generate Financial Statement - Golam Financial Services{% endblock %}
+{% block page_title %}Generate Financial Statement{% endblock %}
+
+{% block extra_css %}
+<style>
+    .generate-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+    
+    .form-input, .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .form-checkbox {
+        margin-right: 0.5rem;
+    }
+    
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .form-error {
+        color: #ef4444;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+    
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .info-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-title {
+        font-weight: 600;
+        color: #0369a1;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-content {
+        color: #0369a1;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .statement-preview {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+    
+    .preview-title {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .preview-description {
+        color: #6b7280;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    @media (max-width: 768px) {
+        .generate-container {
+            margin: 1rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="generate-container">
+    <!-- Info Box -->
+    <div class="info-box">
+        <div class="info-title">
+            <i class="fas fa-info-circle"></i>
+            Financial Statement Generation
+        </div>
+        <div class="info-content">
+            Generate professional financial statements including Trial Balance, Balance Sheet, Income Statement, and Cash Flow Statement. 
+            Select your desired statement type, accounting period, and export format below.
+        </div>
+    </div>
+
+    <!-- Generation Form -->
+    <div class="form-card">
+        <h2 class="card-title">
+            <i class="fas fa-file-alt"></i>
+            Generate Statement
+        </h2>
+
+        <form method="post" id="generateForm">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Statement Configuration
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.statement_type.id_for_label }}" class="form-label required">{{ form.statement_type.label }}</label>
+                        {{ form.statement_type }}
+                        {% if form.statement_type.errors %}
+                            <div class="form-error">{{ form.statement_type.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Select the type of financial statement to generate</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.export_format.id_for_label }}" class="form-label">{{ form.export_format.label }}</label>
+                        {{ form.export_format }}
+                        {% if form.export_format.errors %}
+                            <div class="form-error">{{ form.export_format.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Choose how you want to view or export the statement</div>
+                    </div>
+                </div>
+
+                <!-- Statement Preview -->
+                <div class="statement-preview" id="statementPreview">
+                    <div class="preview-title">Statement Description</div>
+                    <div class="preview-description" id="previewDescription">
+                        Select a statement type to see its description.
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-calendar"></i>
+                    Period Selection
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.period.id_for_label }}" class="form-label required">{{ form.period.label }}</label>
+                        {{ form.period }}
+                        {% if form.period.errors %}
+                            <div class="form-error">{{ form.period.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Select the accounting period for the statement</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.comparison_period.id_for_label }}" class="form-label">{{ form.comparison_period.label }}</label>
+                        {{ form.comparison_period }}
+                        {% if form.comparison_period.errors %}
+                            <div class="form-error">{{ form.comparison_period.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-help">Optional: Select a period for comparison (Balance Sheet & Income Statement only)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-sliders-h"></i>
+                    Options
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        {{ form.include_zero_balances }}
+                        {{ form.include_zero_balances.label }}
+                    </label>
+                    {% if form.include_zero_balances.errors %}
+                        <div class="form-error">{{ form.include_zero_balances.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-help">Include accounts with zero balances in the statement</div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'financial_statements:dashboard' %}" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-play"></i> Generate Statement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Statement descriptions
+    const statementDescriptions = {
+        'trial_balance': 'A trial balance lists all accounts and their balances to verify that total debits equal total credits. It serves as a foundation for preparing other financial statements.',
+        'balance_sheet': 'A balance sheet shows the financial position at a specific point in time, displaying assets, liabilities, and equity. It follows the accounting equation: Assets = Liabilities + Equity.',
+        'income_statement': 'An income statement shows revenues and expenses over a period of time, resulting in net income or loss. It measures the profitability of operations.',
+        'cash_flow': 'A cash flow statement shows cash receipts and payments during a period, categorized into operating, investing, and financing activities.',
+        'complete_set': 'Generate a complete set of financial statements including Trial Balance, Balance Sheet, Income Statement, and Cash Flow Statement.'
+    };
+
+    // Update statement preview
+    function updateStatementPreview() {
+        const statementType = document.getElementById('{{ form.statement_type.id_for_label }}').value;
+        const preview = document.getElementById('statementPreview');
+        const description = document.getElementById('previewDescription');
+        
+        if (statementType && statementDescriptions[statementType]) {
+            description.textContent = statementDescriptions[statementType];
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // Event listeners
+    document.getElementById('{{ form.statement_type.id_for_label }}').addEventListener('change', updateStatementPreview);
+
+    // Form validation
+    document.getElementById('generateForm').addEventListener('submit', function(e) {
+        const statementType = document.getElementById('{{ form.statement_type.id_for_label }}').value;
+        const period = document.getElementById('{{ form.period.id_for_label }}').value;
+
+        if (!statementType) {
+            e.preventDefault();
+            alert('Please select a statement type.');
+            return;
+        }
+
+        if (!period) {
+            e.preventDefault();
+            alert('Please select an accounting period.');
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        submitBtn.disabled = true;
+
+        // Re-enable button after 30 seconds (in case of issues)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 30000);
+    });
+
+    // Initialize preview
+    updateStatementPreview();
+</script>
+{% endblock %}

@@ -1,0 +1,620 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Daily Collections - {{ selected_date|date:"M d, Y" }} - Golam Financial Services{% endblock %}
+{% block page_title %}Daily Collections - {{ selected_date|date:"M d, Y" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collections-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Date Selector */
+    .date-selector {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .date-input {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+
+    .date-nav-btn {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .date-nav-btn:hover {
+        background: #1f5f5c;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.total {
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-card.target {
+        border-left: 4px solid #2b7a76;
+    }
+
+    .stat-card.efficiency {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .stat-card.validation {
+        border-left: 4px solid #ef4444;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .stat-icon.total {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .stat-icon.target {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+    }
+
+    .stat-icon.efficiency {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-icon.validation {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    /* Collections Table */
+    .collections-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .table-header {
+        background: #f9fafb;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+
+    .table-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .collections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .collection-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .collection-card:hover {
+        border-color: #2b7a76;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .collection-card.validated {
+        border-left: 4px solid #16a34a;
+    }
+
+    .collection-card.pending {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .collection-card.discrepancy {
+        border-left: 4px solid #ef4444;
+    }
+
+    .collector-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .collector-name {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .collection-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .status-validated {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-discrepancy {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .collection-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .metric {
+        text-align: center;
+    }
+
+    .metric-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #374151;
+        font-family: monospace;
+    }
+
+    .metric-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .collection-progress {
+        margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #16a34a;
+        transition: width 0.3s ease;
+    }
+
+    .progress-fill.warning {
+        background: #f59e0b;
+    }
+
+    .progress-fill.danger {
+        background: #ef4444;
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+        text-align: center;
+    }
+
+    .collection-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .action-btn {
+        padding: 0.25rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: #f9fafb;
+        border-color: #2b7a76;
+        color: #2b7a76;
+        text-decoration: none;
+    }
+
+    .action-btn.primary {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+
+    .action-btn.primary:hover {
+        background: #1f5f5c;
+        color: white;
+    }
+
+    /* Breakdown Charts */
+    .breakdown-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .breakdown-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .breakdown-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .breakdown-item:last-child {
+        border-bottom: none;
+    }
+
+    .breakdown-label {
+        font-weight: 500;
+        color: #374151;
+        text-transform: capitalize;
+    }
+
+    .breakdown-value {
+        font-weight: 600;
+        color: #16a34a;
+        font-family: monospace;
+    }
+
+    @media (max-width: 768px) {
+        .collections-container {
+            margin: 1rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .collections-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .breakdown-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .date-selector {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="collections-container">
+    <!-- Date Selector -->
+    <div class="date-selector">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <label for="collection-date" style="font-weight: 500; color: #374151;">Collection Date:</label>
+            <input type="date" id="collection-date" class="date-input" value="{{ selected_date|date:'Y-m-d' }}">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="date-nav-btn" onclick="navigateDate(-1)">
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <button class="date-nav-btn" onclick="navigateDate(0)">
+                Today
+            </button>
+            <button class="date-nav-btn" onclick="navigateDate(1)">
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-header">
+                <div class="stat-title">Total Collections</div>
+                <div class="stat-icon total">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ stats.total_amount|floatformat:0 }}</div>
+            <div class="stat-description">
+                {{ stats.total_payments }} payments from {{ stats.active_collectors }} collectors
+            </div>
+        </div>
+
+        <div class="stat-card target">
+            <div class="stat-header">
+                <div class="stat-title">Target Achievement</div>
+                <div class="stat-icon target">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ stats.achievement_percentage|floatformat:1 }}%</div>
+            <div class="stat-description">
+                Target: ₹{{ stats.total_target|floatformat:0 }}
+            </div>
+        </div>
+
+        <div class="stat-card efficiency">
+            <div class="stat-header">
+                <div class="stat-title">Validation Status</div>
+                <div class="stat-icon efficiency">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ stats.validated_collections }}</div>
+            <div class="stat-description">
+                {{ stats.pending_validation }} pending validation
+            </div>
+        </div>
+
+        <div class="stat-card validation">
+            <div class="stat-header">
+                <div class="stat-title">Discrepancies</div>
+                <div class="stat-icon validation">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ stats.collections_with_discrepancy }}</div>
+            <div class="stat-description">
+                Collections need attention
+            </div>
+        </div>
+    </div>
+
+    <!-- Collections Grid -->
+    <div class="collections-table">
+        <div class="table-header">
+            <div class="table-title">
+                <i class="fas fa-users"></i>
+                Collector Collections ({{ collections|length }})
+            </div>
+            <div>
+                <a href="{% url 'repayments:collection_validation' %}" class="action-btn primary">
+                    <i class="fas fa-check"></i> Validate Collections
+                </a>
+            </div>
+        </div>
+        
+        <div class="collections-grid">
+            {% if collections %}
+                {% for collection in collections %}
+                    <div class="collection-card {% if collection.validation_status == 'validated' %}validated{% elif collection.has_discrepancy %}discrepancy{% else %}pending{% endif %}">
+                        <div class="collector-info">
+                            <div class="collector-name">{{ collection.collector.get_full_name }}</div>
+                            <div class="collection-status status-{{ collection.validation_status }}">
+                                {{ collection.get_validation_status_display }}
+                            </div>
+                        </div>
+                        
+                        <div class="collection-metrics">
+                            <div class="metric">
+                                <div class="metric-value">₹{{ collection.total_amount|floatformat:0 }}</div>
+                                <div class="metric-label">Collected</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value">{{ collection.payment_count }}</div>
+                                <div class="metric-label">Payments</div>
+                            </div>
+                        </div>
+                        
+                        <div class="collection-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill {% if collection.collection_efficiency < 50 %}danger{% elif collection.collection_efficiency < 80 %}warning{% endif %}" 
+                                     style="width: {{ collection.collection_efficiency|floatformat:0 }}%"></div>
+                            </div>
+                            <div class="progress-text">
+                                {{ collection.collection_efficiency|floatformat:1 }}% of target (₹{{ collection.target_amount|floatformat:0 }})
+                            </div>
+                        </div>
+                        
+                        {% if collection.has_discrepancy %}
+                            <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.8rem;">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Discrepancy: ₹{{ collection.discrepancy_amount|floatformat:2 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="collection-actions">
+                            <a href="{% url 'repayments:collector_collections' collection.collector.id %}" class="action-btn">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            {% if collection.validation_status == 'pending' or collection.has_discrepancy %}
+                                <a href="{% url 'repayments:validate_collection' collection.id %}" class="action-btn primary">
+                                    <i class="fas fa-check"></i> Validate
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; color: #6b7280; padding: 3rem; grid-column: 1 / -1;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <p>No collections recorded for this date</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Breakdown Section -->
+    <div class="breakdown-section">
+        <!-- Payment Method Breakdown -->
+        <div class="breakdown-card">
+            <div class="breakdown-title">
+                <i class="fas fa-credit-card"></i>
+                Payment Method Breakdown
+            </div>
+            
+            {% for method, amount in method_breakdown.items %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ method|title }}</div>
+                    <div class="breakdown-value">₹{{ amount|floatformat:0 }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Collection Type Breakdown -->
+        <div class="breakdown-card">
+            <div class="breakdown-title">
+                <i class="fas fa-chart-pie"></i>
+                Collection Type Breakdown
+            </div>
+            
+            {% for type, amount in type_breakdown.items %}
+                <div class="breakdown-item">
+                    <div class="breakdown-label">{{ type|title }}</div>
+                    <div class="breakdown-value">₹{{ amount|floatformat:0 }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function navigateDate(direction) {
+        const dateInput = document.getElementById('collection-date');
+        const currentDate = new Date(dateInput.value);
+        
+        if (direction === 0) {
+            // Today
+            currentDate = new Date();
+        } else {
+            // Previous or next day
+            currentDate.setDate(currentDate.getDate() + direction);
+        }
+        
+        const formattedDate = currentDate.toISOString().split('T')[0];
+        window.location.href = `?date=${formattedDate}`;
+    }
+    
+    // Handle date input change
+    document.getElementById('collection-date').addEventListener('change', function() {
+        window.location.href = `?date=${this.value}`;
+    });
+    
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        console.log('Checking for collection updates...');
+        // Could implement auto-refresh here
+    }, 300000);
+</script>
+{% endblock %}

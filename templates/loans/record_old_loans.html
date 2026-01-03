@@ -1,0 +1,361 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Record Old Loans - Golam Financial Services{% endblock %}
+
+{% block page_title %}Record Old Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form Container */
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    /* Form Styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc2626;
+    }
+
+    .invalid-feedback {
+        color: #dc2626;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Button Styling */
+    .btn-primary {
+        background: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary:hover {
+        background: #1f5d5a;
+        border-color: #1f5d5a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(43, 122, 118, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        border-color: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Info Section */
+    .info-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #93c5fd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-message {
+        color: #1e3a8a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Grid Layout for Form Fields */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-grid-full {
+        grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-container {
+            margin: 0 1rem;
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Info Section -->
+    <div class="info-section">
+        <h2 class="info-title">
+            <i class="fas fa-history"></i>
+            Record Historical Loans
+        </h2>
+        <p class="info-message">
+            Use this form to record loans that were issued before the system was implemented. This helps maintain complete historical records and portfolio analysis.
+        </p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+        <h2 class="form-title">
+            <i class="fas fa-plus-circle"></i>
+            Record Old Loan
+        </h2>
+
+        <form method="post" id="oldLoanForm">
+            {% csrf_token %}
+
+            <div class="form-grid">
+                <!-- Borrower Information -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.borrower.id_for_label }}">
+                        <i class="fas fa-user"></i> Borrower *
+                    </label>
+                    {{ form.borrower }}
+                    {% if form.borrower.errors %}
+                        <div class="invalid-feedback">{{ form.borrower.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Loan Amount -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.amount_approved.id_for_label }}">
+                        <i class="fas fa-dollar-sign"></i> Loan Amount *
+                    </label>
+                    {{ form.amount_approved }}
+                    {% if form.amount_approved.errors %}
+                        <div class="invalid-feedback">{{ form.amount_approved.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Interest Rate -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.interest_rate.id_for_label }}">
+                        <i class="fas fa-percentage"></i> Interest Rate (%) *
+                    </label>
+                    {{ form.interest_rate }}
+                    {% if form.interest_rate.errors %}
+                        <div class="invalid-feedback">{{ form.interest_rate.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Duration -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.duration_months.id_for_label }}">
+                        <i class="fas fa-calendar"></i> Duration (Months) *
+                    </label>
+                    {{ form.duration_months }}
+                    {% if form.duration_months.errors %}
+                        <div class="invalid-feedback">{{ form.duration_months.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Disbursement Date -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.disbursement_date.id_for_label }}">
+                        <i class="fas fa-calendar-alt"></i> Disbursement Date *
+                    </label>
+                    {{ form.disbursement_date }}
+                    {% if form.disbursement_date.errors %}
+                        <div class="invalid-feedback">{{ form.disbursement_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Maturity Date -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.maturity_date.id_for_label }}">
+                        <i class="fas fa-calendar-check"></i> Maturity Date *
+                    </label>
+                    {{ form.maturity_date }}
+                    {% if form.maturity_date.errors %}
+                        <div class="invalid-feedback">{{ form.maturity_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Loan Type -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.loan_type.id_for_label }}">
+                        <i class="fas fa-tag"></i> Loan Type
+                    </label>
+                    {{ form.loan_type }}
+                    {% if form.loan_type.errors %}
+                        <div class="invalid-feedback">{{ form.loan_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.status.id_for_label }}">
+                        <i class="fas fa-info-circle"></i> Current Status
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback">{{ form.status.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group form-grid-full">
+                    <label class="form-label" for="{{ form.notes.id_for_label }}">
+                        <i class="fas fa-sticky-note"></i> Notes
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="invalid-feedback">{{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Record Old Loan
+                </button>
+                <a href="{% url 'loans:disbursed_loans' %}" class="btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and enhancement
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('oldLoanForm');
+        const inputs = form.querySelectorAll('input, select, textarea');
+
+        // Add form-control class to all form inputs
+        inputs.forEach(input => {
+            input.classList.add('form-control');
+        });
+
+        // Form submission handling
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Basic validation
+            inputs.forEach(input => {
+                if (input.hasAttribute('required') && !input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields.');
+            }
+        });
+
+        // Real-time validation
+        inputs.forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.hasAttribute('required') && !this.value.trim()) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

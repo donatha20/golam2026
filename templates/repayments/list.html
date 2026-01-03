@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Payment List{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'repayments:dashboard' %}">Repayments</a></li>
+    <li class="breadcrumb-item active">Payment List</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2 text-primary-teal"></i>
+                    Payment List
+                </h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'repayments:record_repayment' %}" class="btn btn-primary-teal">
+                        <i class="fas fa-plus me-1"></i>Record Payment
+                    </a>
+                    <a href="{% url 'repayments:bulk_payments' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-upload me-1"></i>Bulk Payments
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                            <option value="reversed">Reversed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" placeholder="Search by borrower, loan number...">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-outline-secondary" id="filter-btn">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="clear-btn">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                        <button type="button" class="btn btn-outline-success" id="export-btn">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Table -->
+                {% if table %}
+                    {% render_table table %}
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Payment Date</th>
+                                    <th>Borrower</th>
+                                    <th>Loan Number</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Recorded By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.payment_date }}</td>
+                                    <td>
+                                        <a href="{% url 'borrowers:borrower_detail' payment.borrower.id %}">
+                                            {{ payment.borrower.get_full_name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if payment.loan %}
+                                            <a href="{% url 'loans:loan_detail' payment.loan.id %}">
+                                                {{ payment.loan.loan_number }}
+                                            </a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.amount|floatformat:0 }}</td>
+                                    <td>{{ payment.get_payment_method_display|default:"Cash" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if payment.status == 'completed' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                            {{ payment.get_status_display|default:"Completed" }}
+                                        </span>
+                                    </td>
+                                    <td>{{ payment.recorded_by.get_full_name|default:payment.recorded_by.username }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'repayments:payment_detail' payment.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if payment.status == 'completed' and perms.repayments.can_reverse_payment %}
+                                                <a href="{% url 'repayments:reverse_payment' payment.id %}" class="btn btn-sm btn-outline-danger" title="Reverse Payment" onclick="return confirm('Are you sure you want to reverse this payment?')">
+                                                    <i class="fas fa-undo"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No payments found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                        <nav aria-label="Payment pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo; First</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Filter functionality
+    $('#filter-btn').click(function() {
+        var params = new URLSearchParams();
+        
+        var dateFrom = $('#date_from').val();
+        var dateTo = $('#date_to').val();
+        var status = $('#status').val();
+        var search = $('#search').val();
+        
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+        if (status) params.append('status', status);
+        if (search) params.append('search', search);
+        
+        window.location.href = '?' + params.toString();
+    });
+    
+    // Clear filters
+    $('#clear-btn').click(function() {
+        window.location.href = window.location.pathname;
+    });
+    
+    // Export functionality
+    $('#export-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'csv');
+        window.location.href = '?' + params.toString();
+    });
+    
+    // Set current date as default for date filters
+    var today = new Date().toISOString().split('T')[0];
+    if (!$('#date_from').val()) {
+        var lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        $('#date_from').val(lastMonth.toISOString().split('T')[0]);
+    }
+    if (!$('#date_to').val()) {
+        $('#date_to').val(today);
+    }
+});
+</script>
+{% endblock %}

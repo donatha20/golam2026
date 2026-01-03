@@ -1,0 +1,845 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Outstanding Loans - Golam Financial Services{% endblock %}
+
+{% block page_title %}Outstanding Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .outstanding-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1300px;
+        width: 100%;
+    }
+
+    .outstanding-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .outstanding-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .outstanding-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .outstanding-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Risk Level Indicators */
+    .risk-indicator {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .risk-low {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .risk-medium {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .risk-high {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    /* Amount Formatting */
+    .amount-cell {
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .amount-outstanding {
+        color: #dc2626;
+    }
+
+    .amount-overdue {
+        color: #991b1b;
+        font-weight: 700;
+    }
+
+    /* Days Overdue */
+    .days-overdue {
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .days-current {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .days-1-30 {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .days-31-90 {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .days-90-plus {
+        background: rgba(127, 29, 29, 0.1);
+        color: #7f1d1d;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        border: 1px solid #f1f5f9;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 8px 25px rgba(43, 122, 118, 0.15);
+        transform: translateY(-3px);
+        border-color: #e2e8f0;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #2b7a76, #34d399);
+    }
+
+    .stat-card.risk-high::before {
+        background: linear-gradient(90deg, #dc2626, #f87171);
+    }
+
+    .stat-card.risk-medium::before {
+        background: linear-gradient(90deg, #d97706, #fbbf24);
+    }
+
+    .stat-card.risk-low::before {
+        background: linear-gradient(90deg, #16a34a, #34d399);
+    }
+
+    .stat-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .stat-change {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .stat-negative {
+        color: #dc2626;
+    }
+
+    .stat-warning {
+        color: #d97706;
+    }
+
+    .stat-positive {
+        color: #16a34a;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 1.5rem;
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filters-title::before {
+        content: '';
+        width: 3px;
+        height: 20px;
+        background: linear-gradient(135deg, #2b7a76, #34d399);
+        border-radius: 2px;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #475569;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Form Field Styling */
+    .filters-form input, 
+    .filters-form select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .filters-form input:focus, 
+    .filters-form select:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Searchable Borrower Filter */
+    .borrower-search-container {
+        position: relative;
+    }
+
+    .borrower-search-filter {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .borrower-search-filter:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    .borrower-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .borrower-option {
+        padding: 0.75rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.2s ease;
+    }
+
+    .borrower-option:hover {
+        background-color: #f8fafc;
+    }
+
+    .borrower-option.selected {
+        background-color: #2b7a76;
+        color: white;
+    }
+
+    .borrower-option:last-child {
+        border-bottom: none;
+    }
+
+    .borrower-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .borrower-details {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .selected .borrower-name,
+    .selected .borrower-details {
+        color: white;
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, #2b7a76, #34d399);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-filter:hover {
+        background: linear-gradient(135deg, #1f5d5a, #2dd4aa);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(43, 122, 118, 0.25);
+    }
+
+    .btn-clear {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-clear:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #475569;
+        transform: translateY(-1px);
+    }
+
+    /* Action Buttons Section */
+    .action-buttons-section {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .action-btn i {
+        font-size: 1.1rem;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #60a5fa);
+        color: white;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
+        color: white;
+    }
+
+    .action-btn-danger {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+        color: white;
+    }
+
+    .action-btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.25);
+        color: white;
+    }
+
+    .action-btn-warning {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+    }
+
+    .action-btn-warning:hover {
+        background: linear-gradient(135deg, #d97706, #f59e0b);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25);
+        color: white;
+    }
+
+    .action-btn-outline {
+        background: white;
+        color: #2b7a76;
+        border-color: #2b7a76;
+    }
+
+    .action-btn-outline:hover {
+        background: #2b7a76;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(43, 122, 118, 0.25);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .stat-card {
+            padding: 0.75rem;
+            min-height: 80px;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+        }
+        
+        .stat-title {
+            font-size: 0.7rem;
+        }
+        
+        .stat-change {
+            font-size: 0.65rem;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-btn {
+            padding: 0.875rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filter form enhancement
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('.filters-form');
+        const inputs = form.querySelectorAll('input, select');
+        
+        // Auto-submit form on input change (optional)
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Uncomment the line below for auto-submit on change
+                // form.submit();
+            });
+        });
+
+        // Add loading state to filter button
+        const filterBtn = document.querySelector('.btn-filter');
+        if (filterBtn) {
+            filterBtn.addEventListener('click', function(e) {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+                this.disabled = true;
+            });
+        }
+
+        // Risk distribution cards - make them clickable filters
+        const riskCards = document.querySelectorAll('.filter-group');
+        riskCards.forEach((card, index) => {
+            if (index < 4) { // Only the first 4 are risk distribution cards
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', function() {
+                    // Add filter functionality based on risk level
+                    const daysOverdueSelect = document.querySelector('select[name="days_overdue"]');
+                    if (daysOverdueSelect) {
+                        switch(index) {
+                            case 0: // Current
+                                daysOverdueSelect.value = '0';
+                                break;
+                            case 1: // 1-30 days
+                                daysOverdueSelect.value = '1-30';
+                                break;
+                            case 2: // 31-90 days
+                                daysOverdueSelect.value = '31-90';
+                                break;
+                            case 3: // 90+ days
+                                daysOverdueSelect.value = '90+';
+                                break;
+                        }
+                        form.submit();
+                    }
+                });
+            }
+        });
+
+        // Enhanced input validation
+        const numberInputs = form.querySelectorAll('input[type="number"]');
+        numberInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value < 0) {
+                    this.value = 0;
+                }
+            });
+        });
+
+        // Borrower search functionality for filters
+        const borrowerSearchFilter = document.getElementById('borrower_search_filter');
+        const borrowerDropdownFilter = document.getElementById('borrower_dropdown_filter');
+        const selectedBorrowerFilter = document.getElementById('selected_borrower_filter');
+        let borrowersData = [];
+
+        if (borrowerSearchFilter) {
+            // Fetch borrowers data
+            fetch('{% url "loans:borrowers_api" %}')
+                .then(response => response.json())
+                .then(data => {
+                    borrowersData = data;
+                })
+                .catch(error => {
+                    console.log('Error fetching borrowers:', error);
+                    // Fallback: use inline data or show message
+                });
+
+            borrowerSearchFilter.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                
+                if (query.length < 2) {
+                    borrowerDropdownFilter.style.display = 'none';
+                    return;
+                }
+
+                const filteredBorrowers = borrowersData.filter(borrower => 
+                    borrower.first_name.toLowerCase().includes(query) ||
+                    borrower.last_name.toLowerCase().includes(query) ||
+                    borrower.phone_number.includes(query) ||
+                    borrower.borrower_id.toLowerCase().includes(query)
+                );
+
+                if (filteredBorrowers.length > 0) {
+                    displayBorrowerOptions(filteredBorrowers);
+                    borrowerDropdownFilter.style.display = 'block';
+                } else {
+                    borrowerDropdownFilter.innerHTML = '<div class="borrower-option">No borrowers found</div>';
+                    borrowerDropdownFilter.style.display = 'block';
+                }
+            });
+
+            function displayBorrowerOptions(borrowers) {
+                borrowerDropdownFilter.innerHTML = '';
+                
+                borrowers.forEach(borrower => {
+                    const option = document.createElement('div');
+                    option.className = 'borrower-option';
+                    option.innerHTML = `
+                        <div class="borrower-name">${borrower.first_name} ${borrower.last_name}</div>
+                        <div class="borrower-details">ID: ${borrower.borrower_id} | Phone: ${borrower.phone_number}</div>
+                    `;
+                    
+                    option.addEventListener('click', function() {
+                        borrowerSearchFilter.value = `${borrower.first_name} ${borrower.last_name}`;
+                        selectedBorrowerFilter.value = `${borrower.first_name} ${borrower.last_name}`;
+                        borrowerDropdownFilter.style.display = 'none';
+                    });
+                    
+                    borrowerDropdownFilter.appendChild(option);
+                });
+            }
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!borrowerSearchFilter.contains(e.target) && !borrowerDropdownFilter.contains(e.target)) {
+                    borrowerDropdownFilter.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card risk-high">
+        <div class="stat-title">Total Outstanding</div>
+        <div class="stat-value">₹{{ total_outstanding|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-negative">{{ total_loans|default:"0" }} loans</div>
+    </div>
+    <div class="stat-card risk-medium">
+        <div class="stat-title">Overdue Amount</div>
+        <div class="stat-value">₹{{ overdue_amount|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-warning">{{ overdue_loans|default:"0" }} loans</div>
+    </div>
+    <div class="stat-card risk-low">
+        <div class="stat-title">Current Loans</div>
+        <div class="stat-value">{{ current_loans|default:"0" }}</div>
+        <div class="stat-change stat-positive">Up to date</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Portfolio at Risk</div>
+        <div class="stat-value">{{ portfolio_at_risk|floatformat:1|default:"0" }}%</div>
+        <div class="stat-change">30+ days overdue</div>
+    </div>
+</div>
+
+<!-- Risk Summary -->
+<div class="filters-section">
+    <h3 class="filters-title">Risk Distribution</h3>
+    <div class="filters-grid">
+        <div class="filter-group">
+            <span class="filter-label">Current (0 days)</span>
+            <div style="background: rgba(34, 197, 94, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #16a34a;">
+                {{ current_loans|default:"0" }} loans
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">1-30 Days Overdue</span>
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #d97706;">
+                {{ overdue_1_30|default:"0" }} loans
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">31-90 Days Overdue</span>
+            <div style="background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #dc2626;">
+                {{ overdue_31_90|default:"0" }} loans
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">90+ Days Overdue</span>
+            <div style="background: rgba(127, 29, 29, 0.1); padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: 600; color: #991b1b;">
+                {{ overdue_90_plus|default:"0" }} loans
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <h3 class="filters-title">Filter Outstanding Loans</h3>
+    <form method="get" class="filters-form">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="borrower" class="filter-label">Borrower Name</label>
+                <div class="borrower-search-container">
+                    <input type="text" id="borrower_search_filter" class="borrower-search-filter" 
+                           placeholder="Type borrower name to search..." autocomplete="off"
+                           value="{{ request.GET.borrower }}">
+                    <div class="borrower-dropdown" id="borrower_dropdown_filter"></div>
+                    <input type="hidden" name="borrower" id="selected_borrower_filter" value="{{ request.GET.borrower }}">
+                </div>
+            </div>
+            <div class="filter-group">
+                <label for="loan_product" class="filter-label">Loan Product</label>
+                {{ filter.form.loan_product }}
+            </div>
+            <div class="filter-group">
+                <label for="loan_officer" class="filter-label">Loan Officer</label>
+                {{ filter.form.loan_officer }}
+            </div>
+            <div class="filter-group">
+                <label for="days_overdue" class="filter-label">Days Overdue</label>
+                {{ filter.form.days_overdue }}
+            </div>
+            <div class="filter-group">
+                <label for="outstanding_min" class="filter-label">Min Outstanding</label>
+                {{ filter.form.outstanding_min }}
+            </div>
+            <div class="filter-group">
+                <label for="outstanding_max" class="filter-label">Max Outstanding</label>
+                {{ filter.form.outstanding_max }}
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+            </div>
+            <div class="filter-group">
+                <a href="{% url 'loans:outstanding_loans' %}" class="btn-clear">Clear All</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-buttons-section">
+    <div class="action-buttons-grid">
+        <a href="{% url 'repayments:record_repayment' %}" class="action-btn action-btn-primary">
+            <i class="fas fa-credit-card"></i>
+            <span>Record Payment</span>
+        </a>
+        <a href="{% url 'loans:loans_arrears' %}" class="action-btn action-btn-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>View Arrears</span>
+        </a>
+        <a href="{% url 'loans:portfolio_at_risk' %}" class="action-btn action-btn-warning">
+            <i class="fas fa-chart-line"></i>
+            <span>Portfolio at Risk</span>
+        </a>
+        <a href="{% url 'loans:expected_repayments' %}" class="action-btn action-btn-outline">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Expected Repayments</span>
+        </a>
+    </div>
+</div>
+
+<!-- Outstanding Loans Table -->
+<div class="table-container">
+    {% if table.data %}
+        {% render_table table %}
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3>No Outstanding Loans</h3>
+            <p>Great! No loans currently have outstanding balances matching your criteria.</p>
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-list"></i> View All Loans
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Outstanding loans pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Previous</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Last</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %} 

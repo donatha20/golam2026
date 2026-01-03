@@ -1,0 +1,322 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Redisbursed Loans - Golam Financial Services{% endblock %}
+
+{% block page_title %}Redisbursed Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .redisbursed-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1200px;
+        width: 100%;
+    }
+
+    .redisbursed-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .redisbursed-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .redisbursed-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .redisbursed-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-redisbursed {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        border-left: 4px solid #3b82f6;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #3b82f6;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Info Section */
+    .info-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #93c5fd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-message {
+        color: #1e3a8a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Info Section -->
+    <div class="info-section">
+        <h2 class="info-title">
+            <i class="fas fa-redo-alt"></i>
+            Redisbursed Loans
+        </h2>
+        <p class="info-message">
+            These loans have been redisbursed to borrowers, typically after partial repayment or restructuring. Monitor these carefully for performance.
+        </p>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list"></i> All Loans
+            </a>
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-clock"></i> Outstanding Loans
+            </a>
+            <a href="{% url 'loans:add_loan' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus-circle"></i> New Loan
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_redisbursed|default:0 }}</div>
+            <div class="stat-label">Total Redisbursed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_amount|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Amount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ this_month|default:0 }}</div>
+            <div class="stat-label">This Month</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ avg_amount|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Average Amount</div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ disbursements|length|default:0 }} redisbursed loans
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search loans..." id="redisbursedSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <table class="table redisbursed-table" id="redisbursed-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Borrower</th>
+                    <th>Original Amount</th>
+                    <th>Redisbursed Amount</th>
+                    <th>Redisbursement Date</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for disbursement in disbursements %}
+                <tr>
+                    <td>
+                        <div class="loan-number">{{ disbursement.loan.loan_number }}</div>
+                    </td>
+                    <td>
+                        <div class="borrower-full-name">{{ disbursement.loan.borrower.get_full_name }}</div>
+                        <div class="borrower-id">ID: {{ disbursement.loan.borrower.borrower_id }}</div>
+                    </td>
+                    <td class="text-end">${{ disbursement.loan.amount_approved|floatformat:2 }}</td>
+                    <td class="text-end text-primary">${{ disbursement.amount|floatformat:2 }}</td>
+                    <td>{{ disbursement.disbursement_date|date:"M d, Y" }}</td>
+                    <td>{{ disbursement.notes|default:"Redisbursement" }}</td>
+                    <td>
+                        <span class="status-badge status-redisbursed">Redisbursed</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No redisbursed loans found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('redisbursedSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#redisbursed-table tbody tr');
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('redisbursed-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'redisbursed_loans.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

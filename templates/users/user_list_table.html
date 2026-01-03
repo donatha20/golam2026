@@ -1,0 +1,435 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}User Management - Golam Financial Services{% endblock %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .user-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1200px;
+        width: 100%;
+    }
+
+    .user-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .user-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .user-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .user-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    .user-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Avatar Styling */
+    .table-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(43, 122, 118, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0 auto;
+    }
+    
+    /* User Name Cell */
+    .user-name-cell {
+        min-width: 180px;
+    }
+    
+    .user-full-name {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .user-username {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    
+    /* Badge Styling */
+    .role-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .btn-edit:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .add-user-btn {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    
+    .add-user-btn:hover {
+        background: rgba(43, 122, 118, 0.2);
+        color: #1f5d5a;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    /* Pagination Styling */
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        color: #2b7a76;
+        border-color: #e5e7eb;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .pagination .page-link:hover {
+        background: rgba(43, 122, 118, 0.1);
+        border-color: #2b7a76;
+        color: #1f5d5a;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #2b7a76;
+        border-color: #2b7a76;
+    }
+    
+    /* Search and Filter */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .table-search {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .table-controls {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .table-search {
+            justify-content: center;
+        }
+        
+        .search-input {
+            width: 100%;
+        }
+        
+        .user-table {
+            font-size: 0.8rem;
+        }
+        
+        .user-table thead th,
+        .user-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-title">User Management</h1>
+        <a href="{% url 'core:add_user' %}" class="add-user-btn">
+            <i class="fas fa-plus"></i>
+            Add New User
+        </a>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_users }}</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ inactive_users }}</div>
+            <div class="stat-label">Inactive Users</div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ table.paginated_rows|length }} of {{ total_users }} users
+            </div>
+            <div class="table-search">
+                <input type="text" class="search-input" placeholder="Search users..." id="userSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+        
+        {% render_table table %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('userSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#user-table tbody tr');
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Export functionality
+    function exportTable() {
+        // Simple CSV export
+        const table = document.getElementById('user-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'users.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Action button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-edit')) {
+            const row = e.target.closest('tr');
+            const username = row.querySelector('.user-username').textContent.replace('@', '');
+            alert('Edit user: ' + username);
+            // TODO: Implement edit functionality
+        }
+        
+        if (e.target.closest('.btn-delete')) {
+            const row = e.target.closest('tr');
+            const username = row.querySelector('.user-username').textContent.replace('@', '');
+            if (confirm('Are you sure you want to delete user: ' + username + '?')) {
+                alert('Delete user: ' + username);
+                // TODO: Implement delete functionality
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,337 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Interest Receivables - Golam Financial Services{% endblock %}
+
+{% block page_title %}Interest Receivables{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .receivables-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1000px;
+        width: 100%;
+    }
+
+    .receivables-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .receivables-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .receivables-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .receivables-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Loan Number Cell */
+    .loan-number-cell {
+        min-width: 120px;
+    }
+
+    .loan-number {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .loan-type {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* Borrower Name Cell */
+    .borrower-name-cell {
+        min-width: 180px;
+    }
+
+    .borrower-full-name {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .borrower-id {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* Amount Cell */
+    .amount-cell {
+        text-align: right;
+        min-width: 120px;
+    }
+
+    .amount-value {
+        font-weight: 600;
+        color: #059669;
+        font-size: 0.9rem;
+    }
+
+    .interest-amount {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Text Utilities */
+    .text-success { color: #16a34a !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-danger { color: #dc2626 !important; }
+    .text-muted { color: #6b7280 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list"></i> All Loans
+            </a>
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-clock"></i> Outstanding Loans
+            </a>
+            <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-calendar-check"></i> Expected Repayments
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">${{ total_interest_receivable|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Interest Receivable</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ loans_with_interest|default:0 }}</div>
+            <div class="stat-label">Loans with Interest</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ overdue_interest|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Overdue Interest</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ avg_interest_rate|default:0|floatformat:1 }}%</div>
+            <div class="stat-label">Average Interest Rate</div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ loans|length|default:0 }} loans with interest receivables
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search loans..." id="receivablesSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <table class="table receivables-table" id="receivables-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Borrower</th>
+                    <th>Principal Amount</th>
+                    <th>Interest Rate</th>
+                    <th>Interest Receivable</th>
+                    <th>Days Outstanding</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td class="loan-number-cell">
+                        <div class="loan-number">{{ loan.loan_number }}</div>
+                        <div class="loan-type">{{ loan.loan_type.name|default:"Personal Loan" }}</div>
+                    </td>
+                    <td class="borrower-name-cell">
+                        <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>
+                        <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
+                    </td>
+                    <td class="amount-cell">
+                        <div class="amount-value">${{ loan.amount_approved|floatformat:2 }}</div>
+                    </td>
+                    <td class="text-center">{{ loan.interest_rate|floatformat:1 }}%</td>
+                    <td class="amount-cell">
+                        <div class="interest-amount">${{ loan.interest_receivable|default:0|floatformat:2 }}</div>
+                    </td>
+                    <td class="text-center">
+                        {% if loan.days_outstanding %}
+                            <span class="badge badge-warning">{{ loan.days_outstanding }} days</span>
+                        {% else %}
+                            <span class="badge badge-success">Current</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-info">{{ loan.get_status_display|default:"Active" }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No interest receivables found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('receivablesSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#receivables-table tbody tr');
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('receivables-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'interest_receivables.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

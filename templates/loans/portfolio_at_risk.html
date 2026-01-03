@@ -1,0 +1,625 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Portfolio at Risk - Golam Financial Services{% endblock %}
+
+{% block page_title %}Portfolio at Risk Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Risk Alert Section */
+    .risk-alert {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border: 2px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    }
+
+    .risk-alert.critical {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-color: #dc2626;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    }
+
+    .risk-alert-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .risk-alert-title.critical {
+        color: #991b1b;
+    }
+
+    .risk-alert-message {
+        color: #78350f;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .risk-alert-message.critical {
+        color: #7f1d1d;
+    }
+
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .risk-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1300px;
+        width: 100%;
+    }
+
+    .risk-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .risk-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .risk-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .risk-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    .risk-table tbody tr.high-risk {
+        background: rgba(239, 68, 68, 0.05);
+        border-left: 4px solid #dc2626;
+    }
+
+    .risk-table tbody tr.critical-risk {
+        background: rgba(127, 29, 29, 0.1);
+        border-left: 4px solid #7f1d1d;
+    }
+
+    /* Risk Level Indicators */
+    .risk-indicator {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-align: center;
+        min-width: 80px;
+        display: inline-block;
+    }
+    
+    .risk-low {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .risk-medium {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .risk-high {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .risk-critical {
+        background: #7f1d1d;
+        color: white;
+    }
+
+    /* Risk Percentage */
+    .risk-percentage {
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .risk-percentage.low {
+        color: #16a34a;
+    }
+
+    .risk-percentage.medium {
+        color: #d97706;
+    }
+
+    .risk-percentage.high {
+        color: #dc2626;
+    }
+
+    .risk-percentage.critical {
+        color: #7f1d1d;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.par-30 {
+        border-left: 4px solid #d97706;
+        background: linear-gradient(135deg, #fffbeb 0%, #fff 100%);
+    }
+
+    .stat-card.par-90 {
+        border-left: 4px solid #dc2626;
+        background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+    }
+
+    .stat-card.overall {
+        border-left: 4px solid #2b7a76;
+        background: linear-gradient(135deg, #f0fdfa 0%, #fff 100%);
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value.warning {
+        color: #d97706;
+    }
+
+    .stat-value.danger {
+        color: #dc2626;
+    }
+
+    .stat-value.success {
+        color: #16a34a;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .stat-trend {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        opacity: 0.3;
+    }
+
+    /* Risk Benchmark */
+    .benchmark-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .benchmark-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+
+    .benchmark-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .benchmark-item {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 2px solid #e5e7eb;
+    }
+
+    .benchmark-item.good {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: #16a34a;
+    }
+
+    .benchmark-item.warning {
+        background: rgba(245, 158, 11, 0.05);
+        border-color: #d97706;
+    }
+
+    .benchmark-item.danger {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: #dc2626;
+    }
+
+    .benchmark-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .benchmark-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .benchmark-value.good {
+        color: #16a34a;
+    }
+
+    .benchmark-value.warning {
+        color: #d97706;
+    }
+
+    .benchmark-value.danger {
+        color: #dc2626;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .filters-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+        background: #1f5d5a;
+    }
+
+    .btn-clear {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-clear:hover {
+        background: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Risk Alert -->
+{% if portfolio_at_risk_30 > 10 %}
+<div class="risk-alert {% if portfolio_at_risk_30 > 20 %}critical{% endif %}">
+    <h2 class="risk-alert-title {% if portfolio_at_risk_30 > 20 %}critical{% endif %}">
+        <i class="fas fa-exclamation-triangle"></i>
+        Portfolio Risk Alert
+    </h2>
+    <p class="risk-alert-message {% if portfolio_at_risk_30 > 20 %}critical{% endif %}">
+        Your portfolio at risk (30+ days) is {{ portfolio_at_risk_30|floatformat:1 }}%, which {% if portfolio_at_risk_30 > 20 %}exceeds critical levels{% elif portfolio_at_risk_30 > 15 %}is above recommended thresholds{% else %}requires monitoring{% endif %}. 
+        Industry benchmark is typically below 5% for healthy microfinance operations.
+    </p>
+</div>
+{% endif %}
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card overall">
+        <div class="stat-trend">📊</div>
+        <div class="stat-title">Portfolio at Risk (30+)</div>
+        <div class="stat-value {% if portfolio_at_risk_30 > 10 %}danger{% elif portfolio_at_risk_30 > 5 %}warning{% else %}success{% endif %}">
+            {{ portfolio_at_risk_30|floatformat:1|default:"0" }}%
+        </div>
+        <div class="stat-change">₹{{ par_30_amount|floatformat:0|default:"0" }} at risk</div>
+    </div>
+    <div class="stat-card par-90">
+        <div class="stat-trend">⚠️</div>
+        <div class="stat-title">Portfolio at Risk (90+)</div>
+        <div class="stat-value {% if portfolio_at_risk_90 > 5 %}danger{% elif portfolio_at_risk_90 > 2 %}warning{% else %}success{% endif %}">
+            {{ portfolio_at_risk_90|floatformat:1|default:"0" }}%
+        </div>
+        <div class="stat-change">₹{{ par_90_amount|floatformat:0|default:"0" }} critical risk</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-trend">📈</div>
+        <div class="stat-title">Total Outstanding</div>
+        <div class="stat-value">₹{{ total_outstanding|floatformat:0|default:"0" }}</div>
+        <div class="stat-change">{{ total_loans|default:"0" }} active loans</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-trend">🎯</div>
+        <div class="stat-title">Collection Efficiency</div>
+        <div class="stat-value {% if collection_efficiency > 95 %}success{% elif collection_efficiency > 85 %}warning{% else %}danger{% endif %}">
+            {{ collection_efficiency|floatformat:1|default:"0" }}%
+        </div>
+        <div class="stat-change">Current month</div>
+    </div>
+</div>
+
+<!-- Risk Benchmarks -->
+<div class="benchmark-section">
+    <h3 class="benchmark-title">Industry Benchmarks</h3>
+    <div class="benchmark-grid">
+        <div class="benchmark-item {% if portfolio_at_risk_30 <= 5 %}good{% elif portfolio_at_risk_30 <= 10 %}warning{% else %}danger{% endif %}">
+            <div class="benchmark-label">PAR 30 Benchmark</div>
+            <div class="benchmark-value {% if portfolio_at_risk_30 <= 5 %}good{% elif portfolio_at_risk_30 <= 10 %}warning{% else %}danger{% endif %}">
+                &lt; 5%
+            </div>
+        </div>
+        <div class="benchmark-item {% if portfolio_at_risk_90 <= 2 %}good{% elif portfolio_at_risk_90 <= 5 %}warning{% else %}danger{% endif %}">
+            <div class="benchmark-label">PAR 90 Benchmark</div>
+            <div class="benchmark-value {% if portfolio_at_risk_90 <= 2 %}good{% elif portfolio_at_risk_90 <= 5 %}warning{% else %}danger{% endif %}">
+                &lt; 2%
+            </div>
+        </div>
+        <div class="benchmark-item {% if write_off_rate <= 3 %}good{% elif write_off_rate <= 6 %}warning{% else %}danger{% endif %}">
+            <div class="benchmark-label">Write-off Rate</div>
+            <div class="benchmark-value {% if write_off_rate <= 3 %}good{% elif write_off_rate <= 6 %}warning{% else %}danger{% endif %}">
+                &lt; 3%
+            </div>
+        </div>
+        <div class="benchmark-item {% if collection_efficiency >= 95 %}good{% elif collection_efficiency >= 85 %}warning{% else %}danger{% endif %}">
+            <div class="benchmark-label">Collection Target</div>
+            <div class="benchmark-value {% if collection_efficiency >= 95 %}good{% elif collection_efficiency >= 85 %}warning{% else %}danger{% endif %}">
+                &gt; 95%
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Breakdown by Days -->
+<div class="filters-section">
+    <h3 class="filters-title">Risk Analysis by Overdue Period</h3>
+    <div class="filters-grid">
+        <div class="filter-group">
+            <span class="filter-label">1-30 Days Overdue</span>
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 0.75rem; border-radius: 6px; text-align: center;">
+                <div style="font-weight: 700; font-size: 1.25rem; color: #d97706;">
+                    {{ par_1_30|floatformat:1|default:"0" }}%
+                </div>
+                <div style="font-size: 0.875rem; color: #92400e;">
+                    ₹{{ par_1_30_amount|floatformat:0|default:"0" }}
+                </div>
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">31-90 Days Overdue</span>
+            <div style="background: rgba(239, 68, 68, 0.1); padding: 0.75rem; border-radius: 6px; text-align: center;">
+                <div style="font-weight: 700; font-size: 1.25rem; color: #dc2626;">
+                    {{ par_31_90|floatformat:1|default:"0" }}%
+                </div>
+                <div style="font-size: 0.875rem; color: #991b1b;">
+                    ₹{{ par_31_90_amount|floatformat:0|default:"0" }}
+                </div>
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">91-180 Days Overdue</span>
+            <div style="background: rgba(127, 29, 29, 0.1); padding: 0.75rem; border-radius: 6px; text-align: center;">
+                <div style="font-weight: 700; font-size: 1.25rem; color: #7f1d1d;">
+                    {{ par_91_180|floatformat:1|default:"0" }}%
+                </div>
+                <div style="font-size: 0.875rem; color: #7f1d1d;">
+                    ₹{{ par_91_180_amount|floatformat:0|default:"0" }}
+                </div>
+            </div>
+        </div>
+        <div class="filter-group">
+            <span class="filter-label">180+ Days Overdue</span>
+            <div style="background: #7f1d1d; padding: 0.75rem; border-radius: 6px; text-align: center;">
+                <div style="font-weight: 700; font-size: 1.25rem; color: white;">
+                    {{ par_180_plus|floatformat:1|default:"0" }}%
+                </div>
+                <div style="font-size: 0.875rem; color: #fca5a5;">
+                    ₹{{ par_180_plus_amount|floatformat:0|default:"0" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Section -->
+<div class="filters-section">
+    <h3 class="filters-title">Filter Risk Analysis</h3>
+    <form method="get" class="filters-form">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="loan_officer" class="filter-label">Loan Officer</label>
+                {{ filter.form.loan_officer }}
+            </div>
+            <div class="filter-group">
+                <label for="loan_product" class="filter-label">Loan Product</label>
+                {{ filter.form.loan_product }}
+            </div>
+            <div class="filter-group">
+                <label for="branch" class="filter-label">Branch</label>
+                {{ filter.form.branch }}
+            </div>
+            <div class="filter-group">
+                <label for="risk_level" class="filter-label">Risk Level</label>
+                {{ filter.form.risk_level }}
+            </div>
+            <div class="filter-group">
+                <label for="date_from" class="filter-label">Analysis From</label>
+                {{ filter.form.date_from }}
+            </div>
+            <div class="filter-group">
+                <label for="date_to" class="filter-label">Analysis To</label>
+                {{ filter.form.date_to }}
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+            </div>
+            <div class="filter-group">
+                <a href="{% url 'loans:portfolio_at_risk' %}" class="btn-clear">Clear All</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Action Buttons -->
+<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'loans:loans_arrears' %}" class="btn btn-danger">
+        <i class="fas fa-exclamation-triangle"></i> View Arrears
+    </a>
+    <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-warning">
+        <i class="fas fa-chart-line"></i> Outstanding Loans
+    </a>
+    <a href="{% url 'loans:defaulted_loans' %}" class="btn btn-outline-danger">
+        <i class="fas fa-ban"></i> Defaulted Loans
+    </a>
+    <a href="{% url 'loans:loans_graphs_summary' %}" class="btn btn-outline-primary">
+        <i class="fas fa-chart-bar"></i> Risk Graphs
+    </a>
+</div>
+
+<!-- Risk Analysis Table -->
+<div class="table-container">
+    {% if table.data %}
+        {% render_table table %}
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3>No Risk Data Available</h3>
+            <p>No portfolio risk data matches your criteria or all loans are current.</p>
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-list"></i> View All Loans
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Risk analysis pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Previous</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Last</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %} 

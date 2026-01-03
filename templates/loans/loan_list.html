@@ -1,0 +1,362 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}All Loans - Golam Financial Services{% endblock %}
+
+{% block page_title %}All Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .loans-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1200px;
+        width: 100%;
+    }
+
+    .loans-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .loans-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .loans-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .loans-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+    
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    .status-completed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-defaulted {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        border-left: 4px solid #2b7a76;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+    
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .btn-view {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+    
+    .btn-view:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .btn-edit:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'loans:add_loan' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus-circle"></i> Add Loan
+            </a>
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-clock"></i> Outstanding Loans
+            </a>
+            <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-calendar-check"></i> Expected Repayments
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ loans|length|default:0 }}</div>
+            <div class="stat-label">Total Loans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_amount|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Amount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_loans|default:0 }}</div>
+            <div class="stat-label">Active Loans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ completion_rate|default:0|floatformat:1 }}%</div>
+            <div class="stat-label">Completion Rate</div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ loans|length|default:0 }} loans
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search loans..." id="loanSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+        
+        <table class="table loans-table" id="loans-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Borrower</th>
+                    <th>Amount</th>
+                    <th>Disbursed Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td>
+                        <div class="loan-number">{{ loan.loan_number }}</div>
+                    </td>
+                    <td>
+                        <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>
+                        <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
+                    </td>
+                    <td class="text-end">${{ loan.amount_approved|floatformat:2 }}</td>
+                    <td>{{ loan.disbursement_date|date:"M d, Y" }}</td>
+                    <td>{{ loan.maturity_date|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="status-badge status-{{ loan.status|lower }}">{{ loan.get_status_display }}</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view" data-id="{{ loan.id }}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-edit" data-id="{{ loan.id }}" title="Edit Loan">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No loans found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('loanSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#loans-table tbody tr');
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('loans-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'all_loans.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Action button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-view')) {
+            const id = e.target.closest('.btn-view').dataset.id;
+            window.location.href = `/loans/repayments/${id}/`;
+        }
+        
+        if (e.target.closest('.btn-edit')) {
+            const id = e.target.closest('.btn-edit').dataset.id;
+            // Add edit functionality here
+            alert('Edit functionality to be implemented');
+        }
+    });
+</script>
+{% endblock %}

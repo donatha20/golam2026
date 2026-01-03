@@ -1,0 +1,314 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}SMS Settings{% endblock %}
+{% block page_title %}SMS Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Current Configuration -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2 text-primary-teal"></i>
+                    Current SMS Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">SMS Service Status</label>
+                            <div>
+                                {% if sms_enabled %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check-circle me-1"></i>Enabled
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-times-circle me-1"></i>Disabled
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Current Provider</label>
+                            <div>
+                                <span class="badge bg-info fs-6">{{ current_provider|title }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Provider Configuration -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-server me-2 text-primary-teal"></i>
+                    SMS Provider Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> SMS provider settings are configured through environment variables. 
+                    Contact your system administrator to change these settings.
+                </div>
+
+                <!-- Available Providers -->
+                <div class="row">
+                    {% for provider in available_providers %}
+                    <div class="col-lg-6 mb-3">
+                        <div class="card {% if provider == current_provider %}border-primary{% else %}border-light{% endif %}">
+                            <div class="card-header {% if provider == current_provider %}bg-primary text-white{% else %}bg-light{% endif %}">
+                                <h6 class="mb-0">
+                                    {% if provider == 'twilio' %}
+                                        <i class="fas fa-cloud me-2"></i>Twilio
+                                    {% elif provider == 'textlocal' %}
+                                        <i class="fas fa-mobile-alt me-2"></i>TextLocal
+                                    {% elif provider == 'msg91' %}
+                                        <i class="fas fa-sms me-2"></i>MSG91
+                                    {% else %}
+                                        <i class="fas fa-cog me-2"></i>{{ provider|title }}
+                                    {% endif %}
+                                    {% if provider == current_provider %}
+                                        <span class="badge bg-light text-dark ms-2">Current</span>
+                                    {% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if provider == 'twilio' %}
+                                    <p class="card-text">
+                                        <strong>Twilio</strong> - Global SMS service with high delivery rates.
+                                    </p>
+                                    <ul class="small">
+                                        <li>Required: TWILIO_ACCOUNT_SID</li>
+                                        <li>Required: TWILIO_AUTH_TOKEN</li>
+                                        <li>Required: TWILIO_FROM_NUMBER</li>
+                                    </ul>
+                                {% elif provider == 'textlocal' %}
+                                    <p class="card-text">
+                                        <strong>TextLocal</strong> - UK-based SMS service with competitive rates.
+                                    </p>
+                                    <ul class="small">
+                                        <li>Required: TEXTLOCAL_API_KEY</li>
+                                        <li>Optional: TEXTLOCAL_SENDER</li>
+                                    </ul>
+                                {% elif provider == 'msg91' %}
+                                    <p class="card-text">
+                                        <strong>MSG91</strong> - Indian SMS service with local delivery optimization.
+                                    </p>
+                                    <ul class="small">
+                                        <li>Required: MSG91_AUTH_KEY</li>
+                                        <li>Optional: MSG91_SENDER_ID</li>
+                                    </ul>
+                                {% else %}
+                                    <p class="card-text">
+                                        <strong>{{ provider|title }}</strong> - Testing/development provider.
+                                    </p>
+                                    <ul class="small">
+                                        <li>No configuration required</li>
+                                        <li>Messages are logged but not sent</li>
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Environment Variables Guide -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-code me-2 text-primary-teal"></i>
+                    Environment Variables Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Add these variables to your <code>.env</code> file to configure SMS services:</p>
+                
+                <div class="accordion" id="providerAccordion">
+                    <!-- Twilio Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="twilioHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#twilioCollapse" aria-expanded="false" aria-controls="twilioCollapse">
+                                <i class="fas fa-cloud me-2"></i>Twilio Configuration
+                            </button>
+                        </h2>
+                        <div id="twilioCollapse" class="accordion-collapse collapse" aria-labelledby="twilioHeading" 
+                             data-bs-parent="#providerAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-dark text-light p-3 rounded"><code># Twilio SMS Configuration
+SMS_ENABLED=True
+SMS_PROVIDER=twilio
+TWILIO_ACCOUNT_SID=your_account_sid_here
+TWILIO_AUTH_TOKEN=your_auth_token_here
+TWILIO_FROM_NUMBER=+1234567890</code></pre>
+                                <p class="mt-2">
+                                    <strong>How to get credentials:</strong><br>
+                                    1. Sign up at <a href="https://www.twilio.com" target="_blank">twilio.com</a><br>
+                                    2. Get your Account SID and Auth Token from the console<br>
+                                    3. Purchase a phone number for sending SMS
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TextLocal Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="textlocalHeading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#textlocalCollapse" aria-expanded="false" aria-controls="textlocalCollapse">
+                                <i class="fas fa-mobile-alt me-2"></i>TextLocal Configuration
+                            </button>
+                        </h2>
+                        <div id="textlocalCollapse" class="accordion-collapse collapse" aria-labelledby="textlocalHeading" 
+                             data-bs-parent="#providerAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-dark text-light p-3 rounded"><code># TextLocal SMS Configuration
+SMS_ENABLED=True
+SMS_PROVIDER=textlocal
+TEXTLOCAL_API_KEY=your_api_key_here
+TEXTLOCAL_SENDER=TXTLCL</code></pre>
+                                <p class="mt-2">
+                                    <strong>How to get credentials:</strong><br>
+                                    1. Sign up at <a href="https://www.textlocal.in" target="_blank">textlocal.in</a><br>
+                                    2. Get your API key from the settings<br>
+                                    3. Configure your sender ID
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MSG91 Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="msg91Heading">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#msg91Collapse" aria-expanded="false" aria-controls="msg91Collapse">
+                                <i class="fas fa-sms me-2"></i>MSG91 Configuration
+                            </button>
+                        </h2>
+                        <div id="msg91Collapse" class="accordion-collapse collapse" aria-labelledby="msg91Heading" 
+                             data-bs-parent="#providerAccordion">
+                            <div class="accordion-body">
+                                <pre class="bg-dark text-light p-3 rounded"><code># MSG91 SMS Configuration
+SMS_ENABLED=True
+SMS_PROVIDER=msg91
+MSG91_AUTH_KEY=your_auth_key_here
+MSG91_SENDER_ID=MSGIND</code></pre>
+                                <p class="mt-2">
+                                    <strong>How to get credentials:</strong><br>
+                                    1. Sign up at <a href="https://msg91.com" target="_blank">msg91.com</a><br>
+                                    2. Get your Auth Key from the dashboard<br>
+                                    3. Configure your sender ID
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test SMS -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-vial me-2 text-primary-teal"></i>
+                    Test SMS Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Test your SMS configuration by sending a test message:</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="testPhoneNumber" 
+                                   placeholder="+91 9876543210" aria-label="Phone number">
+                            <button class="btn btn-primary-teal" type="button" onclick="sendTestSMS()">
+                                <i class="fas fa-paper-plane me-1"></i>Send Test SMS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="testResult" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- SMS Guidelines -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2 text-primary-teal"></i>
+                    SMS Best Practices
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Technical Guidelines</h6>
+                        <ul>
+                            <li>Keep messages under 160 characters for single SMS</li>
+                            <li>Use UTF-8 encoding for international characters</li>
+                            <li>Test thoroughly before bulk sending</li>
+                            <li>Monitor delivery rates and costs</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Content Guidelines</h6>
+                        <ul>
+                            <li>Always include your organization name</li>
+                            <li>Use clear, professional language</li>
+                            <li>Include relevant reference numbers</li>
+                            <li>Respect timing (9 AM - 6 PM)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendTestSMS() {
+    const phoneNumber = $('#testPhoneNumber').val();
+    const resultDiv = $('#testResult');
+    
+    if (!phoneNumber) {
+        resultDiv.html('<div class="alert alert-warning">Please enter a phone number</div>');
+        return;
+    }
+    
+    resultDiv.html('<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Sending test SMS...</div>');
+    
+    $.ajax({
+        url: '{% url "sms:test_sms" %}',
+        method: 'POST',
+        data: {
+            'phone_number': phoneNumber,
+            'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+            if (response.success) {
+                resultDiv.html('<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>' + response.message + '</div>');
+            } else {
+                resultDiv.html('<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>' + response.message + '</div>');
+            }
+        },
+        error: function() {
+            resultDiv.html('<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Error sending test SMS</div>');
+        }
+    });
+}
+</script>
+{% endblock %}

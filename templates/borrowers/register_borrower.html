@@ -1,0 +1,484 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Register Client - Golam Financial Services{% endblock %}
+
+{% block page_title %}Register New Client{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0 0 2rem 0;
+        text-align: center;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        margin-right: 1rem;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .required-note {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        color: #92400e;
+    }
+    
+    .progress-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    .progress-step {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.8rem;
+        margin: 0 0.5rem;
+        position: relative;
+    }
+    
+    .progress-step.active {
+        background: #2b7a76;
+        color: white;
+    }
+    
+    .progress-step.completed {
+        background: #16a34a;
+        color: white;
+    }
+    
+    .progress-step::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 100%;
+        width: 40px;
+        height: 2px;
+        background: #e5e7eb;
+        transform: translateY(-50%);
+    }
+    
+    .progress-step:last-child::after {
+        display: none;
+    }
+    
+    .progress-step.completed::after {
+        background: #16a34a;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-secondary {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-indicator {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="form-container">
+        <h1 class="page-title">Register New Client</h1>
+        
+        <div class="required-note">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> Fields marked with <span style="color: #ef4444;">*</span> are required.
+        </div>
+        
+        <form method="post" id="clientForm">
+            {% csrf_token %}
+            
+            <!-- Registration Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-clipboard-list"></i> Registration Information
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="registration_date" class="form-label required">Registration Date</label>
+                        <input type="date" id="registration_date" name="registration_date" class="form-input"
+                               value="{{ today|date:'Y-m-d' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registered_by" class="form-label">Registered By</label>
+                        <input type="text" id="registered_by" name="registered_by" class="form-input"
+                               value="{{ user.get_full_name }}" readonly>
+                        <div class="form-help">Current logged-in officer</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="branch" class="form-label required">Branch</label>
+                        <select id="branch" name="branch" class="form-select" required>
+                            <option value="">Select Branch</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}" {% if branch == user.branch %}selected{% endif %}>
+                                {{ branch.name }} - {{ branch.location }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i> Personal Information
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name" class="form-label required">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="middle_name" class="form-label">Middle Name</label>
+                        <input type="text" id="middle_name" name="middle_name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name" class="form-label required">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender" class="form-label required">Gender</label>
+                        <select id="gender" name="gender" class="form-select" required>
+                            <option value="">Select Gender</option>
+                            {% for value, label in gender_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_of_birth" class="form-label required">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="marital_status" class="form-label required">Marital Status</label>
+                        <select id="marital_status" name="marital_status" class="form-select" required>
+                            <option value="">Select Status</option>
+                            {% for value, label in marital_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="occupation" class="form-label required">Occupation</label>
+                    <input type="text" id="occupation" name="occupation" class="form-input" required 
+                           placeholder="e.g., Farmer, Trader, Teacher">
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-phone"></i> Contact Information
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone_number" class="form-label required">Phone Number</label>
+                        <input type="tel" id="phone_number" name="phone_number" class="form-input" required 
+                               placeholder="+255123456789">
+                        <div class="form-help">Include country code (e.g., +255 for Tanzania)</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-input" 
+                               placeholder="client@example.com">
+                        <div class="form-help">Optional - for communication purposes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Identification -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-id-card"></i> Identification
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_type" class="form-label required">ID Type</label>
+                        <select id="id_type" name="id_type" class="form-select" required>
+                            <option value="">Select ID Type</option>
+                            {% for value, label in id_type_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_number" class="form-label required">ID Number</label>
+                        <input type="text" id="id_number" name="id_number" class="form-input" required>
+                        <div class="form-help">Must be unique for each client</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-map-marker-alt"></i> Address Information
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="street" class="form-label required">Street/House Number</label>
+                        <input type="text" id="street" name="street" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ward" class="form-label required">Ward</label>
+                        <input type="text" id="ward" name="ward" class="form-input" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="district" class="form-label required">District</label>
+                        <input type="text" id="district" name="district" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="region" class="form-label required">Region</label>
+                        <input type="text" id="region" name="region" class="form-input" required>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Next of Kin -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-users"></i> Next of Kin Information
+                </h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="next_of_kin_name" class="form-label required">Full Name</label>
+                        <input type="text" id="next_of_kin_name" name="next_of_kin_name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="next_of_kin_relationship" class="form-label required">Relationship</label>
+                        <input type="text" id="next_of_kin_relationship" name="next_of_kin_relationship" 
+                               class="form-input" required placeholder="e.g., Spouse, Parent, Sibling">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="next_of_kin_phone" class="form-label required">Phone Number</label>
+                        <input type="tel" id="next_of_kin_phone" name="next_of_kin_phone" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="next_of_kin_address" class="form-label required">Address</label>
+                        <textarea id="next_of_kin_address" name="next_of_kin_address" class="form-textarea" required></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'borrowers:borrower_list' %}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">Register Client</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('clientForm').addEventListener('submit', function(e) {
+        const phoneNumber = document.getElementById('phone_number').value;
+        const idNumber = document.getElementById('id_number').value;
+        
+        // Phone number validation
+        if (!phoneNumber.startsWith('+')) {
+            e.preventDefault();
+            alert('Phone number must include country code (e.g., +255)');
+            return;
+        }
+        
+        // ID number validation
+        if (idNumber.length < 5) {
+            e.preventDefault();
+            alert('ID number must be at least 5 characters long');
+            return;
+        }
+    });
+    
+    // Auto-format phone number
+    document.getElementById('phone_number').addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length > 0 && !value.startsWith('255')) {
+            if (value.startsWith('0')) {
+                value = '255' + value.substring(1);
+            } else if (!value.startsWith('255')) {
+                value = '255' + value;
+            }
+        }
+        this.value = '+' + value;
+    });
+    
+    // Auto-capitalize names
+    ['first_name', 'middle_name', 'last_name', 'next_of_kin_name'].forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+            this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+        });
+    });
+</script>
+{% endblock %}

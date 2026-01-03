@@ -1,0 +1,464 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Retained Earnings Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .date-filter {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .filter-input {
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-filter {
+        padding: 0.75rem 1.5rem;
+        background-color: #1e3a8a;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-filter:hover {
+        background-color: #1e40af;
+        transform: translateY(-1px);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #1e3a8a, #3730a3);
+    }
+    
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value.positive {
+        color: #059669;
+    }
+    
+    .stat-value.negative {
+        color: #dc2626;
+    }
+    
+    .stat-value.neutral {
+        color: #1e3a8a;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-period {
+        color: #9ca3af;
+        font-size: 0.8rem;
+    }
+    
+    .analysis-section {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .data-table th {
+        background-color: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .data-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    
+    .amount {
+        font-weight: 600;
+        text-align: right;
+    }
+    
+    .amount.positive {
+        color: #059669;
+    }
+    
+    .amount.negative {
+        color: #dc2626;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .ratio-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .ratio-card {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid #1e3a8a;
+    }
+    
+    .ratio-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1e3a8a;
+        margin-bottom: 0.5rem;
+    }
+    
+    .ratio-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .summary-box {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .summary-content {
+        line-height: 1.6;
+    }
+    
+    .highlight {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line"></i>
+                Retained Earnings Analysis
+            </h1>
+            <p class="page-subtitle">Financial performance and retained earnings calculation</p>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="date-filter">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label class="filter-label">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Update Analysis
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Key Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value neutral">₹{{ period_stats.total_income|floatformat:0 }}</div>
+            <div class="stat-label">Total Income</div>
+            <div class="stat-period">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value neutral">₹{{ period_stats.total_expenditure|floatformat:0 }}</div>
+            <div class="stat-label">Total Expenditure</div>
+            <div class="stat-period">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value {% if period_stats.net_income >= 0 %}positive{% else %}negative{% endif %}">
+                ₹{{ period_stats.net_income|floatformat:0 }}
+            </div>
+            <div class="stat-label">Net Income (Period)</div>
+            <div class="stat-period">{{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value {% if retained_earnings.cumulative >= 0 %}positive{% else %}negative{% endif %}">
+                ₹{{ retained_earnings.cumulative|floatformat:0 }}
+            </div>
+            <div class="stat-label">Cumulative Retained Earnings</div>
+            <div class="stat-period">As of {{ end_date|date:"M d, Y" }}</div>
+        </div>
+    </div>
+
+    <!-- Retained Earnings Summary -->
+    <div class="summary-box">
+        <h3 class="summary-title">
+            <i class="fas fa-info-circle"></i>
+            Retained Earnings Summary
+        </h3>
+        <div class="summary-content">
+            Your microfinance institution has <span class="highlight">₹{{ retained_earnings.cumulative|floatformat:0 }}</span> 
+            in cumulative retained earnings as of {{ end_date|date:"F d, Y" }}. This represents the total profits 
+            that have been reinvested back into the business after accounting for 
+            <span class="highlight">₹{{ retained_earnings.capital_withdrawals|floatformat:0 }}</span> in capital withdrawals/distributions.
+            {% if period_stats.profit_margin > 0 %}
+            Your current profit margin is <span class="highlight">{{ period_stats.profit_margin|floatformat:1 }}%</span>, 
+            indicating {{ period_stats.profit_margin|floatformat:1 }} cents of profit for every rupee of income.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Financial Ratios -->
+    <div class="analysis-section">
+        <h3 class="section-title">
+            <i class="fas fa-calculator"></i>
+            Key Financial Ratios
+        </h3>
+        <div class="ratio-grid">
+            <div class="ratio-card">
+                <div class="ratio-value">{{ financial_ratios.profit_margin|floatformat:1 }}%</div>
+                <div class="ratio-label">Profit Margin</div>
+            </div>
+            <div class="ratio-card">
+                <div class="ratio-value">{{ financial_ratios.roe|floatformat:1 }}%</div>
+                <div class="ratio-label">Return on Equity (ROE)</div>
+            </div>
+            <div class="ratio-card">
+                <div class="ratio-value">₹{{ retained_earnings.total_capital_injections|floatformat:0 }}</div>
+                <div class="ratio-label">Total Capital Invested</div>
+            </div>
+            <div class="ratio-card">
+                <div class="ratio-value">₹{{ retained_earnings.capital_withdrawals|floatformat:0 }}</div>
+                <div class="ratio-label">Capital Withdrawals</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Breakdown -->
+    <div class="analysis-section">
+        <h3 class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            Monthly Performance ({{ end_date.year }})
+        </h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Expenditure</th>
+                        <th>Net Income</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month in monthly_data %}
+                    <tr>
+                        <td>{{ month.month }}</td>
+                        <td class="amount">₹{{ month.income|floatformat:0 }}</td>
+                        <td class="amount">₹{{ month.expenditure|floatformat:0 }}</td>
+                        <td class="amount {% if month.net_income >= 0 %}positive{% else %}negative{% endif %}">
+                            ₹{{ month.net_income|floatformat:0 }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Yearly Comparison -->
+    <div class="analysis-section">
+        <h3 class="section-title">
+            <i class="fas fa-chart-bar"></i>
+            Year-over-Year Analysis
+        </h3>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Income</th>
+                        <th>Expenditure</th>
+                        <th>Net Income</th>
+                        <th>Withdrawals</th>
+                        <th>Retained</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year in yearly_data %}
+                    <tr>
+                        <td><strong>{{ year.year }}</strong></td>
+                        <td class="amount">₹{{ year.income|floatformat:0 }}</td>
+                        <td class="amount">₹{{ year.expenditure|floatformat:0 }}</td>
+                        <td class="amount {% if year.net_income >= 0 %}positive{% else %}negative{% endif %}">
+                            ₹{{ year.net_income|floatformat:0 }}
+                        </td>
+                        <td class="amount">₹{{ year.withdrawals|floatformat:0 }}</td>
+                        <td class="amount {% if year.retained >= 0 %}positive{% else %}negative{% endif %}">
+                            ₹{{ year.retained|floatformat:0 }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Calculation Methodology -->
+    <div class="analysis-section">
+        <h3 class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Calculation Methodology
+        </h3>
+        <div style="line-height: 1.8; color: #4b5563;">
+            <p><strong>Retained Earnings Formula:</strong></p>
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: 6px; margin: 1rem 0; font-family: monospace;">
+                Retained Earnings = (Total Income - Total Expenditure) - Capital Withdrawals
+            </div>
+            <ul style="margin-top: 1rem;">
+                <li><strong>Total Income:</strong> All recorded income from various sources</li>
+                <li><strong>Total Expenditure:</strong> Only approved and completed expenditures</li>
+                <li><strong>Capital Withdrawals:</strong> Distributions to shareholders/owners</li>
+                <li><strong>Profit Margin:</strong> (Net Income ÷ Total Income) × 100</li>
+                <li><strong>Return on Equity:</strong> (Net Income ÷ Total Capital Investment) × 100</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when dates change (optional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDate = document.querySelector('input[name="start_date"]');
+        const endDate = document.querySelector('input[name="end_date"]');
+        
+        // You can uncomment this to auto-submit on date change
+        // startDate.addEventListener('change', function() {
+        //     this.form.submit();
+        // });
+        // endDate.addEventListener('change', function() {
+        //     this.form.submit();
+        // });
+    });
+</script>
+{% endblock %}

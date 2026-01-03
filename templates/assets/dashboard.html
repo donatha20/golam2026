@@ -1,0 +1,495 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Assets & Collateral Dashboard - Golam Financial Services{% endblock %}
+{% block page_title %}Assets & Collateral Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.assets {
+        border-left: 4px solid #2b7a76;
+    }
+
+    .stat-card.collaterals {
+        border-left: 4px solid #7c3aed;
+    }
+
+    .stat-card.maintenance {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .stat-card.verification {
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .stat-icon.assets {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+    }
+
+    .stat-icon.collaterals {
+        background: rgba(124, 58, 237, 0.1);
+        color: #7c3aed;
+    }
+
+    .stat-icon.maintenance {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-icon.verification {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    /* Content Sections */
+    .content-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .main-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Recent Items */
+    .recent-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+    }
+
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-info {
+        flex: 1;
+    }
+
+    .recent-name {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .recent-date {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .recent-value {
+        font-weight: 600;
+        color: #2b7a76;
+        font-family: monospace;
+    }
+
+    /* Charts Section */
+    .charts-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .category-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .category-item:last-child {
+        border-bottom: none;
+    }
+
+    .category-name {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .category-stats {
+        text-align: right;
+    }
+
+    .category-count {
+        font-weight: 600;
+        color: #2b7a76;
+    }
+
+    .category-value {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-family: monospace;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            margin: 1rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .content-section,
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'assets:add_asset' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Add Asset
+        </a>
+        <a href="{% url 'assets:add_collateral' %}" class="btn-action">
+            <i class="fas fa-shield-alt"></i> Add Collateral
+        </a>
+        <a href="{% url 'assets:asset_list' %}" class="btn-action secondary">
+            <i class="fas fa-list"></i> View Assets
+        </a>
+        <a href="{% url 'assets:collateral_list' %}" class="btn-action secondary">
+            <i class="fas fa-shield-alt"></i> View Collaterals
+        </a>
+        <a href="{% url 'assets:asset_reports' %}" class="btn-action secondary">
+            <i class="fas fa-chart-bar"></i> Reports
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card assets">
+            <div class="stat-header">
+                <div class="stat-title">Assets</div>
+                <div class="stat-icon assets">
+                    <i class="fas fa-boxes"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ asset_stats.total_assets }}</div>
+            <div class="stat-change">
+                Active: {{ asset_stats.active_assets }}<br>
+                Value: ₹{{ asset_stats.total_asset_value|floatformat:0 }}
+            </div>
+        </div>
+
+        <div class="stat-card collaterals">
+            <div class="stat-header">
+                <div class="stat-title">Collaterals</div>
+                <div class="stat-icon collaterals">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ collateral_stats.total_collaterals }}</div>
+            <div class="stat-change">
+                Held: {{ collateral_stats.held_collaterals }}<br>
+                Value: ₹{{ collateral_stats.total_collateral_value|floatformat:0 }}
+            </div>
+        </div>
+
+        <div class="stat-card maintenance">
+            <div class="stat-header">
+                <div class="stat-title">Maintenance</div>
+                <div class="stat-icon maintenance">
+                    <i class="fas fa-tools"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ asset_stats.maintenance_due }}</div>
+            <div class="stat-change">
+                Due for maintenance<br>
+                Under maintenance: {{ asset_stats.assets_under_maintenance }}
+            </div>
+        </div>
+
+        <div class="stat-card verification">
+            <div class="stat-header">
+                <div class="stat-title">Verification</div>
+                <div class="stat-icon verification">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ collateral_stats.pending_verification }}</div>
+            <div class="stat-change">Pending verification</div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="content-section">
+        <!-- Recent Assets -->
+        <div class="main-card">
+            <div class="card-title">
+                <i class="fas fa-boxes"></i>
+                Recent Assets
+            </div>
+            
+            <div class="recent-list">
+                {% if recent_assets %}
+                    {% for asset in recent_assets %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">
+                                    <a href="{% url 'assets:asset_detail' asset.id %}" style="text-decoration: none; color: inherit;">
+                                        {{ asset.asset_name }}
+                                    </a>
+                                </div>
+                                <div class="recent-date">{{ asset.category.name }} - {{ asset.created_at|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="recent-value">₹{{ asset.current_value|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No assets recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Collaterals -->
+        <div class="main-card">
+            <div class="card-title">
+                <i class="fas fa-shield-alt"></i>
+                Recent Collaterals
+            </div>
+            
+            <div class="recent-list">
+                {% if recent_collaterals %}
+                    {% for collateral in recent_collaterals %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">
+                                    <a href="{% url 'assets:collateral_detail' collateral.id %}" style="text-decoration: none; color: inherit;">
+                                        {{ collateral.title }}
+                                    </a>
+                                </div>
+                                <div class="recent-date">{{ collateral.borrower.get_full_name }} - {{ collateral.created_at|date:"M d, Y" }}</div>
+                            </div>
+                            <div class="recent-value">₹{{ collateral.estimated_value|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No collaterals recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <!-- Assets by Category -->
+        <div class="chart-card">
+            <div class="card-title">
+                <i class="fas fa-chart-pie"></i>
+                Assets by Category
+            </div>
+            
+            <div>
+                {% if assets_by_category %}
+                    {% for category in assets_by_category %}
+                        <div class="category-item">
+                            <div class="category-name">{{ category.name }}</div>
+                            <div class="category-stats">
+                                <div class="category-count">{{ category.asset_count }} assets</div>
+                                <div class="category-value">₹{{ category.total_value|floatformat:0 }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <p>No asset categories with assets yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Collaterals by Type -->
+        <div class="chart-card">
+            <div class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                Collaterals by Type
+            </div>
+            
+            <div>
+                {% if collaterals_by_type %}
+                    {% for type in collaterals_by_type %}
+                        <div class="category-item">
+                            <div class="category-name">{{ type.name }}</div>
+                            <div class="category-stats">
+                                <div class="category-count">{{ type.collateral_count }} items</div>
+                                <div class="category-value">₹{{ type.total_value|floatformat:0 }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <p>No collateral types with items yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard data every 30 seconds
+    setInterval(function() {
+        console.log('Checking for dashboard updates...');
+    }, 30000);
+</script>
+{% endblock %}

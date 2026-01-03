@@ -1,0 +1,30 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Cash Flow Statement{% endblock %}
+{% block page_title %}Cash Flow Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary-teal"></i>
+                    Cash Flow Statement
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                    <h4>{{ title }}</h4>
+                    <p class="text-muted">{{ message }}</p>
+                    <a href="{% url 'financial_statements:dashboard' %}" class="btn btn-primary-teal">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

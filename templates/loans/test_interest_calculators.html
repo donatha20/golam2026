@@ -1,0 +1,628 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Interest Calculator - Golam Financial Services{% endblock %}
+{% block page_title %}Interest Calculator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calculator-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    .calculator-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    .calculator-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .form-input, .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    .input-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .input-addon {
+        padding: 0.75rem;
+        background: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #6b7280;
+        min-width: 60px;
+        text-align: center;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        justify-content: center;
+    }
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        width: 100%;
+    }
+    .btn-primary:hover {
+        background: #236b67;
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+        width: 100%;
+    }
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+    .results-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .result-card {
+        background: #f9fafb;
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    .result-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .result-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2b7a76;
+    }
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+    .schedule-table thead tr {
+        background-color: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .schedule-table th {
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+    .schedule-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .schedule-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    .comparison-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .method-tabs {
+        display: flex;
+        border-bottom: 2px solid #e5e7eb;
+        margin-bottom: 2rem;
+        gap: 0.5rem;
+    }
+    .method-tab {
+        padding: 0.75rem 1.5rem;
+        background: transparent;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .method-tab.active {
+        color: #2b7a76;
+        border-bottom-color: #2b7a76;
+        font-weight: 600;
+    }
+    .method-tab:hover {
+        color: #2b7a76;
+    }
+    .chart-container {
+        height: 400px;
+        margin: 2rem 0;
+        background: #f9fafb;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+    }
+    .calculator-help {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    .help-title {
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+    }
+    .help-text {
+        font-size: 0.875rem;
+        color: #1e40af;
+        line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+        .calculator-grid {
+            grid-template-columns: 1fr;
+        }
+        .results-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calculator-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-calculator"></i>
+            Interest Calculator & Loan Simulator
+        </h1>
+        <p class="page-subtitle">Calculate interest rates, payments, and repayment schedules</p>
+    </div>
+
+    <div class="calculator-grid">
+        <!-- Simple Interest Calculator -->
+        <div class="calculator-section">
+            <h3 class="section-title">
+                <i class="fas fa-percent"></i>
+                Simple Interest Calculator
+            </h3>
+            <form id="simple-interest-form">
+                <div class="form-group">
+                    <label class="form-label">Principal Amount</label>
+                    <div class="input-group">
+                        <span class="input-addon">TZS</span>
+                        <input type="number" id="simple-principal" class="form-input" placeholder="100,000" min="1000" step="1000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Interest Rate</label>
+                    <div class="input-group">
+                        <input type="number" id="simple-rate" class="form-input" placeholder="15" min="0.1" step="0.1" max="100">
+                        <span class="input-addon">%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time Period</label>
+                    <div class="input-group">
+                        <input type="number" id="simple-time" class="form-input" placeholder="12" min="1" max="120">
+                        <span class="input-addon">Months</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculateSimpleInterest()">
+                    <i class="fas fa-calculator"></i> Calculate
+                </button>
+            </form>
+        </div>
+
+        <!-- Compound Interest Calculator -->
+        <div class="calculator-section">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Compound Interest Calculator
+            </h3>
+            <form id="compound-interest-form">
+                <div class="form-group">
+                    <label class="form-label">Principal Amount</label>
+                    <div class="input-group">
+                        <span class="input-addon">TZS</span>
+                        <input type="number" id="compound-principal" class="form-input" placeholder="100,000" min="1000" step="1000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Annual Interest Rate</label>
+                    <div class="input-group">
+                        <input type="number" id="compound-rate" class="form-input" placeholder="18" min="0.1" step="0.1" max="100">
+                        <span class="input-addon">%</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Compounding Frequency</label>
+                    <select id="compound-frequency" class="form-select">
+                        <option value="12">Monthly</option>
+                        <option value="4">Quarterly</option>
+                        <option value="2">Semi-annually</option>
+                        <option value="1">Annually</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time Period</label>
+                    <div class="input-group">
+                        <input type="number" id="compound-time" class="form-input" placeholder="2" min="0.1" step="0.1" max="10">
+                        <span class="input-addon">Years</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="calculateCompoundInterest()">
+                    <i class="fas fa-calculator"></i> Calculate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section" id="results-section" style="display: none;">
+        <h3 class="section-title">
+            <i class="fas fa-chart-bar"></i>
+            Calculation Results
+        </h3>
+        <div class="results-grid" id="results-grid">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Loan Payment Calculator -->
+    <div class="calculator-section">
+        <h3 class="section-title">
+            <i class="fas fa-credit-card"></i>
+            Loan Payment Calculator
+        </h3>
+        <div class="calculator-grid">
+            <div>
+                <form id="loan-payment-form">
+                    <div class="form-group">
+                        <label class="form-label">Loan Amount</label>
+                        <div class="input-group">
+                            <span class="input-addon">TZS</span>
+                            <input type="number" id="loan-amount" class="form-input" placeholder="500,000" min="10000" step="10000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Interest Rate (Annual)</label>
+                        <div class="input-group">
+                            <input type="number" id="loan-rate" class="form-input" placeholder="20" min="0.1" step="0.1" max="100">
+                            <span class="input-addon">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loan Term</label>
+                        <div class="input-group">
+                            <input type="number" id="loan-term" class="form-input" placeholder="24" min="1" max="120">
+                            <span class="input-addon">Months</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select id="payment-method" class="form-select">
+                            <option value="equal-installments">Equal Monthly Installments</option>
+                            <option value="equal-principal">Equal Principal Payments</option>
+                            <option value="interest-only">Interest Only</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="calculateLoanPayment()">
+                        <i class="fas fa-calculator"></i> Calculate Payment
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="generateSchedule()">
+                        <i class="fas fa-table"></i> Generate Schedule
+                    </button>
+                </form>
+            </div>
+            <div id="payment-results" style="display: none;">
+                <div class="result-card">
+                    <div class="result-label">Monthly Payment</div>
+                    <div class="result-value" id="monthly-payment">-</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Total Interest</div>
+                    <div class="result-value" id="total-interest">-</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Total Amount</div>
+                    <div class="result-value" id="total-amount">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repayment Schedule -->
+    <div class="results-section" id="schedule-section" style="display: none;">
+        <h3 class="section-title">
+            <i class="fas fa-calendar-alt"></i>
+            Repayment Schedule
+        </h3>
+        <div class="chart-container">
+            <div>
+                <i class="fas fa-chart-area" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <div>Payment Schedule Chart (Chart.js integration can be added here)</div>
+            </div>
+        </div>
+        <table class="schedule-table" id="schedule-table">
+            <thead>
+                <tr>
+                    <th>Payment #</th>
+                    <th>Due Date</th>
+                    <th>Payment Amount</th>
+                    <th>Principal</th>
+                    <th>Interest</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-tbody">
+                <!-- Schedule will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Interest Method Comparison -->
+    <div class="comparison-section">
+        <h3 class="section-title">
+            <i class="fas fa-balance-scale"></i>
+            Interest Method Comparison
+        </h3>
+        <div class="method-tabs">
+            <button class="method-tab active" onclick="showMethod('simple')">Simple Interest</button>
+            <button class="method-tab" onclick="showMethod('compound')">Compound Interest</button>
+            <button class="method-tab" onclick="showMethod('flat')">Flat Rate</button>
+            <button class="method-tab" onclick="showMethod('reducing')">Reducing Balance</button>
+        </div>
+        <div id="method-comparison">
+            <!-- Comparison content will be populated here -->
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="calculator-help">
+        <div class="help-title">Interest Calculation Methods</div>
+        <div class="help-text">
+            <strong>Simple Interest:</strong> Interest = Principal × Rate × Time<br>
+            <strong>Compound Interest:</strong> A = P(1 + r/n)^(nt)<br>
+            <strong>Flat Rate:</strong> Fixed interest on original principal throughout loan term<br>
+            <strong>Reducing Balance:</strong> Interest calculated on outstanding balance
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateSimpleInterest() {
+    const principal = parseFloat(document.getElementById('simple-principal').value) || 0;
+    const rate = parseFloat(document.getElementById('simple-rate').value) || 0;
+    const time = parseFloat(document.getElementById('simple-time').value) || 0;
+    
+    if (principal && rate && time) {
+        const interest = (principal * rate * time) / 1200; // Monthly calculation
+        const total = principal + interest;
+        
+        showResults([
+            { label: 'Principal Amount', value: formatCurrency(principal) },
+            { label: 'Interest Amount', value: formatCurrency(interest) },
+            { label: 'Total Amount', value: formatCurrency(total) },
+            { label: 'Monthly Interest', value: formatCurrency(interest / time) }
+        ]);
+    }
+}
+
+function calculateCompoundInterest() {
+    const principal = parseFloat(document.getElementById('compound-principal').value) || 0;
+    const rate = parseFloat(document.getElementById('compound-rate').value) || 0;
+    const frequency = parseFloat(document.getElementById('compound-frequency').value) || 12;
+    const time = parseFloat(document.getElementById('compound-time').value) || 0;
+    
+    if (principal && rate && time) {
+        const amount = principal * Math.pow((1 + (rate/100) / frequency), frequency * time);
+        const interest = amount - principal;
+        
+        showResults([
+            { label: 'Principal Amount', value: formatCurrency(principal) },
+            { label: 'Compound Interest', value: formatCurrency(interest) },
+            { label: 'Final Amount', value: formatCurrency(amount) },
+            { label: 'Effective Rate', value: ((amount / principal - 1) / time * 100).toFixed(2) + '%' }
+        ]);
+    }
+}
+
+function calculateLoanPayment() {
+    const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
+    const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
+    const term = parseFloat(document.getElementById('loan-term').value) || 0;
+    const method = document.getElementById('payment-method').value;
+    
+    if (amount && rate && term) {
+        const monthlyRate = rate / 100 / 12;
+        let monthlyPayment, totalInterest, totalAmount;
+        
+        if (method === 'equal-installments') {
+            monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / 
+                           (Math.pow(1 + monthlyRate, term) - 1);
+            totalAmount = monthlyPayment * term;
+            totalInterest = totalAmount - amount;
+        } else if (method === 'equal-principal') {
+            const principalPayment = amount / term;
+            monthlyPayment = principalPayment + (amount * monthlyRate);
+            totalInterest = amount * monthlyRate * (term + 1) / 2;
+            totalAmount = amount + totalInterest;
+        }
+        
+        document.getElementById('monthly-payment').textContent = formatCurrency(monthlyPayment);
+        document.getElementById('total-interest').textContent = formatCurrency(totalInterest);
+        document.getElementById('total-amount').textContent = formatCurrency(totalAmount);
+        document.getElementById('payment-results').style.display = 'block';
+    }
+}
+
+function generateSchedule() {
+    const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
+    const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
+    const term = parseFloat(document.getElementById('loan-term').value) || 0;
+    
+    if (amount && rate && term) {
+        const monthlyRate = rate / 100 / 12;
+        const monthlyPayment = amount * (monthlyRate * Math.pow(1 + monthlyRate, term)) / 
+                              (Math.pow(1 + monthlyRate, term) - 1);
+        
+        let balance = amount;
+        const tbody = document.getElementById('schedule-tbody');
+        tbody.innerHTML = '';
+        
+        for (let i = 1; i <= term; i++) {
+            const interestPayment = balance * monthlyRate;
+            const principalPayment = monthlyPayment - interestPayment;
+            balance -= principalPayment;
+            
+            const dueDate = new Date();
+            dueDate.setMonth(dueDate.getMonth() + i);
+            
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${i}</td>
+                <td>${dueDate.toLocaleDateString()}</td>
+                <td>${formatCurrency(monthlyPayment)}</td>
+                <td>${formatCurrency(principalPayment)}</td>
+                <td>${formatCurrency(interestPayment)}</td>
+                <td>${formatCurrency(Math.max(0, balance))}</td>
+            `;
+        }
+        
+        document.getElementById('schedule-section').style.display = 'block';
+    }
+}
+
+function showResults(results) {
+    const grid = document.getElementById('results-grid');
+    grid.innerHTML = '';
+    
+    results.forEach(result => {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.innerHTML = `
+            <div class="result-label">${result.label}</div>
+            <div class="result-value">${result.value}</div>
+        `;
+        grid.appendChild(card);
+    });
+    
+    document.getElementById('results-section').style.display = 'block';
+}
+
+function showMethod(method) {
+    // Update active tab
+    document.querySelectorAll('.method-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Show method comparison content
+    const comparison = document.getElementById('method-comparison');
+    comparison.innerHTML = `<p>Comparison for ${method} interest method will be displayed here.</p>`;
+}
+
+function formatCurrency(amount) {
+    return 'TZS ' + new Intl.NumberFormat('en-TZ').format(Math.round(amount));
+}
+
+// Initialize the calculator
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default values
+    document.getElementById('simple-principal').value = '100000';
+    document.getElementById('simple-rate').value = '15';
+    document.getElementById('simple-time').value = '12';
+    
+    document.getElementById('compound-principal').value = '100000';
+    document.getElementById('compound-rate').value = '18';
+    document.getElementById('compound-time').value = '2';
+    
+    document.getElementById('loan-amount').value = '500000';
+    document.getElementById('loan-rate').value = '20';
+    document.getElementById('loan-term').value = '24';
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,265 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Collection Summary{% endblock %}
+{% block page_title %}Collection Summary Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Summary Cards -->
+    <div class="col-lg-6 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ total_collections|floatformat:0 }}</h5>
+                <p class="card-text">Total Collections</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ collection_count }}</h5>
+                <p class="card-text">Number of Payments</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-money-check-alt me-2" style="color: #2b7a76;"></i>
+                    Collection Summary Report
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" id="export-excel-btn">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Date Range Filter -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Report Header -->
+                <div class="text-center mb-4">
+                    <h4>Collection Summary Report</h4>
+                    <p class="text-muted">For the period from {{ start_date }} to {{ end_date }}</p>
+                </div>
+
+                <!-- Collections by Payment Method -->
+                <div class="row mb-4">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Collections by Payment Method</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Payment Method</th>
+                                                <th class="text-center">Count</th>
+                                                <th class="text-end">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for method in collections_by_method %}
+                                            <tr>
+                                                <td>{{ method.payment_method|default:"Cash"|title }}</td>
+                                                <td class="text-center">{{ method.count }}</td>
+                                                <td class="text-end">{{ method.total|floatformat:2 }}</td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">No collections found.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Collections Chart Area -->
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Daily Collection Trend</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="dailyCollectionsChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Collections Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Daily Collections Detail</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th class="text-center">Number of Payments</th>
+                                                <th class="text-end">Total Amount</th>
+                                                <th class="text-end">Average Payment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for day in daily_collections %}
+                                            <tr>
+                                                <td>{{ day.payment_date }}</td>
+                                                <td class="text-center">{{ day.count }}</td>
+                                                <td class="text-end">{{ day.total|floatformat:2 }}</td>
+                                                <td class="text-end">{{ day.average|floatformat:2 }}</td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">No daily collection data available.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                        <tfoot class="table-dark">
+                                            <tr>
+                                                <th>TOTAL</th>
+                                                <th class="text-center">{{ collection_count }}</th>
+                                                <th class="text-end">{{ total_collections|floatformat:2 }}</th>
+                                                <th class="text-end">{{ overall_average|floatformat:2 }}</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Export to Excel functionality
+    const exportBtn = document.getElementById('export-excel-btn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const params = new URLSearchParams(window.location.search);
+            // Remove any existing export parameters
+            params.delete('export');
+            // Add single export parameter
+            params.append('export', 'excel');
+            window.location.href = '?' + params.toString();
+        });
+    }
+
+    // Daily Collections Chart
+    const ctx = document.getElementById('dailyCollectionsChart');
+    if (ctx) {
+        const dailyData = [
+            {% for day in daily_collections %}
+            {
+                date: '{{ day.payment_date|date:"M d" }}',
+                amount: {{ day.total|default:0 }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dailyData.map(d => d.date),
+                datasets: [{
+                    label: 'Daily Collections',
+                    data: dailyData.map(d => d.amount),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₹' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Amount: ₹' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .form-control, .form-label {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    canvas {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

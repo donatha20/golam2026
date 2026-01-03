@@ -1,0 +1,176 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Company Profile - Golam Financial Services{% endblock %}
+{% block page_title %}Company Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2 text-primary-teal"></i>
+                    Company Profile
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Basic Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Company Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ company.name|default:'' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="legal_name" class="form-label">Legal Name</label>
+                            <input type="text" class="form-control" id="legal_name" name="legal_name" value="{{ company.legal_name|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="registration_number" class="form-label">Registration Number</label>
+                            <input type="text" class="form-control" id="registration_number" name="registration_number" value="{{ company.registration_number|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tax_id" class="form-label">Tax ID</label>
+                            <input type="text" class="form-control" id="tax_id" name="tax_id" value="{{ company.tax_id|default:'' }}">
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address Information
+                            </h6>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="address_line_1" class="form-label">Address Line 1 *</label>
+                            <input type="text" class="form-control" id="address_line_1" name="address_line_1" value="{{ company.address_line_1|default:'' }}" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="address_line_2" class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="address_line_2" name="address_line_2" value="{{ company.address_line_2|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="city" class="form-label">City *</label>
+                            <input type="text" class="form-control" id="city" name="city" value="{{ company.city|default:'' }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="state" class="form-label">State *</label>
+                            <input type="text" class="form-control" id="state" name="state" value="{{ company.state|default:'' }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="postal_code" class="form-label">Postal Code *</label>
+                            <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ company.postal_code|default:'' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="country" class="form-label">Country *</label>
+                            <input type="text" class="form-control" id="country" name="country" value="{{ company.country|default:'India' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-phone me-2"></i>Contact Information
+                            </h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ company.phone_number|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ company.email|default:'' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="website" class="form-label">Website</label>
+                            <input type="url" class="form-control" id="website" name="website" value="{{ company.website|default:'' }}">
+                        </div>
+                    </div>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary-teal border-bottom pb-2 mb-3">
+                                <i class="fas fa-money-bill me-2"></i>Financial Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="base_currency" class="form-label">Base Currency *</label>
+                            <select class="form-control" id="base_currency" name="base_currency" required>
+                                <option value="INR" {% if company.base_currency == 'INR' or not company %}selected{% endif %}>INR - Indian Rupee</option>
+                                <option value="USD" {% if company.base_currency == 'USD' %}selected{% endif %}>USD - US Dollar</option>
+                                <option value="EUR" {% if company.base_currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+                                <option value="GBP" {% if company.base_currency == 'GBP' %}selected{% endif %}>GBP - British Pound</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="financial_year_start" class="form-label">Financial Year Start *</label>
+                            <input type="date" class="form-control" id="financial_year_start" name="financial_year_start" 
+                                   value="{{ company.financial_year_start|date:'Y-m-d'|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'core:settings_dashboard' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Settings
+                                </a>
+                                <button type="submit" class="btn btn-primary-teal">
+                                    <i class="fas fa-save me-1"></i>
+                                    {% if company %}Update Profile{% else %}Create Profile{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set default financial year start if not set
+    if (!$('#financial_year_start').val()) {
+        var currentYear = new Date().getFullYear();
+        var defaultDate = currentYear + '-04-01'; // April 1st
+        $('#financial_year_start').val(defaultDate);
+    }
+    
+    // Form validation
+    $('form').on('submit', function(e) {
+        var requiredFields = ['name', 'address_line_1', 'city', 'state', 'postal_code', 'country', 'base_currency', 'financial_year_start'];
+        var isValid = true;
+        
+        requiredFields.forEach(function(field) {
+            var value = $('#' + field).val().trim();
+            if (!value) {
+                isValid = false;
+                $('#' + field).addClass('is-invalid');
+            } else {
+                $('#' + field).removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+});
+</script>
+{% endblock %}

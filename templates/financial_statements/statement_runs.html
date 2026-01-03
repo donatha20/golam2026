@@ -1,0 +1,167 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Financial Statement Runs{% endblock %}
+{% block page_title %}Statement History{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-journal-whills me-2 text-primary-teal"></i>
+                    Financial Statement Runs
+                </h5>
+                <a href="{% url 'financial_statements:generate_statement' %}" class="btn btn-primary-teal">
+                    <i class="fas fa-plus me-1"></i>Generate Statement
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Filter Form -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                {{ filter_form.period.label_tag }}
+                                {{ filter_form.period }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ filter_form.status.label_tag }}
+                                {{ filter_form.status }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ filter_form.year.label_tag }}
+                                {{ filter_form.year }}
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-filter me-1"></i>Filter
+                                </button>
+                                <a href="{% url 'financial_statements:statement_runs' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>Clear
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {% if runs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Run ID</th>
+                                    <th>Statement Type</th>
+                                    <th>Period</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Created Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for run in runs %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ run.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ run.get_statement_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ run.period.name }}</strong><br>
+                                        <small class="text-muted">{{ run.period.start_date }} to {{ run.period.end_date }}</small>
+                                    </td>
+                                    <td>
+                                        {% if run.status == 'completed' %}
+                                            <span class="badge bg-success">{{ run.get_status_display }}</span>
+                                        {% elif run.status == 'failed' %}
+                                            <span class="badge bg-danger">{{ run.get_status_display }}</span>
+                                        {% elif run.status == 'processing' %}
+                                            <span class="badge bg-warning">{{ run.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ run.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ run.created_by.get_full_name|default:run.created_by.username }}</td>
+                                    <td>{{ run.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if run.status == 'completed' %}
+                                                <a href="{% url 'financial_statements:view_statement' run.id %}" class="btn btn-sm btn-outline-primary" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'financial_statements:export_pdf' run.id %}" class="btn btn-sm btn-outline-success" title="Export PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                                <a href="{% url 'financial_statements:export_excel' run.id %}" class="btn btn-sm btn-outline-info" title="Export Excel">
+                                                    <i class="fas fa-file-excel"></i>
+                                                </a>
+                                            {% else %}
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Not Available">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if runs.has_other_pages %}
+                    <nav aria-label="Statement runs pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if runs.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ runs.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in runs.paginator.page_range %}
+                                {% if runs.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if runs.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ runs.next_page_number }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-journal-whills fa-3x text-muted mb-3"></i>
+                        <h5>No Statement Runs Found</h5>
+                        <p class="text-muted">Generate your first financial statement to see the history here.</p>
+                        <a href="{% url 'financial_statements:generate_statement' %}" class="btn btn-primary-teal">
+                            <i class="fas fa-plus me-1"></i>Generate First Statement
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add any JavaScript functionality here
+    console.log('Statement runs page loaded');
+});
+</script>
+{% endblock %}

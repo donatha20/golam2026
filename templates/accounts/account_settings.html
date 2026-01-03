@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Account Settings - Golam Financial Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .settings-header {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .settings-title {
+        color: #2b7a76;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .settings-subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+    
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .settings-card {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .card-title {
+        color: #2b7a76;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .session-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .session-info {
+        flex: 1;
+    }
+    
+    .session-ip {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .session-time {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .session-current {
+        background: rgba(43, 122, 118, 0.1);
+        border: 1px solid rgba(43, 122, 118, 0.2);
+    }
+    
+    .btn-terminate {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .btn-terminate:hover {
+        background: #c82333;
+    }
+    
+    .btn-terminate-all {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 15px;
+        transition: background 0.3s ease;
+    }
+    
+    .btn-terminate-all:hover {
+        background: #5a6268;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(43, 122, 118, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2b7a76;
+        margin-right: 15px;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-action {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .activity-time {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .activity-description {
+        font-size: 14px;
+        color: #666;
+        margin-top: 2px;
+    }
+    
+    .no-data {
+        text-align: center;
+        color: #666;
+        padding: 30px;
+        font-style: italic;
+    }
+    
+    .current-badge {
+        background: #28a745;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="account-settings-container">
+    <div class="settings-header">
+        <h1 class="settings-title">Account Settings</h1>
+        <p class="settings-subtitle">Manage your account security and view activity</p>
+    </div>
+    
+    <div class="settings-grid">
+        <!-- Active Sessions Card -->
+        <div class="settings-card">
+            <h2 class="card-title">
+                <i class="fas fa-desktop"></i>
+                Active Sessions
+            </h2>
+            
+            {% if user_sessions %}
+                {% for session in user_sessions %}
+                    <div class="session-item {% if session.session_key == request.session.session_key %}session-current{% endif %}">
+                        <div class="session-info">
+                            <div class="session-ip">
+                                <i class="fas fa-globe"></i>
+                                {{ session.ip_address }}
+                                {% if session.session_key == request.session.session_key %}
+                                    <span class="current-badge">Current</span>
+                                {% endif %}
+                            </div>
+                            <div class="session-time">
+                                <i class="fas fa-clock"></i>
+                                {{ session.login_time|date:"M d, Y H:i" }}
+                            </div>
+                        </div>
+                        {% if session.session_key != request.session.session_key %}
+                            <button class="btn-terminate" onclick="terminateSession({{ session.id }})">
+                                <i class="fas fa-times"></i> Terminate
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+                <button class="btn-terminate-all" onclick="terminateAllSessions()">
+                    <i class="fas fa-ban"></i> Terminate All Other Sessions
+                </button>
+            {% else %}
+                <div class="no-data">
+                    <i class="fas fa-desktop fa-2x"></i>
+                    <p>No active sessions found</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Recent Activity Card -->
+        <div class="settings-card">
+            <h2 class="card-title">
+                <i class="fas fa-history"></i>
+                Recent Activity
+            </h2>
+            
+            {% if recent_activities %}
+                {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-{% if activity.action == 'LOGIN' %}sign-in-alt{% elif activity.action == 'LOGOUT' %}sign-out-alt{% elif activity.action == 'UPDATE_PROFILE' %}user-edit{% elif activity.action == 'CHANGE_PASSWORD' %}key{% else %}cog{% endif %}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-action">{{ activity.action|title|replace:"_":" " }}</div>
+                            <div class="activity-time">{{ activity.timestamp|date:"M d, Y H:i" }}</div>
+                            {% if activity.description %}
+                                <div class="activity-description">{{ activity.description }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data">
+                    <i class="fas fa-history fa-2x"></i>
+                    <p>No recent activity found</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function terminateSession(sessionId) {
+    if (confirm('Are you sure you want to terminate this session?')) {
+        fetch(`/accounts/sessions/${sessionId}/terminate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while terminating the session.');
+        });
+    }
+}
+
+function terminateAllSessions() {
+    if (confirm('Are you sure you want to terminate all other sessions? This will log you out from all other devices.')) {
+        fetch('/accounts/sessions/terminate-all/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while terminating sessions.');
+        });
+    }
+}
+</script>
+{% endblock %}

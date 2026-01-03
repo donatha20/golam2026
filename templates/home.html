@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Loan Management System - Professional Microfinance Solutions</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <style>
+        :root {
+            --primary-teal: #1e7570;
+            --teal-light: #4a9b96;
+            --teal-lighter: #7bb8b4;
+            --teal-lightest: #e8f4f3;
+            --primary-red: #dc3545;
+            --red-light: #f8d7da;
+            --red-lightest: #fdf2f2;
+            --gray-800: #2d3748;
+            --gray-600: #718096;
+            --gray-100: #f7fafc;
+            --success: #28a745;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            overflow-x: hidden;
+        }
+
+        .container-fluid {
+            max-width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-transparent fixed-top" id="mainNav" style="transition: all 0.3s ease; padding: 1rem 0; z-index: 1000;">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#home" style="font-size: 1.25rem;">
+                <i class="fas fa-university me-2"></i>
+                <span class="d-none d-sm-inline">Loan Management System</span>
+                <span class="d-inline d-sm-none">LMS</span>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="#services">Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="#stats">Impact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="#contact">Contact</a>
+                    </li>
+                </ul>
+
+                <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-in-alt me-2"></i>Staff Login
+                    </a>
+                    <a href="#contact" class="btn btn-light text-primary-teal fw-medium btn-sm">
+                        <i class="fas fa-envelope me-2"></i>Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" style="position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; padding-top: 80px; background: linear-gradient(135deg, #1e7570 0%, #4a9b96 50%, #7bb8b4 100%);">
+        <div class="container-fluid">
+            <div class="row align-items-center min-vh-100 g-4">
+                <div class="col-lg-6 col-md-12" data-aos="fade-right">
+                    <div style="color: white; z-index: 2; padding: 1rem;">
+                        <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; line-height: 1.2; margin-bottom: 1.5rem;">
+                            Professional
+                            <span style="background: linear-gradient(45deg, #ffffff, #acd4d2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Loan Management</span>
+                            System
+                        </h1>
+                        <p style="font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 400; line-height: 1.6; margin-bottom: 2rem; opacity: 0.9;">
+                            Complete microfinance management solution with automated workflows,
+                            SMS notifications, and comprehensive reporting for modern financial institutions.
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 2rem;">
+                            <div style="display: flex; align-items: center; font-weight: 500; opacity: 0.9;">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Automated SMS Alerts
+                            </div>
+                            <div style="display: flex; align-items: center; font-weight: 500; opacity: 0.9;">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Real-time Analytics
+                            </div>
+                            <div style="display: flex; align-items: center; font-weight: 500; opacity: 0.9;">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Secure & Scalable
+                            </div>
+                            <div style="display: flex; align-items: center; font-weight: 500; opacity: 0.9;">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Mobile Responsive
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row gap-3">
+                            <a href="{% url 'login' %}" class="btn btn-light btn-lg text-primary-teal fw-bold">
+                                <i class="fas fa-sign-in-alt me-2"></i>Access System
+                            </a>
+                            <a href="#about" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-info-circle me-2"></i>Learn More
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-12" data-aos="fade-left">
+                    <div style="position: relative; padding: 2rem 1rem;">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; padding: 1.5rem; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" data-aos="zoom-in" data-aos-delay="200">
+                                    <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-teal);"></i>
+                                    <h4 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--gray-800);">1000+</h4>
+                                    <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">Active Users</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; padding: 1.5rem; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" data-aos="zoom-in" data-aos-delay="400">
+                                    <i class="fas fa-money-bill-wave" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--success);"></i>
+                                    <h4 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--gray-800);">₹10M+</h4>
+                                    <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">Loans Managed</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; padding: 1.5rem; text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);" data-aos="zoom-in" data-aos-delay="600">
+                                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--primary-red);"></i>
+                                    <h4 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--gray-800);">99%</h4>
+                                    <p style="font-size: 0.875rem; color: var(--gray-600); margin: 0;">Uptime</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" style="padding: 5rem 0; background: #f8f9fa;">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+                    <h2 style="font-size: clamp(2rem, 4vw, 2.5rem); font-weight: 700; color: var(--gray-800); margin-bottom: 1.5rem;">
+                        Professional Loan Management System
+                    </h2>
+                    <p style="font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--gray-600); line-height: 1.7; max-width: 800px; margin: 0 auto;">
+                        Complete microfinance management solution designed for modern financial institutions.
+                        Handle every aspect of your operations with our comprehensive, secure, and user-friendly platform.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row mt-5 g-4">
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+                    <div style="background: white; border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(30, 117, 112, 0.1); height: 100%; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="background: var(--primary-teal); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-users" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <h4 style="font-weight: 600; color: var(--gray-800); margin-bottom: 1rem;">User Management</h4>
+                        <p style="color: var(--gray-600); line-height: 1.6; margin: 0;">Role-based access control with comprehensive user management and activity tracking.</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div style="background: white; border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(30, 117, 112, 0.1); height: 100%; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="background: var(--primary-red); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-mobile-alt" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <h4 style="font-weight: 600; color: var(--gray-800); margin-bottom: 1rem;">SMS Integration</h4>
+                        <p style="color: var(--gray-600); line-height: 1.6; margin: 0;">Automated SMS notifications for payments, reminders, and important updates.</p>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div style="background: white; border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(30, 117, 112, 0.1); height: 100%; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="background: var(--success); width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                            <i class="fas fa-chart-bar" style="color: white; font-size: 1.5rem;"></i>
+                        </div>
+                        <h4 style="font-weight: 600; color: var(--gray-800); margin-bottom: 1rem;">Advanced Analytics</h4>
+                        <p style="color: var(--gray-600); line-height: 1.6; margin: 0;">Real-time reporting and business intelligence for informed decision making.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+                    <h2 class="section-title">Our Services</h2>
+                    <p class="section-subtitle">
+                        Comprehensive financial solutions tailored to meet the diverse needs 
+                        of our community members.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-6 mb-4" data-aos="fade-right">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="service-content">
+                            <h4>Microloans</h4>
+                            <p>Small business loans from TSh 100,000 to TSh 5,000,000 with flexible terms and competitive rates.</p>
+                            <ul class="service-features">
+                                <li>Quick approval process</li>
+                                <li>Flexible repayment schedules</li>
+                                <li>No hidden fees</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4" data-aos="fade-left">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="service-content">
+                            <h4>Savings Programs</h4>
+                            <p>Secure savings accounts with attractive interest rates to help you build financial security.</p>
+                            <ul class="service-features">
+                                <li>Competitive interest rates</li>
+                                <li>No minimum balance</li>
+                                <li>Easy access to funds</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4" data-aos="fade-right">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="service-content">
+                            <h4>Group Lending</h4>
+                            <p>Community-based lending programs that leverage social collateral for better access to credit.</p>
+                            <ul class="service-features">
+                                <li>Lower interest rates</li>
+                                <li>Peer support system</li>
+                                <li>Shared responsibility</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4" data-aos="fade-left">
+                    <div class="service-card">
+                        <div class="service-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="service-content">
+                            <h4>Business Advisory</h4>
+                            <p>Expert guidance and mentorship to help your business grow and succeed in the market.</p>
+                            <ul class="service-features">
+                                <li>Business planning support</li>
+                                <li>Financial management training</li>
+                                <li>Market analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Animated Stats Section -->
+    <section id="stats" class="stats-section py-5">
+        <div class="stats-background"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center mb-5" data-aos="fade-up">
+                    <h2 class="section-title text-white">Our Impact in Numbers</h2>
+                    <p class="section-subtitle text-white opacity-75">
+                        See how we're making a difference in the Morogoro community
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-3 col-6 mb-4" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="stat-item text-center">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="stat-number" data-target="500">0</h3>
+                        <p class="stat-label">Active Borrowers</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6 mb-4" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="stat-item text-center">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h3 class="stat-number" data-target="50">0</h3>
+                        <p class="stat-label">Million TSh Disbursed</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6 mb-4" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="stat-item text-center">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <h3 class="stat-number" data-target="95">0</h3>
+                        <p class="stat-label">Repayment Rate</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6 mb-4" data-aos="zoom-in" data-aos-delay="400">
+                    <div class="stat-item text-center">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <h3 class="stat-number" data-target="5">0</h3>
+                        <p class="stat-label">Years of Service</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+                    <h2 class="section-title">Get in Touch</h2>
+                    <p class="section-subtitle">
+                        Ready to start your financial journey? Contact us today to learn more about our services.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="contact-item text-center">
+                        <div class="contact-icon bg-primary-teal">
+                            <i class="fas fa-map-marker-alt text-white"></i>
+                        </div>
+                        <h5>Location</h5>
+                        <p>Nanenane, Morogoro<br>Tanzania</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="contact-item text-center">
+                        <div class="contact-icon bg-primary-red">
+                            <i class="fas fa-phone text-white"></i>
+                        </div>
+                        <h5>Phone</h5>
+                        <p>+255 747 513 065<br>+255 762 484 868 <br> +255</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="contact-item text-center">
+                        <div class="contact-icon bg-success">
+                            <i class="fas fa-envelope text-white"></i>
+                        </div>
+                        <h5>Email</h5>
+                        <p>golamfinancialservices@gmail.co.tz</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-5">
+                <div class="col-lg-6 mx-auto text-center">
+                    <div class="cta-section" data-aos="zoom-in">
+                        <h3 class="mb-3">Need Financial Services?</h3>
+                        <p class="mb-4">Contact us to learn about our microfinance solutions</p>
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a href="#contact" class="btn btn-primary-teal btn-lg">
+                                <i class="fas fa-envelope me-2"></i>Contact Us
+                            </a>
+                            <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Staff Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer bg-dark text-white py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">© 2025 Golam Financial Services. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AOS Animation JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNav');
+            if (window.scrollY > 100) {
+                navbar.style.background = 'rgba(30, 117, 112, 0.95)';
+                navbar.style.backdropFilter = 'blur(10px)';
+                navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+            } else {
+                navbar.style.background = 'transparent';
+                navbar.style.backdropFilter = 'none';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+
+                    // Close mobile menu if open
+                    const navbarCollapse = document.querySelector('.navbar-collapse');
+                    if (navbarCollapse.classList.contains('show')) {
+                        const navbarToggler = document.querySelector('.navbar-toggler');
+                        navbarToggler.click();
+                    }
+                }
+            });
+        });
+
+        // Handle window resize for responsive behavior
+        function handleResize() {
+            // Refresh AOS on resize to recalculate positions
+            AOS.refresh();
+
+            // Adjust hero section height on mobile
+            const heroSection = document.getElementById('home');
+            if (window.innerWidth < 768) {
+                heroSection.style.minHeight = '100vh';
+                heroSection.style.paddingTop = '100px';
+            } else {
+                heroSection.style.minHeight = '100vh';
+                heroSection.style.paddingTop = '80px';
+            }
+        }
+
+        // Initial call and event listener for resize
+        handleResize();
+        window.addEventListener('resize', handleResize);
+
+        // Prevent horizontal scroll on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.overflowX = 'hidden';
+
+            // Ensure all containers don't exceed viewport width
+            const containers = document.querySelectorAll('.container-fluid, .container');
+            containers.forEach(container => {
+                container.style.maxWidth = '100%';
+                container.style.overflowX = 'hidden';
+            });
+        });
+
+        // Mobile menu auto-close on outside click
+        document.addEventListener('click', function(event) {
+            const navbar = document.querySelector('.navbar-collapse');
+            const toggler = document.querySelector('.navbar-toggler');
+
+            if (navbar.classList.contains('show') &&
+                !navbar.contains(event.target) &&
+                !toggler.contains(event.target)) {
+                toggler.click();
+            }
+        });
+
+        // Animated counter for stats
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const increment = target / 100;
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = Math.floor(current);
+                    }
+                }, 20);
+            });
+        }
+
+        // Trigger counter animation when stats section is visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+
+        const statsSection = document.getElementById('stats');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+    </script>
+
+    <style>
+        /* Additional responsive styles */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem !important;
+            }
+
+            .btn {
+                font-size: 0.875rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .btn-lg {
+                font-size: 1rem;
+                padding: 0.75rem 1.5rem;
+            }
+
+            /* Ensure cards don't overflow */
+            [style*="border-radius"] {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            /* Fix hero section on mobile */
+            #home {
+                padding-top: 100px !important;
+                min-height: 100vh !important;
+            }
+
+            /* Adjust grid spacing on mobile */
+            .row.g-4 > * {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container-fluid {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
+
+            .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+
+            .col-sm-6, .col-md-6, .col-lg-4, .col-lg-6 {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
+
+            /* Smaller text on very small screens */
+            h1 {
+                font-size: 1.75rem !important;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            /* Adjust button sizes */
+            .btn-lg {
+                font-size: 0.9rem;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+
+        /* Prevent text overflow */
+        * {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Ensure images and content stay within bounds */
+        img, video, iframe {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Fix navbar on mobile */
+        .navbar-collapse {
+            background: rgba(30, 117, 112, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+        }
+
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                background: transparent !important;
+                backdrop-filter: none !important;
+                border-radius: 0 !important;
+                margin-top: 0 !important;
+                padding: 0 !important;
+            }
+        }
+
+        /* Smooth transitions */
+        .navbar, .btn, [style*="transition"] {
+            transition: all 0.3s ease !important;
+        }
+
+        /* Ensure proper spacing */
+        section {
+            overflow-x: hidden;
+        }
+
+        /* Fix any potential layout issues */
+        .row > * {
+            min-width: 0;
+        }
+    </style>
+</body>
+</html>

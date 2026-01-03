@@ -1,0 +1,159 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Branch Management - Golam Financial Services{% endblock %}
+{% block page_title %}Branch Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt me-2 text-primary-teal"></i>
+                    Branch Management
+                </h5>
+                <button type="button" class="btn btn-primary-teal" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+                    <i class="fas fa-plus me-1"></i>Add Branch
+                </button>
+            </div>
+            <div class="card-body">
+                {% if branches %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Branch Code</th>
+                                    <th>Branch Name</th>
+                                    <th>City</th>
+                                    <th>Manager</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for branch in branches %}
+                                <tr>
+                                    <td>{{ branch.code }}</td>
+                                    <td>
+                                        {{ branch.name }}
+                                        {% if branch.is_head_office %}
+                                            <span class="badge bg-primary ms-2">Head Office</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ branch.city }}, {{ branch.state }}</td>
+                                    <td>{{ branch.manager_name|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if branch.is_active %}success{% else %}danger{% endif %}">
+                                            {% if branch.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center">
+                        <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                        <h5>No Branches Found</h5>
+                        <p class="text-muted">Add your first branch to get started.</p>
+                        <button type="button" class="btn btn-primary-teal" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+                            <i class="fas fa-plus me-1"></i>Add First Branch
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Branch Modal -->
+<div class="modal fade" id="addBranchModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Branch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBranchForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="branch_name" class="form-label">Branch Name *</label>
+                            <input type="text" class="form-control" id="branch_name" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="branch_code" class="form-label">Branch Code *</label>
+                            <input type="text" class="form-control" id="branch_code" name="code" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="address_line_1" class="form-label">Address Line 1 *</label>
+                            <input type="text" class="form-control" id="address_line_1" name="address_line_1" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="address_line_2" class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="address_line_2" name="address_line_2">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="city" class="form-label">City *</label>
+                            <input type="text" class="form-control" id="city" name="city" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="state" class="form-label">State *</label>
+                            <input type="text" class="form-control" id="state" name="state" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="postal_code" class="form-label">Postal Code *</label>
+                            <input type="text" class="form-control" id="postal_code" name="postal_code" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="manager_name" class="form-label">Manager Name</label>
+                            <input type="text" class="form-control" id="manager_name" name="manager_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone_number" name="phone_number">
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_head_office" name="is_head_office">
+                                <label class="form-check-label" for="is_head_office">
+                                    This is the head office
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary-teal" id="saveBranchBtn">Save Branch</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#saveBranchBtn').click(function() {
+        // This would normally submit the form via AJAX
+        alert('Branch management functionality will be implemented based on your requirements.');
+        $('#addBranchModal').modal('hide');
+    });
+});
+</script>
+{% endblock %}

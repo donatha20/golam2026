@@ -1,0 +1,347 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Capital Approvals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .approval-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .table-header {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .approval-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+    
+    .approval-item:hover {
+        background-color: #f9fafb;
+    }
+    
+    .approval-item:last-child {
+        border-bottom: none;
+    }
+    
+    .approval-header {
+        display: flex;
+        justify-content: between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .approval-info {
+        flex: 1;
+    }
+    
+    .approval-id {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .approval-type {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .injection {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .withdrawal {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .approval-amount {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .injection .approval-amount {
+        color: #059669;
+    }
+    
+    .withdrawal .approval-amount {
+        color: #dc2626;
+    }
+    
+    .approval-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-weight: 500;
+        color: #1f2937;
+    }
+    
+    .approval-description {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-style: italic;
+        color: #4b5563;
+    }
+    
+    .approval-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background-color: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #5a67d8;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-subtitle {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-clipboard-check"></i>
+                Capital Approvals
+            </h1>
+            <p class="page-subtitle">Review and approve capital injection and withdrawal requests</p>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_pending }}</div>
+            <div class="stat-label">Pending Approvals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">₹{{ total_pending_amount|floatformat:0 }}</div>
+            <div class="stat-label">Total Pending Amount</div>
+        </div>
+    </div>
+
+    <!-- Approval List -->
+    <div class="approval-table">
+        <div class="table-header">
+            <h3 class="table-title">
+                <i class="fas fa-hourglass-half"></i>
+                Pending Capital Transactions
+            </h3>
+        </div>
+
+        {% if pending_capital %}
+            {% for capital in pending_capital %}
+                <div class="approval-item {{ capital.transaction_type }}">
+                    <div class="approval-header">
+                        <div class="approval-info">
+                            <div class="approval-id">{{ capital.capital_id }}</div>
+                            <span class="approval-type {{ capital.transaction_type }}">
+                                {{ capital.get_transaction_type_display }}
+                            </span>
+                        </div>
+                        <div class="approval-amount">
+                            {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
+                        </div>
+                    </div>
+
+                    <div class="approval-details">
+                        <div class="detail-group">
+                            <span class="detail-label">Capital Type</span>
+                            <span class="detail-value">{{ capital.get_capital_type_display }}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Transaction Date</span>
+                            <span class="detail-value">{{ capital.transaction_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Requested By</span>
+                            <span class="detail-value">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</span>
+                        </div>
+                        <div class="detail-group">
+                            <span class="detail-label">Submitted</span>
+                            <span class="detail-value">{{ capital.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        {% if capital.shareholder %}
+                        <div class="detail-group">
+                            <span class="detail-label">Shareholder</span>
+                            <span class="detail-value">{{ capital.shareholder.name }}</span>
+                        </div>
+                        {% endif %}
+                        {% if capital.reference_number %}
+                        <div class="detail-group">
+                            <span class="detail-label">Reference Number</span>
+                            <span class="detail-value">{{ capital.reference_number }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if capital.description %}
+                    <div class="approval-description">
+                        {{ capital.description }}
+                    </div>
+                    {% endif %}
+
+                    <div class="approval-actions">
+                        <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary">
+                            <i class="fas fa-check"></i>
+                            Review & Approve
+                        </a>
+                        <a href="{% url 'finance_tracker:capital_approval_detail' capital.id %}" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i>
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3 class="empty-title">No Pending Approvals</h3>
+                <p class="empty-subtitle">All capital transactions have been processed</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

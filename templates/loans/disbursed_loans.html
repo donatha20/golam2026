@@ -1,0 +1,682 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Disbursed Loans - Golam Financial Services{% endblock %}
+
+{% block page_title %}Disbursed Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .loan-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1200px;
+        width: 100%;
+    }
+
+    .loan-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .loan-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .loan-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .loan-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Loan Number Cell */
+    .loan-number-cell {
+        min-width: 120px;
+    }
+
+    .loan-number {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .loan-type {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* Borrower Name Cell */
+    .borrower-name-cell {
+        min-width: 180px;
+    }
+
+    .borrower-full-name {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .borrower-id {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* Amount Cell */
+    .amount-cell {
+        text-align: right;
+        min-width: 120px;
+    }
+
+    .amount-value {
+        font-weight: 600;
+        color: #059669;
+        font-size: 0.9rem;
+    }
+
+    /* Status Badge Styling */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-disbursed {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .status-overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .status-completed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .btn-view {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .btn-view:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .btn-edit {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .btn-edit:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .btn-repayment {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .btn-repayment:hover {
+        background: rgba(34, 197, 94, 0.2);
+        transform: translateY(-1px);
+    }
+
+    /* Compact Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 120px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.15);
+        transform: translateY(-2px);
+        border-color: #2b7a76;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #2b7a76 0%, #16a34a 100%);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        width: 6px;
+    }
+
+    .stat-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .stat-change {
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-positive {
+        color: #16a34a;
+    }
+
+    /* Action Buttons Grid */
+    .action-buttons-section {
+        margin-bottom: 2rem;
+    }
+    
+    .action-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #475569;
+        transition: all 0.3s ease;
+        text-align: center;
+        min-height: auto;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2b7a76 0%, #34d399 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.3);
+    }
+
+    .action-btn-success {
+        border-color: #16a34a;
+        color: #16a34a;
+    }
+
+    .action-btn-success:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.3);
+    }
+
+    .action-btn-outline {
+        border-color: #64748b;
+        color: #64748b;
+    }
+
+    .action-btn-outline:hover {
+        background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(100, 116, 139, 0.3);
+    }
+    
+    .action-btn i {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .action-btn:hover i {
+        transform: scale(1.1);
+    }
+
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border-width: 2px;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(43, 122, 118, 0.2);
+    }
+
+    /* Button spacing and layout */
+    .gap-3 {
+        gap: 1rem !important;
+    }
+
+    .flex-fill {
+        flex: 1 1 0%;
+    }
+
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Pagination */
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .pagination .page-link {
+        color: #2b7a76;
+        border-color: #e5e7eb;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .pagination .page-link:hover {
+        background: rgba(43, 122, 118, 0.1);
+        border-color: #2b7a76;
+        color: #1f5d5a;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #2b7a76;
+        border-color: #2b7a76;
+    }
+
+    /* Text Utilities */
+    .text-success { color: #16a34a !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-danger { color: #dc2626 !important; }
+    .text-muted { color: #6b7280 !important; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .stat-card {
+            padding: 0.75rem;
+            min-height: 100px;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+        }
+        
+        .stat-title {
+            font-size: 0.7rem;
+        }
+        
+        .action-buttons-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .action-btn {
+            padding: 0.625rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .header-actions {
+            justify-content: center;
+        }
+
+        .btn-outline-primary {
+            margin-bottom: 0.5rem;
+        }
+
+        .table-controls {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .table-actions {
+            justify-content: center;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
+        .loan-table {
+            font-size: 0.8rem;
+        }
+
+        .loan-table thead th,
+        .loan-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Action Buttons -->
+    <div class="action-buttons-section">
+        <div class="action-buttons-grid">
+            <a href="{% url 'loans:add_loan' %}" class="action-btn action-btn-primary">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Loan</span>
+            </a>
+            <a href="{% url 'loans:outstanding_loans' %}" class="action-btn action-btn-success">
+                <i class="fas fa-clock"></i>
+                <span>Outstanding Loans</span>
+            </a>
+            <a href="{% url 'loans:expected_repayments' %}" class="action-btn action-btn-outline">
+                <i class="fas fa-calendar-check"></i>
+                <span>Expected Repayments</span>
+            </a>
+            <a href="{% url 'loans:fully_paid_loans' %}" class="action-btn action-btn-outline">
+                <i class="fas fa-check-circle"></i>
+                <span>Paid Loans</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Disbursed</div>
+            <div class="stat-value">{{ stats.total_disbursed|default:0 }}</div>
+            <div class="stat-change stat-positive">
+                <i class="fas fa-chart-line"></i> Active loans
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Total Amount</div>
+            <div class="stat-value">${{ stats.total_amount|default:0|floatformat:0 }}</div>
+            <div class="stat-change stat-positive">
+                <i class="fas fa-money-bill"></i> Disbursed value
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Active Loans</div>
+            <div class="stat-value">{{ stats.active_loans|default:0 }}</div>
+            <div class="stat-change stat-positive">
+                <i class="fas fa-user-check"></i> Current borrowers
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Overdue Loans</div>
+            <div class="stat-value">{{ stats.overdue_loans|default:0 }}</div>
+            <div class="stat-change stat-positive">
+                <i class="fas fa-exclamation-triangle"></i> Need attention
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ loans|length|default:0 }} disbursed loans
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search loans..." id="loanSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <table class="table loan-table" id="loan-table">
+            <thead>
+                <tr>
+                    <th>Loan Number</th>
+                    <th>Borrower</th>
+                    <th>Amount</th>
+                    <th>Disbursed Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td class="loan-number-cell">
+                        <div class="loan-number">{{ loan.loan_number }}</div>
+                        <div class="loan-type">{{ loan.loan_type.name|default:"Personal Loan" }}</div>
+                    </td>
+                    <td class="borrower-name-cell">
+                        <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>
+                        <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
+                    </td>
+                    <td class="amount-cell">
+                        <div class="amount-value">${{ loan.amount_approved|floatformat:2 }}</div>
+                    </td>
+                    <td>{{ loan.disbursement_date|date:"M d, Y" }}</td>
+                    <td>{{ loan.maturity_date|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="status-badge status-disbursed">Disbursed</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-view" data-id="{{ loan.id }}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-edit" data-id="{{ loan.id }}" title="Edit Loan">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-repayment" data-id="{{ loan.id }}" title="Record Repayment">
+                                <i class="fas fa-money-bill"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                        No disbursed loans found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('loanSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#loan-table tbody tr');
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('loan-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'disbursed_loans.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Action button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-view')) {
+            const id = e.target.closest('.btn-view').dataset.id;
+            window.location.href = `/loans/view/${id}/`;
+        }
+
+        if (e.target.closest('.btn-edit')) {
+            const id = e.target.closest('.btn-edit').dataset.id;
+            window.location.href = `/loans/edit/${id}/`;
+        }
+
+        if (e.target.closest('.btn-repayment')) {
+            const id = e.target.closest('.btn-repayment').dataset.id;
+            window.location.href = `/loans/repayments/${id}/`;
+        }
+    });
+</script>
+{% endblock %}

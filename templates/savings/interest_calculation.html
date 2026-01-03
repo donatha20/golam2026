@@ -1,0 +1,612 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Interest Calculation - Golam Financial Services{% endblock %}
+{% block page_title %}Interest Calculation & Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .interest-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e7570;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-content {
+        padding: 1.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #16a34a;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2d8a82 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #16635d 0%, #1e7570 100%);
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+        color: white;
+        text-decoration: none;
+    }
+
+    .account-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .account-table th,
+    .account-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .account-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+    }
+
+    .account-table tr:hover {
+        background: #f9fafb;
+    }
+
+    .account-number {
+        font-weight: 600;
+        color: #1e7570;
+    }
+
+    .balance-amount {
+        font-family: monospace;
+        font-weight: 600;
+        color: #16a34a;
+    }
+
+    .interest-amount {
+        font-family: monospace;
+        font-weight: 600;
+        color: #f59e0b;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .status-eligible {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-calculated {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-posted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .calculation-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.3s ease;
+    }
+
+    .calculation-item:hover {
+        background: #f9fafb;
+    }
+
+    .calculation-item:last-child {
+        border-bottom: none;
+    }
+
+    .calculation-info {
+        flex: 1;
+    }
+
+    .calculation-account {
+        font-weight: 600;
+        color: #1e7570;
+        margin-bottom: 0.25rem;
+    }
+
+    .calculation-details {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .calculation-amount {
+        text-align: right;
+    }
+
+    .amount-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #16a34a;
+        font-family: monospace;
+    }
+
+    .amount-period {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .calculation-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: 0;
+        border-color: #1e7570;
+        box-shadow: 0 0 0 0.2rem rgba(30, 117, 112, 0.25);
+    }
+
+    .calculation-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .interest-container {
+            margin: 1rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .account-table {
+            font-size: 0.875rem;
+        }
+
+        .calculation-form {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="interest-container">
+    <!-- Interest Statistics -->
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Interest Overview
+            </h2>
+        </div>
+        <div class="section-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ eligible_accounts.count }}</div>
+                    <div class="stat-label">Eligible Accounts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ pending_calculations.count }}</div>
+                    <div class="stat-label">Pending Calculations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹{% widthratio eligible_accounts.count 1 1000 %}</div>
+                    <div class="stat-label">Est. Monthly Interest</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹{% widthratio pending_calculations.count 1 500 %}</div>
+                    <div class="stat-label">Pending Amount</div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="calculateInterest()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate Interest
+                </button>
+                <button class="btn btn-success" onclick="postPendingInterest()">
+                    <i class="fas fa-check"></i>
+                    Post Pending Interest
+                </button>
+                <button class="btn btn-warning" onclick="generateReport()">
+                    <i class="fas fa-file-pdf"></i>
+                    Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interest Calculation Form -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-cogs"></i>
+                Calculate Interest
+            </h3>
+        </div>
+        <div class="section-content">
+            <form method="post" id="interestCalculationForm">
+                {% csrf_token %}
+                <div class="calculation-form">
+                    <div class="form-group">
+                        <label for="calculation_date" class="form-label">Calculation Date</label>
+                        <input type="date" 
+                               name="calculation_date" 
+                               id="calculation_date" 
+                               class="form-control" 
+                               value="{{ today|date:'Y-m-d' }}"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="calculation_type" class="form-label">Calculation Type</label>
+                        <select name="calculation_type" id="calculation_type" class="form-select" required>
+                            <option value="">Select Type</option>
+                            <option value="monthly">Monthly Interest</option>
+                            <option value="quarterly">Quarterly Interest</option>
+                            <option value="annual">Annual Interest</option>
+                            <option value="custom">Custom Period</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_filter" class="form-label">Account Filter</label>
+                        <select name="account_filter" id="account_filter" class="form-select">
+                            <option value="all">All Eligible Accounts</option>
+                            <option value="active">Active Accounts Only</option>
+                            <option value="minimum_balance">Above Minimum Balance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-play"></i>
+                            Run Calculation
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Eligible Accounts -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-piggy-bank"></i>
+                Eligible Accounts ({{ eligible_accounts.count }})
+            </h3>
+        </div>
+        <div class="section-content">
+            {% if eligible_accounts %}
+                <div class="table-responsive">
+                    <table class="account-table">
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>Account Holder</th>
+                                <th>Product</th>
+                                <th>Current Balance</th>
+                                <th>Interest Rate</th>
+                                <th>Est. Monthly Interest</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in eligible_accounts %}
+                                <tr>
+                                    <td>
+                                        <div class="account-number">{{ account.account_number }}</div>
+                                    </td>
+                                    <td>{{ account.borrower.get_full_name }}</td>
+                                    <td>{{ account.savings_product.name }}</td>
+                                    <td>
+                                        <div class="balance-amount">₹{{ account.balance|floatformat:2 }}</div>
+                                    </td>
+                                    <td>{{ account.savings_product.annual_interest_rate }}%</td>
+                                    <td>
+                                        <div class="interest-amount">
+                                            ₹{% widthratio account.balance account.savings_product.annual_interest_rate 1200 %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-eligible">Eligible</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="calculateAccountInterest({{ account.id }})">
+                                            <i class="fas fa-calculator"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <p>No accounts are currently eligible for interest calculation</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Calculations -->
+    <div class="section-card">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-clock"></i>
+                Pending Interest Calculations ({{ pending_calculations.count }})
+            </h3>
+        </div>
+        <div class="section-content">
+            {% if pending_calculations %}
+                {% for calculation in pending_calculations %}
+                    <div class="calculation-item">
+                        <div class="calculation-info">
+                            <div class="calculation-account">
+                                {{ calculation.savings_account.account_number }} - {{ calculation.savings_account.borrower.get_full_name }}
+                            </div>
+                            <div class="calculation-details">
+                                Calculated: {{ calculation.calculation_date|date:"M d, Y" }} | 
+                                Period: {{ calculation.period_start|date:"M d" }} - {{ calculation.period_end|date:"M d, Y" }} |
+                                Rate: {{ calculation.interest_rate }}%
+                            </div>
+                        </div>
+                        <div class="calculation-amount">
+                            <div class="amount-value">₹{{ calculation.interest_amount|floatformat:2 }}</div>
+                            <div class="amount-period">{{ calculation.days_in_period }} days</div>
+                        </div>
+                        <div class="calculation-actions">
+                            <button class="btn btn-sm btn-success" onclick="postInterest({{ calculation.id }})">
+                                <i class="fas fa-check"></i>
+                                Post
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editCalculation({{ calculation.id }})">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <div style="margin-top: 1.5rem; text-align: right;">
+                    <button class="btn btn-success" onclick="postAllPending()">
+                        <i class="fas fa-check-double"></i>
+                        Post All Pending
+                    </button>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <p>No pending interest calculations</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    document.getElementById('interestCalculationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Calculating...';
+        
+        // Simulate calculation process
+        setTimeout(() => {
+            alert('Interest calculation completed! (This is a simulation)');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-play me-2"></i>Run Calculation';
+            
+            // Refresh page to show new calculations
+            location.reload();
+        }, 3000);
+    });
+});
+
+function calculateInterest() {
+    if (confirm('This will calculate interest for all eligible accounts. Continue?')) {
+        alert('Interest calculation started for all eligible accounts (functionality to be implemented)');
+    }
+}
+
+function postPendingInterest() {
+    const pendingCount = {{ pending_calculations.count }};
+    if (pendingCount === 0) {
+        alert('No pending interest calculations to post');
+        return;
+    }
+    
+    if (confirm(`This will post ${pendingCount} pending interest calculations. Continue?`)) {
+        alert('Posting pending interest calculations (functionality to be implemented)');
+    }
+}
+
+function generateReport() {
+    const reportType = prompt('Select report type:\n1. Interest Summary\n2. Account-wise Interest\n3. Monthly Report\n\nEnter 1, 2, or 3:');
+    
+    if (reportType) {
+        alert(`Generating interest report type ${reportType} (functionality to be implemented)`);
+    }
+}
+
+function calculateAccountInterest(accountId) {
+    if (confirm('Calculate interest for this specific account?')) {
+        alert(`Calculating interest for account ID ${accountId} (functionality to be implemented)`);
+    }
+}
+
+function postInterest(calculationId) {
+    if (confirm('Post this interest calculation to the account?')) {
+        alert(`Posting interest calculation ID ${calculationId} (functionality to be implemented)`);
+    }
+}
+
+function editCalculation(calculationId) {
+    const newAmount = prompt('Enter new interest amount:');
+    if (newAmount && parseFloat(newAmount) >= 0) {
+        alert(`Updating calculation ID ${calculationId} with amount ${newAmount} (functionality to be implemented)`);
+    }
+}
+
+function postAllPending() {
+    const pendingCount = {{ pending_calculations.count }};
+    if (confirm(`Post all ${pendingCount} pending interest calculations?`)) {
+        alert('Posting all pending calculations (functionality to be implemented)');
+    }
+}
+</script>
+{% endblock %}

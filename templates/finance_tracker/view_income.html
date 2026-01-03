@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Income Records{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'finance_tracker:dashboard' %}">Finance</a></li>
+    <li class="breadcrumb-item active">Income</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ stats.total_income|floatformat:0 }}</h5>
+                <p class="card-text">Total Income</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ stats.monthly_income|floatformat:0 }}</h5>
+                <p class="card-text">This Month</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ stats.pending_income|floatformat:0 }}</h5>
+                <p class="card-text">Pending Income</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary-teal">{{ stats.income_count }}</h5>
+                <p class="card-text">Total Records</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary-teal"></i>
+                    Income Records
+                </h5>
+                <a href="{% url 'finance_tracker:add_income' %}" class="btn btn-primary-teal">
+                    <i class="fas fa-plus me-1"></i>Add Income
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label for="source" class="form-label">Income Source</label>
+                        <select class="form-control" id="source" name="source">
+                            <option value="">All Sources</option>
+                            {% for value, label in income_sources %}
+                                <option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="">All Status</option>
+                            <option value="PENDING" {% if filters.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                            <option value="RECEIVED" {% if filters.status == 'RECEIVED' %}selected{% endif %}>Received</option>
+                            <option value="CANCELLED" {% if filters.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filters.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filters.date_to }}">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-outline-secondary" id="filter-btn">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="clear-btn">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                        <button type="button" class="btn btn-outline-success" id="export-btn">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Income Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Income ID</th>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Received From</th>
+                                <th>Status</th>
+                                <th>Recorded By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for income in page_obj %}
+                            <tr>
+                                <td>{{ income.income_id }}</td>
+                                <td>{{ income.income_date }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ income.get_source_display }}</span>
+                                </td>
+                                <td>{{ income.amount|floatformat:0 }}</td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ income.description }}">
+                                        {{ income.description }}
+                                    </div>
+                                </td>
+                                <td>{{ income.received_from|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if income.status == 'RECEIVED' %}success{% elif income.status == 'PENDING' %}warning{% else %}danger{% endif %}">
+                                        {{ income.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ income.recorded_by.get_full_name|default:income.recorded_by.username }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'finance_tracker:income_detail' income.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if income.status == 'PENDING' %}
+                                            <a href="{% url 'finance_tracker:confirm_income' income.id %}" class="btn btn-sm btn-outline-success" title="Confirm Receipt">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'finance_tracker:edit_income' income.id %}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted">No income records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Income pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">&laquo; First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Set default dates
+    var today = new Date().toISOString().split('T')[0];
+    var firstDayOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    
+    if (!$('#date_from').val()) {
+        $('#date_from').val(firstDayOfMonth);
+    }
+    if (!$('#date_to').val()) {
+        $('#date_to').val(today);
+    }
+    
+    // Filter functionality
+    $('#filter-btn').click(function() {
+        var params = new URLSearchParams();
+        
+        var source = $('#source').val();
+        var status = $('#status').val();
+        var dateFrom = $('#date_from').val();
+        var dateTo = $('#date_to').val();
+        
+        if (source) params.append('source', source);
+        if (status) params.append('status', status);
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+        
+        window.location.href = '?' + params.toString();
+    });
+    
+    // Clear filters
+    $('#clear-btn').click(function() {
+        window.location.href = window.location.pathname;
+    });
+    
+    // Export functionality
+    $('#export-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'csv');
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+{% endblock %}

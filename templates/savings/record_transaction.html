@@ -1,0 +1,599 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if transaction_type == 'deposit' %}Record Deposit{% elif transaction_type == 'withdrawal' %}Record Withdrawal{% else %}Record Transaction{% endif %} - Golam Financial Services
+{% endblock %}
+{% block page_title %}
+    {% if transaction_type == 'deposit' %}Record Deposit{% elif transaction_type == 'withdrawal' %}Record Withdrawal{% else %}Record Transaction{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transaction-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .transaction-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .transaction-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .deposit-icon {
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+    }
+
+    .withdrawal-icon {
+        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    }
+
+    .transaction-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .transaction-subtitle {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    .form-control.large {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .account-selector {
+        position: relative;
+    }
+
+    .account-option {
+        padding: 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .account-option:hover {
+        background: #f9fafb;
+    }
+
+    .account-option:last-child {
+        border-bottom: none;
+    }
+
+    .account-number {
+        font-weight: 600;
+        color: #2b7a76;
+        margin-bottom: 0.25rem;
+    }
+
+    .account-holder {
+        font-size: 0.9rem;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .account-balance {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-family: monospace;
+    }
+
+    .selected-account {
+        background: #f0fdf4;
+        border: 2px solid #16a34a;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .selected-account-title {
+        font-weight: 600;
+        color: #16a34a;
+        margin-bottom: 0.5rem;
+    }
+
+    .currency-input {
+        position: relative;
+    }
+
+    .currency-input::before {
+        content: '₹';
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 1.25rem;
+        z-index: 1;
+    }
+
+    .currency-input input {
+        padding-left: 2.5rem;
+        font-family: monospace;
+    }
+
+    .amount-display {
+        background: #f9fafb;
+        border: 2px dashed #d1d5db;
+        border-radius: 6px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    .amount-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+
+    .amount-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        font-family: monospace;
+    }
+
+    .validation-info {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .validation-title {
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+
+    .validation-item {
+        font-size: 0.875rem;
+        color: #92400e;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2b7a76 0%, #16a34a 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1f5f5b 0%, #15803d 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    @media (max-width: 768px) {
+        .transaction-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .btn-group {
+            flex-direction: column;
+        }
+
+        .amount-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="transaction-container">
+    <!-- Header -->
+    <div class="transaction-header">
+        <div class="transaction-icon {% if transaction_type == 'deposit' %}deposit-icon{% else %}withdrawal-icon{% endif %}">
+            {% if transaction_type == 'deposit' %}
+                <i class="fas fa-arrow-down"></i>
+            {% else %}
+                <i class="fas fa-arrow-up"></i>
+            {% endif %}
+        </div>
+        <h1 class="transaction-title">
+            {% if transaction_type == 'deposit' %}
+                Record Deposit
+            {% else %}
+                Record Withdrawal
+            {% endif %}
+        </h1>
+        <p class="transaction-subtitle">
+            {% if transaction_type == 'deposit' %}
+                Add money to a savings account
+            {% else %}
+                Withdraw money from a savings account
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="post" id="transactionForm">
+        {% csrf_token %}
+        
+        <!-- Account Selection -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-user"></i>
+                Select Account
+            </div>
+
+            <div class="form-group">
+                <label for="account_id" class="form-label">
+                    Savings Account <span class="required">*</span>
+                </label>
+                <select id="account_id" name="account_id" class="form-control" required onchange="updateAccountInfo()">
+                    <option value="">Choose an account...</option>
+                    {% for account in accounts %}
+                        <option value="{{ account.id }}" 
+                                data-number="{{ account.account_number }}"
+                                data-holder="{{ account.borrower.get_full_name }}"
+                                data-balance="{{ account.balance }}"
+                                data-available="{{ account.available_balance }}"
+                                data-minimum="{{ account.minimum_balance_required }}">
+                            {{ account.account_number }} - {{ account.borrower.get_full_name }} (₹{{ account.balance|floatformat:2 }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="help-text">Select the account for this transaction</div>
+            </div>
+
+            <!-- Selected Account Info -->
+            <div id="accountInfo" style="display: none;">
+                <div class="selected-account">
+                    <div class="selected-account-title">Selected Account</div>
+                    <div class="account-number" id="selectedAccountNumber"></div>
+                    <div class="account-holder" id="selectedAccountHolder"></div>
+                    <div class="account-balance">
+                        Current Balance: <span id="selectedAccountBalance"></span>
+                        {% if transaction_type == 'withdrawal' %}
+                        <br>Available Balance: <span id="selectedAvailableBalance"></span>
+                        <br>Minimum Required: <span id="selectedMinimumBalance"></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amount Section -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-rupee-sign"></i>
+                Transaction Amount
+            </div>
+
+            <div class="form-group">
+                <label for="amount" class="form-label">
+                    Amount <span class="required">*</span>
+                </label>
+                <div class="currency-input">
+                    <input 
+                        type="number" 
+                        id="amount" 
+                        name="amount" 
+                        class="form-control large" 
+                        step="0.01"
+                        min="0.01"
+                        required
+                        placeholder="0.00"
+                        oninput="updateAmountDisplay()"
+                    >
+                </div>
+                <div class="help-text">Enter the transaction amount</div>
+            </div>
+
+            <!-- Amount Display -->
+            <div class="amount-display" id="amountDisplay" style="display: none;">
+                <div class="amount-label">Transaction Amount</div>
+                <div class="amount-value" id="amountValue">₹0.00</div>
+            </div>
+
+            <!-- Validation Info for Withdrawals -->
+            {% if transaction_type == 'withdrawal' %}
+            <div class="validation-info" id="validationInfo" style="display: none;">
+                <div class="validation-title">Withdrawal Validation</div>
+                <div class="validation-item" id="validationSufficient">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Checking sufficient balance...</span>
+                </div>
+                <div class="validation-item" id="validationMinimum">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Checking minimum balance requirement...</span>
+                </div>
+                <div class="validation-item" id="validationCharges">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Applicable charges will be calculated</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Notes Section -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-sticky-note"></i>
+                Additional Information
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea 
+                    id="notes" 
+                    name="notes" 
+                    class="form-control"
+                    rows="3"
+                    placeholder="Optional notes about this transaction..."
+                ></textarea>
+                <div class="help-text">Optional description or reference for this transaction</div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                <i class="fas fa-save"></i> 
+                {% if transaction_type == 'deposit' %}
+                    Record Deposit
+                {% else %}
+                    Record Withdrawal
+                {% endif %}
+            </button>
+            <a href="{% url 'savings:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateAccountInfo() {
+    const select = document.getElementById('account_id');
+    const accountInfo = document.getElementById('accountInfo');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (select.value) {
+        const option = select.selectedOptions[0];
+        
+        document.getElementById('selectedAccountNumber').textContent = option.dataset.number;
+        document.getElementById('selectedAccountHolder').textContent = option.dataset.holder;
+        document.getElementById('selectedAccountBalance').textContent = '₹' + parseFloat(option.dataset.balance).toFixed(2);
+        
+        {% if transaction_type == 'withdrawal' %}
+        document.getElementById('selectedAvailableBalance').textContent = '₹' + parseFloat(option.dataset.available).toFixed(2);
+        document.getElementById('selectedMinimumBalance').textContent = '₹' + parseFloat(option.dataset.minimum).toFixed(2);
+        {% endif %}
+        
+        accountInfo.style.display = 'block';
+        checkFormValidity();
+    } else {
+        accountInfo.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+}
+
+function updateAmountDisplay() {
+    const amountInput = document.getElementById('amount');
+    const amountDisplay = document.getElementById('amountDisplay');
+    const amountValue = document.getElementById('amountValue');
+    
+    const amount = parseFloat(amountInput.value);
+    
+    if (amount > 0) {
+        amountValue.textContent = '₹' + amount.toFixed(2);
+        amountDisplay.style.display = 'block';
+        
+        {% if transaction_type == 'withdrawal' %}
+        validateWithdrawal(amount);
+        {% endif %}
+    } else {
+        amountDisplay.style.display = 'none';
+        {% if transaction_type == 'withdrawal' %}
+        document.getElementById('validationInfo').style.display = 'none';
+        {% endif %}
+    }
+    
+    checkFormValidity();
+}
+
+{% if transaction_type == 'withdrawal' %}
+function validateWithdrawal(amount) {
+    const select = document.getElementById('account_id');
+    const validationInfo = document.getElementById('validationInfo');
+    
+    if (!select.value || !amount) {
+        validationInfo.style.display = 'none';
+        return;
+    }
+    
+    const option = select.selectedOptions[0];
+    const balance = parseFloat(option.dataset.balance);
+    const available = parseFloat(option.dataset.available);
+    const minimum = parseFloat(option.dataset.minimum);
+    
+    validationInfo.style.display = 'block';
+    
+    // Check sufficient balance
+    const sufficientElement = document.getElementById('validationSufficient');
+    if (amount <= available) {
+        sufficientElement.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a;"></i> <span>Sufficient balance available</span>';
+    } else {
+        sufficientElement.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i> <span>Insufficient balance (Available: ₹' + available.toFixed(2) + ')</span>';
+    }
+    
+    // Check minimum balance
+    const minimumElement = document.getElementById('validationMinimum');
+    const remainingBalance = balance - amount;
+    if (remainingBalance >= minimum) {
+        minimumElement.innerHTML = '<i class="fas fa-check-circle" style="color: #16a34a;"></i> <span>Minimum balance requirement will be met</span>';
+    } else {
+        minimumElement.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> <span>Warning: Remaining balance (₹' + remainingBalance.toFixed(2) + ') below minimum (₹' + minimum.toFixed(2) + ')</span>';
+    }
+}
+{% endif %}
+
+function checkFormValidity() {
+    const accountSelect = document.getElementById('account_id');
+    const amountInput = document.getElementById('amount');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    const isValid = accountSelect.value && 
+                   amountInput.value && 
+                   parseFloat(amountInput.value) > 0;
+    
+    submitBtn.disabled = !isValid;
+}
+
+// Form submission validation
+document.getElementById('transactionForm').addEventListener('submit', function(e) {
+    const amount = parseFloat(document.getElementById('amount').value);
+    const select = document.getElementById('account_id');
+    
+    if (!select.value) {
+        e.preventDefault();
+        alert('Please select an account.');
+        return;
+    }
+    
+    if (!amount || amount <= 0) {
+        e.preventDefault();
+        alert('Please enter a valid amount.');
+        return;
+    }
+    
+    {% if transaction_type == 'withdrawal' %}
+    const option = select.selectedOptions[0];
+    const available = parseFloat(option.dataset.available);
+    
+    if (amount > available) {
+        e.preventDefault();
+        alert('Insufficient balance. Available: ₹' + available.toFixed(2));
+        return;
+    }
+    {% endif %}
+    
+    // Confirm transaction
+    const confirmMessage = `Are you sure you want to {% if transaction_type == 'deposit' %}deposit{% else %}withdraw{% endif %} ₹${amount.toFixed(2)}?`;
+    if (!confirm(confirmMessage)) {
+        e.preventDefault();
+    }
+});
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    checkFormValidity();
+});
+</script>
+{% endblock %}

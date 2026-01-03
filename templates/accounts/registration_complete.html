@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Registration Complete - Golam Financial Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-complete-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 64px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    
+    .registration-title {
+        color: #2b7a76;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .registration-subtitle {
+        color: #666;
+        font-size: 18px;
+        margin-bottom: 30px;
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    
+    .info-box h4 {
+        color: #2b7a76;
+        margin-bottom: 15px;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .info-box li {
+        margin-bottom: 8px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #2b7a76, #4a9b96);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1f5d5a, #3a8b86);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(43, 122, 118, 0.3);
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+    }
+    
+    .support-info {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+        color: #666;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-complete-container">
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    
+    <h1 class="registration-title">Registration Successful!</h1>
+    <p class="registration-subtitle">Your account has been created successfully.</p>
+    
+    <div class="info-box">
+        <h4><i class="fas fa-envelope"></i> Check Your Email</h4>
+        <p>We've sent an activation link to your email address. Please check your inbox and click the activation link to complete your registration.</p>
+        
+        <h4><i class="fas fa-clock"></i> What's Next?</h4>
+        <ul>
+            <li>Check your email inbox (and spam/junk folder)</li>
+            <li>Click the activation link in the email</li>
+            <li>Your account will be activated immediately</li>
+            <li>You can then log in with your credentials</li>
+        </ul>
+    </div>
+    
+    <div style="margin: 30px 0;">
+        <a href="{% url 'login' %}" class="btn-primary">
+            <i class="fas fa-sign-in-alt"></i> Go to Login
+        </a>
+        <a href="{% url 'accounts:resend_activation' %}" class="btn-secondary">
+            <i class="fas fa-redo"></i> Resend Activation Email
+        </a>
+    </div>
+    
+    <div class="support-info">
+        <p><strong>Need Help?</strong></p>
+        <p>If you don't receive the activation email within a few minutes, please check your spam folder or contact our support team.</p>
+        <p><i class="fas fa-envelope"></i> support@golamfinancial.com | <i class="fas fa-phone"></i> +255 123 456 789</p>
+    </div>
+</div>
+{% endblock %}

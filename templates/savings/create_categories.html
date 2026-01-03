@@ -1,0 +1,245 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Create Category - Golam Financial Services{% endblock %}
+{% block page_title %}Create New Category{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .form-header h1 {
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    .form-control.textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2b7a76 0%, #16a34a 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1f5f5b 0%, #15803d 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-group {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h1>Create New Category</h1>
+        <p>Add a new savings product category to organize your offerings</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name" class="form-label">
+                    Category Name <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-control" 
+                    required
+                    placeholder="e.g., Regular Savings"
+                    maxlength="100"
+                >
+                <div class="help-text">Enter a descriptive name for the category</div>
+            </div>
+
+            <div class="form-group">
+                <label for="code" class="form-label">
+                    Category Code <span class="required">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="code" 
+                    name="code" 
+                    class="form-control" 
+                    required
+                    placeholder="e.g., REG_SAV"
+                    maxlength="20"
+                    style="text-transform: uppercase;"
+                >
+                <div class="help-text">Unique identifier (uppercase letters and underscores)</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="description" class="form-label">Description</label>
+            <textarea 
+                id="description" 
+                name="description" 
+                class="form-control textarea"
+                placeholder="Describe the purpose and characteristics of this category..."
+                rows="4"
+            ></textarea>
+            <div class="help-text">Optional description to explain the category's purpose</div>
+        </div>
+
+        <div class="form-group">
+            <label for="display_order" class="form-label">Display Order</label>
+            <input 
+                type="number" 
+                id="display_order" 
+                name="display_order" 
+                class="form-control" 
+                value="0"
+                min="0"
+                max="999"
+            >
+            <div class="help-text">Order in which this category appears in lists (0 = first)</div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Create Category
+            </button>
+            <a href="{% url 'savings:view_categories' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.getElementById('code');
+    const nameInput = document.getElementById('name');
+    
+    // Auto-generate code from name
+    nameInput.addEventListener('input', function() {
+        if (!codeInput.value) {
+            const code = this.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9\s]/g, '')
+                .replace(/\s+/g, '_')
+                .substring(0, 20);
+            codeInput.value = code;
+        }
+    });
+    
+    // Ensure code stays uppercase
+    codeInput.addEventListener('input', function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+    });
+});
+</script>
+{% endblock %}

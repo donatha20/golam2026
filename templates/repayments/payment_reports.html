@@ -1,0 +1,722 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Payment Reports - Golam Financial Services{% endblock %}
+
+{% block page_title %}Payment Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    .report-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .report-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+    
+    .report-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e7570;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
+    }
+    
+    .btn-outline-primary {
+        border: 2px solid #1e7570;
+        color: #1e7570;
+        background: transparent;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #1e7570;
+        color: white;
+    }
+    
+    .table th {
+        background: white !important;
+        color: #2b7a76 !important;
+        border-bottom: 2px solid #2b7a76 !important;
+        font-weight: 600;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    .trend-up {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.2);
+    }
+    
+    .trend-down {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.2);
+    }
+    
+    .trend-neutral {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.2);
+    }
+    
+    .summary-metrics {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .summary-metrics h4 {
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        text-align: center;
+        font-size: 1.2rem;
+        color: #374151;
+    }
+    
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .metric-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        .metric-item {
+            padding: 0.75rem;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+        }
+        .metric-label {
+            font-size: 0.7rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .metric-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        .metric-item {
+            padding: 0.5rem;
+        }
+        .metric-value {
+            font-size: 1.2rem;
+        }
+    }
+    }
+    
+    .metric-item {
+        text-align: center;
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .metric-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-color: #2b7a76;
+    }
+    
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #2b7a76;
+    }
+    
+    .metric-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+    }
+    
+    .trend-indicator.positive {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .trend-indicator.negative {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .period-selector {
+        background: white;
+        border-radius: 8px;
+        padding: 0.25rem;
+        display: inline-flex;
+        margin-bottom: 1rem;
+    }
+    
+    .period-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        color: #6b7280;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .period-btn.active {
+        background: #1e7570;
+        color: white;
+    }
+    
+    .collection-efficiency {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .efficiency-meter {
+        background: #e9ecef;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .efficiency-fill {
+        background: linear-gradient(90deg, #dc2626 0%, #eab308 50%, #16a34a 100%);
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                Payment Reports
+            </h1>
+            <p class="text-muted">Analyze payment patterns and collection performance</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="export-buttons">
+                <button class="btn btn-outline-primary btn-sm" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-outline-primary btn-sm" onclick="exportReport('csv')">
+                    <i class="fas fa-file-csv me-1"></i>CSV
+                </button>
+            </div>
+            <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Date Range Filters -->
+    <div class="filters-section">
+        <h5 class="mb-3">
+            <i class="fas fa-filter me-2"></i>Report Filters
+        </h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" 
+                       value="{{ request.GET.start_date|default:default_start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" 
+                       value="{{ request.GET.end_date|default:default_end_date }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Payment Method</label>
+                <select name="payment_method" class="form-select">
+                    <option value="">All Methods</option>
+                    <option value="cash" {% if request.GET.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                    <option value="bank_transfer" {% if request.GET.payment_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                    <option value="mobile_money" {% if request.GET.payment_method == 'mobile_money' %}selected{% endif %}>Mobile Money</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Loan Type</label>
+                <select name="loan_type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="personal" {% if request.GET.loan_type == 'personal' %}selected{% endif %}>Personal</option>
+                    <option value="business" {% if request.GET.loan_type == 'business' %}selected{% endif %}>Business</option>
+                    <option value="agricultural" {% if request.GET.loan_type == 'agricultural' %}selected{% endif %}>Agricultural</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="summary-metrics">
+        <h4 class="mb-3">Payment Summary - {{ period_display }}</h4>
+        <div class="metric-grid">
+            <div class="metric-item">
+                <div class="metric-value">{{ metrics.total_payments }}</div>
+                <div class="metric-label">Total Payments</div>
+                <div class="trend-indicator trend-{{ metrics.payments_trend }}">
+                    <i class="fas fa-arrow-{{ metrics.payments_trend|yesno:'up,down,right' }} me-1"></i>
+                    {{ metrics.payments_change }}%
+                </div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">₹{{ metrics.total_amount|floatformat:2 }}</div>
+                <div class="metric-label">Total Amount</div>
+                <div class="trend-indicator trend-{{ metrics.amount_trend }}">
+                    <i class="fas fa-arrow-{{ metrics.amount_trend|yesno:'up,down,right' }} me-1"></i>
+                    {{ metrics.amount_change }}%
+                </div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">₹{{ metrics.avg_payment|floatformat:2 }}</div>
+                <div class="metric-label">Average Payment</div>
+                <div class="trend-indicator trend-{{ metrics.avg_trend }}">
+                    <i class="fas fa-arrow-{{ metrics.avg_trend|yesno:'up,down,right' }} me-1"></i>
+                    {{ metrics.avg_change }}%
+                </div>
+            </div>
+            <div class="metric-item">
+                <div class="metric-value">{{ metrics.collection_rate }}%</div>
+                <div class="metric-label">Collection Rate</div>
+                <div class="trend-indicator trend-{{ metrics.collection_trend }}">
+                    <i class="fas fa-arrow-{{ metrics.collection_trend|yesno:'up,down,right' }} me-1"></i>
+                    {{ metrics.collection_change }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Payment Trends Chart -->
+        <div class="col-lg-8">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">Payment Trends</h5>
+                    <div class="period-selector">
+                        <button class="period-btn active" onclick="updateChart('daily')">Daily</button>
+                        <button class="period-btn" onclick="updateChart('weekly')">Weekly</button>
+                        <button class="period-btn" onclick="updateChart('monthly')">Monthly</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Method Distribution -->
+        <div class="col-lg-4">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">Payment Methods</h5>
+                    <div class="report-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="methodsChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    {% for method in payment_methods %}
+                    <div class="stat-item">
+                        <div class="stat-value">{{ method.percentage }}%</div>
+                        <div class="stat-label">{{ method.name }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Collection Efficiency -->
+        <div class="col-lg-6">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">Collection Efficiency</h5>
+                    <div class="report-icon">
+                        <i class="fas fa-target"></i>
+                    </div>
+                </div>
+                
+                <div class="collection-efficiency">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>On-time Collections</span>
+                        <span class="fw-bold">{{ efficiency.on_time_rate }}%</span>
+                    </div>
+                    <div class="efficiency-meter">
+                        <div class="efficiency-fill" style="width: {{ efficiency.on_time_rate }}%"></div>
+                    </div>
+                </div>
+
+                <div class="collection-efficiency">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Recovery Rate</span>
+                        <span class="fw-bold">{{ efficiency.recovery_rate }}%</span>
+                    </div>
+                    <div class="efficiency-meter">
+                        <div class="efficiency-fill" style="width: {{ efficiency.recovery_rate }}%"></div>
+                    </div>
+                </div>
+
+                <div class="collection-efficiency">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Target Achievement</span>
+                        <span class="fw-bold">{{ efficiency.target_achievement }}%</span>
+                    </div>
+                    <div class="efficiency-meter">
+                        <div class="efficiency-fill" style="width: {{ efficiency.target_achievement }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performing Loans -->
+        <div class="col-lg-6">
+            <div class="report-card">
+                <div class="report-header">
+                    <h5 class="report-title">Top Performing Loans</h5>
+                    <div class="report-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Loan ID</th>
+                                <th>Borrower</th>
+                                <th>Payments</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in top_loans %}
+                            <tr>
+                                <td>{{ loan.loan__loan_number }}</td>
+                                <td>{{ loan.loan__borrower__first_name }} {{ loan.loan__borrower__last_name }}</td>
+                                <td>{{ loan.payment_count }}</td>
+                                <td>₹{{ loan.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Payment Analysis -->
+    <div class="report-card">
+        <div class="report-header">
+            <h5 class="report-title">Detailed Payment Analysis</h5>
+            <div class="export-buttons">
+                <button class="btn btn-outline-primary btn-sm" onclick="exportTable()">
+                    <i class="fas fa-download me-1"></i>Export Table
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-striped" id="paymentsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Loan ID</th>
+                        <th>Borrower</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Principal</th>
+                        <th>Interest</th>
+                        <th>Penalty</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in detailed_payments %}
+                    <tr>
+                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                        <td>{{ payment.loan.loan_number }}</td>
+                        <td>{{ payment.loan.borrower.get_full_name }}</td>
+                        <td>₹{{ payment.amount|floatformat:2 }}</td>
+                        <td>{{ payment.get_payment_method_display }}</td>
+                        <td>₹{{ payment.principal_paid|floatformat:2 }}</td>
+                        <td>₹{{ payment.interest_paid|floatformat:2 }}</td>
+                        <td>₹{{ payment.penalty_paid|floatformat:2 }}</td>
+                        <td>{{ payment.receipt_number|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Initialize Charts
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTrendsChart();
+    initializeMethodsChart();
+});
+
+function initializeTrendsChart() {
+    const ctx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ trends_data.labels|safe }},
+            datasets: [{
+                label: 'Payment Amount',
+                data: {{ trends_data.amounts|safe }},
+                borderColor: '#1e7570',
+                backgroundColor: 'rgba(30, 117, 112, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Payment Count',
+                data: {{ trends_data.counts|safe }},
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Amount (₹)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    });
+}
+
+function initializeMethodsChart() {
+    const ctx = document.getElementById('methodsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ methods_data.labels|safe }},
+            datasets: [{
+                data: {{ methods_data.values|safe }},
+                backgroundColor: [
+                    '#1e7570',
+                    '#2b7a76',
+                    '#16a34a',
+                    '#eab308',
+                    '#dc2626'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function updateChart(period) {
+    // Update active button
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Reload chart data
+    // This would typically make an AJAX call to get new data
+    console.log('Updating chart for period:', period);
+}
+
+function exportReport(format) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', format);
+    window.open(`${window.location.pathname}?${params.toString()}`, '_blank');
+}
+
+function exportTable() {
+    // Export table data as CSV
+    const table = document.getElementById('paymentsTable');
+    const rows = Array.from(table.rows);
+    const csv = rows.map(row => 
+        Array.from(row.cells).map(cell => `"${cell.textContent}"`).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'payment_analysis.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}SMS Logs{% endblock %}
+{% block page_title %}SMS Logs{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2 text-primary-teal"></i>
+                    SMS Logs
+                </h5>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'sms:send_sms' %}" class="btn btn-primary-teal btn-sm">
+                        <i class="fas fa-paper-plane me-1"></i>Send SMS
+                    </a>
+                    <a href="{% url 'sms:bulk_sms' %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-broadcast-tower me-1"></i>Bulk SMS
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-2">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-control form-control-sm">
+                                    <option value="">All Statuses</option>
+                                    <option value="sent" {% if status_filter == 'sent' %}selected{% endif %}>Sent</option>
+                                    <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                                    <option value="delivered" {% if status_filter == 'delivered' %}selected{% endif %}>Delivered</option>
+                                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="template" class="form-label">Template</label>
+                                <select name="template" id="template" class="form-control form-control-sm">
+                                    <option value="">All Templates</option>
+                                    {% for template in templates %}
+                                    <option value="{{ template }}" {% if template_filter == template %}selected{% endif %}>
+                                        {{ template|title }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="text" name="phone" id="phone" class="form-control form-control-sm" 
+                                       value="{{ phone_filter }}" placeholder="Phone number">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="date_from" class="form-label">From Date</label>
+                                <input type="date" name="date_from" id="date_from" class="form-control form-control-sm" 
+                                       value="{{ date_from }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="date_to" class="form-label">To Date</label>
+                                <input type="date" name="date_to" id="date_to" class="form-control form-control-sm" 
+                                       value="{{ date_to }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary-teal btn-sm">
+                                        <i class="fas fa-search me-1"></i>Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SMS Logs Table -->
+                {% if sms_logs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Phone Number</th>
+                                <th>Message</th>
+                                <th>Template</th>
+                                <th>Provider</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sms in sms_logs %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold">{{ sms.phone_number }}</span>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 250px;" 
+                                         title="{{ sms.message }}" data-bs-toggle="tooltip">
+                                        {{ sms.message }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if sms.template_name %}
+                                        <span class="badge bg-secondary">{{ sms.template_name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Manual</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ sms.provider|title }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if sms.status == 'sent' %}bg-success
+                                        {% elif sms.status == 'failed' %}bg-danger
+                                        {% elif sms.status == 'delivered' %}bg-primary
+                                        {% else %}bg-warning{% endif %}">
+                                        {{ sms.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <small>{{ sms.sent_at|date:"M d, Y" }}<br>{{ sms.sent_at|time:"H:i:s" }}</small>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            onclick="viewSMSDetails({{ sms.id }})" data-bs-toggle="tooltip" 
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if sms_logs.has_other_pages %}
+                <nav aria-label="SMS logs pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if sms_logs.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.template %}&template={{ request.GET.template }}{% endif %}{% if request.GET.phone %}&phone={{ request.GET.phone }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ sms_logs.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.template %}&template={{ request.GET.template }}{% endif %}{% if request.GET.phone %}&phone={{ request.GET.phone }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ sms_logs.number }} of {{ sms_logs.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if sms_logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ sms_logs.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.template %}&template={{ request.GET.template }}{% endif %}{% if request.GET.phone %}&phone={{ request.GET.phone }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ sms_logs.paginator.num_pages }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.template %}&template={{ request.GET.template }}{% endif %}{% if request.GET.phone %}&phone={{ request.GET.phone }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No SMS logs found</h5>
+                    <p class="text-muted">No SMS messages match your current filters.</p>
+                    <a href="{% url 'sms:send_sms' %}" class="btn btn-primary-teal">
+                        <i class="fas fa-paper-plane me-1"></i>Send Your First SMS
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SMS Details Modal -->
+<div class="modal fade" id="smsDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">SMS Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="smsDetailsContent">
+                <!-- Content will be loaded via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+function viewSMSDetails(smsId) {
+    // This would load SMS details via AJAX
+    $('#smsDetailsModal').modal('show');
+    $('#smsDetailsContent').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
+    
+    // For now, just show a placeholder
+    setTimeout(function() {
+        $('#smsDetailsContent').html('<p>SMS details for ID: ' + smsId + '</p><p>This feature can be enhanced to show full SMS details, provider response, etc.</p>');
+    }, 500);
+}
+</script>
+{% endblock %}

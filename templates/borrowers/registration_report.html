@@ -1,0 +1,487 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Registration Report - Golam Financial Services{% endblock %}
+
+{% block page_title %}Registration Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Report Styling */
+    .report-header {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0 0 1rem 0;
+        text-align: center;
+    }
+    
+    .date-filter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .date-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    .date-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-filter:hover {
+        background: #1f5d5a;
+    }
+    
+    /* Statistics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Charts Section */
+    .charts-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .chart-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1rem 0;
+        text-align: center;
+    }
+    
+    .chart-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .chart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .chart-item:last-child {
+        border-bottom: none;
+    }
+    
+    .chart-label {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .chart-value {
+        font-weight: 600;
+        color: #2b7a76;
+        background: rgba(43, 122, 118, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+    }
+    
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .registration-table {
+        margin: 0;
+        border: none;
+        font-size: 0.85rem;
+        min-width: 1000px;
+        width: 100%;
+    }
+
+    .registration-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .registration-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .registration-table tbody td {
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .registration-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+    
+    /* Avatar Styling */
+    .table-avatar-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(43, 122, 118, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.8rem;
+        margin: 0 auto;
+    }
+    
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-export {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+        border: 1px solid rgba(43, 122, 118, 0.2);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-export:hover {
+        background: rgba(43, 122, 118, 0.2);
+        color: #1f5d5a;
+        text-decoration: none;
+    }
+    
+    /* Pagination */
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        color: #2b7a76;
+        border-color: #e5e7eb;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .pagination .page-link:hover {
+        background: rgba(43, 122, 118, 0.1);
+        border-color: #2b7a76;
+        color: #1f5d5a;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #2b7a76;
+        border-color: #2b7a76;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .date-filter {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .table-controls {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .table-actions {
+            justify-content: center;
+        }
+        
+        .registration-table {
+            font-size: 0.8rem;
+        }
+        
+        .registration-table thead th,
+        .registration-table tbody td {
+            padding: 0.5rem 0.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="report-header">
+        <h1 class="page-title">Client Registration Report</h1>
+        
+        <!-- Date Filter -->
+        <form method="get" class="date-filter">
+            <label for="start_date">From:</label>
+            <input type="date" id="start_date" name="start_date" class="date-input" 
+                   value="{{ start_date|date:'Y-m-d' }}">
+            
+            <label for="end_date">To:</label>
+            <input type="date" id="end_date" name="end_date" class="date-input" 
+                   value="{{ end_date|date:'Y-m-d' }}">
+            
+            <button type="submit" class="btn-filter">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </form>
+        
+        <div style="text-align: center; color: #6b7280; font-size: 0.9rem;">
+            Report Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_registered }}</div>
+            <div class="stat-label">Total Registered</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.male_borrowers }}</div>
+            <div class="stat-label">Male Clients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.female_borrowers }}</div>
+            <div class="stat-label">Female Clients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                {% if stats.total_registered > 0 %}
+                    {{ stats.female_borrowers|floatformat:0 }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+            <div class="stat-label">Female Percentage</div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <!-- By Branch -->
+        <div class="chart-container">
+            <h3 class="chart-title">Registrations by Branch</h3>
+            <ul class="chart-list">
+                {% for branch in stats.by_branch %}
+                <li class="chart-item">
+                    <span class="chart-label">{{ branch.branch__name|default:"Unknown" }}</span>
+                    <span class="chart-value">{{ branch.count }}</span>
+                </li>
+                {% empty %}
+                <li class="chart-item">
+                    <span class="chart-label">No data available</span>
+                    <span class="chart-value">0</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- By Officer -->
+        <div class="chart-container">
+            <h3 class="chart-title">Registrations by Officer</h3>
+            <ul class="chart-list">
+                {% for officer in stats.by_officer %}
+                <li class="chart-item">
+                    <span class="chart-label">
+                        {{ officer.registered_by__first_name }} {{ officer.registered_by__last_name }}
+                    </span>
+                    <span class="chart-value">{{ officer.count }}</span>
+                </li>
+                {% empty %}
+                <li class="chart-item">
+                    <span class="chart-label">No data available</span>
+                    <span class="chart-value">0</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ table.paginated_rows|length }} of {{ stats.total_registered }} registrations
+            </div>
+            <div class="table-actions">
+                <button class="btn-export" onclick="printReport()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn-export" onclick="exportReport()">
+                    <i class="fas fa-download"></i> Export CSV
+                </button>
+                <button class="btn-export" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+        
+        {% render_table table %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print functionality
+    function printReport() {
+        window.print();
+    }
+    
+    // Export CSV functionality
+    function exportReport() {
+        const table = document.getElementById('registration-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'registration_report.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Export PDF functionality (placeholder)
+    function exportPDF() {
+        alert('PDF export functionality will be implemented soon.');
+        // TODO: Implement PDF export using libraries like jsPDF or server-side generation
+    }
+    
+    // Auto-set end date to today if start date is selected
+    document.getElementById('start_date').addEventListener('change', function() {
+        const endDate = document.getElementById('end_date');
+        if (!endDate.value) {
+            endDate.value = new Date().toISOString().split('T')[0];
+        }
+    });
+    
+    // Validate date range
+    document.querySelector('.date-filter').addEventListener('submit', function(e) {
+        const startDate = new Date(document.getElementById('start_date').value);
+        const endDate = new Date(document.getElementById('end_date').value);
+        
+        if (startDate > endDate) {
+            e.preventDefault();
+            alert('Start date cannot be later than end date.');
+        }
+    });
+</script>
+{% endblock %}

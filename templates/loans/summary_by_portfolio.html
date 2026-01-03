@@ -1,0 +1,341 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Portfolio Summary - Golam Financial Services{% endblock %}
+
+{% block page_title %}Loan Portfolio Summary{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Beautiful Data Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .portfolio-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1000px;
+        width: 100%;
+    }
+
+    .portfolio-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .portfolio-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .portfolio-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .portfolio-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        border-left: 4px solid #2b7a76;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Info Section */
+    .info-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #93c5fd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-message {
+        color: #1e3a8a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Info Section -->
+    <div class="info-section">
+        <h2 class="info-title">
+            <i class="fas fa-chart-bar"></i>
+            Portfolio Summary Analysis
+        </h2>
+        <p class="info-message">
+            Comprehensive overview of loan portfolios organized by different categories and performance metrics.
+        </p>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list"></i> All Loans
+            </a>
+            <a href="{% url 'loans:portfolio_at_risk' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-chart-area"></i> Portfolio at Risk
+            </a>
+            <a href="{% url 'loans:customer_portfolio' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-user-chart"></i> Customer Portfolio
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_portfolios|default:0 }}</div>
+            <div class="stat-label">Total Portfolios</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_portfolio_value|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Portfolio Value</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_portfolios|default:0 }}</div>
+            <div class="stat-label">Active Portfolios</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ avg_portfolio_size|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Average Portfolio Size</div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing portfolio summary by category
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search portfolios..." id="portfolioSearch">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </div>
+
+        <table class="table portfolio-table" id="portfolio-table">
+            <thead>
+                <tr>
+                    <th>Portfolio Category</th>
+                    <th>Total Loans</th>
+                    <th>Outstanding Amount</th>
+                    <th>Performance Rate</th>
+                    <th>Risk Level</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sample data since portfolios variable might not be available -->
+                <tr>
+                    <td>
+                        <div class="portfolio-name">Personal Loans</div>
+                        <div class="portfolio-description">Individual borrower loans</div>
+                    </td>
+                    <td class="text-center">150</td>
+                    <td class="text-end">$750,000</td>
+                    <td class="text-center">
+                        <span class="badge badge-success">95.2%</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-success">Low</span>
+                    </td>
+                    <td>Today</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="portfolio-name">Business Loans</div>
+                        <div class="portfolio-description">SME and business financing</div>
+                    </td>
+                    <td class="text-center">85</td>
+                    <td class="text-end">$1,200,000</td>
+                    <td class="text-center">
+                        <span class="badge badge-warning">88.7%</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-warning">Medium</span>
+                    </td>
+                    <td>Today</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="portfolio-name">Group Loans</div>
+                        <div class="portfolio-description">Community group lending</div>
+                    </td>
+                    <td class="text-center">45</td>
+                    <td class="text-end">$450,000</td>
+                    <td class="text-center">
+                        <span class="badge badge-success">97.1%</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-success">Low</span>
+                    </td>
+                    <td>Today</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="portfolio-name">Agricultural Loans</div>
+                        <div class="portfolio-description">Farming and agriculture financing</div>
+                    </td>
+                    <td class="text-center">65</td>
+                    <td class="text-end">$325,000</td>
+                    <td class="text-center">
+                        <span class="badge badge-warning">82.3%</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-danger">High</span>
+                    </td>
+                    <td>Today</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('portfolioSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#portfolio-table tbody tr');
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('portfolio-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'portfolio_summary.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

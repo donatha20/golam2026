@@ -1,0 +1,760 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Defaulted Loans - Golam Financial Services{% endblock %}
+{% block page_title %}Defaulted Loans{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Compact Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 120px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.15);
+        transform: translateY(-2px);
+        border-color: #2b7a76;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        width: 6px;
+    }
+    
+    .stat-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+    
+    .stat-change {
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .stat-positive { color: #16a34a; }
+    .stat-negative { color: #dc2626; }
+    .stat-warning { color: #d97706; }
+    
+    /* Action Buttons Grid */
+    .action-buttons-section {
+        margin-bottom: 2rem;
+    }
+    
+    .action-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #475569;
+        transition: all 0.3s ease;
+        text-align: center;
+        min-height: auto;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .action-btn-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2b7a76 0%, #34d399 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.3);
+    }
+
+    .action-btn-success {
+        border-color: #16a34a;
+        color: #16a34a;
+    }
+
+    .action-btn-success:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.3);
+    }
+
+    .action-btn-outline {
+        border-color: #64748b;
+        color: #64748b;
+    }
+
+    .action-btn-outline:hover {
+        background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(100, 116, 139, 0.3);
+    }
+
+    .action-btn-danger {
+        border-color: #dc2626;
+        color: #dc2626;
+    }
+
+    .action-btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+    }
+    
+    .action-btn i {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .action-btn:hover i {
+        transform: scale(1.1);
+    }
+    
+    .action-btn span {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    .alert-banner {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .alert-banner i {
+        color: #dc2626;
+        font-size: 1.25rem;
+    }
+    .alert-text {
+        color: #991b1b;
+        font-weight: 500;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        transition: transform 0.2s;
+        border-left: 4px solid #dc2626;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+    }
+    .stat-change {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .filter-input, .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .table-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .table-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .styled-table thead tr {
+        background-color: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .styled-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .styled-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    .styled-table tbody tr:hover {
+        background-color: #fef2f2;
+    }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .status-defaulted { background: #fef2f2; color: #991b1b; }
+    .status-written-off { background: #f3f4f6; color: #374151; }
+    .status-legal { background: #fef3c7; color: #92400e; }
+    .loan-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .loan-number {
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    .loan-type {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .borrower-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .borrower-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .borrower-contact {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .amount-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: flex-end;
+    }
+    .amount-value {
+        font-weight: 600;
+        color: #dc2626;
+    }
+    .amount-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    .days-overdue {
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    .days-overdue.critical {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+    .days-overdue.severe {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    .btn-danger {
+        background: #dc2626;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+    .btn-warning:hover {
+        background: #d97706;
+    }
+    .btn-outline {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    .btn-outline:hover {
+        background: #f9fafb;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #10b981;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .recovery-status {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.25rem;
+    }
+    .recovery-active { background: #fef3c7; color: #92400e; }
+    .recovery-legal { background: #fef2f2; color: #991b1b; }
+    .recovery-none { background: #f3f4f6; color: #6b7280; }
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        .table-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        .styled-table {
+            font-size: 0.8rem;
+        }
+        .styled-table th,
+        .styled-table td {
+            padding: 0.5rem;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            Defaulted Loans
+        </h1>
+        <p class="page-subtitle">Monitor and manage loans in default status</p>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner">
+        <i class="fas fa-exclamation-circle"></i>
+        <div class="alert-text">
+            High priority: {{ critical_defaults|default:0 }} loans require immediate attention
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Defaulted</div>
+            <div class="stat-value">{{ total_defaulted|default:0 }}</div>
+            <div class="stat-change stat-negative">
+                <i class="fas fa-exclamation-triangle"></i>
+                TZS {{ total_defaulted_amount|floatformat:0|default:0 }}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">New This Month</div>
+            <div class="stat-value">{{ new_defaults_this_month|default:0 }}</div>
+            <div class="stat-change stat-warning">
+                <i class="fas fa-chart-line"></i>
+                {{ default_trend|default:0 }}% from last month
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Recovery Rate</div>
+            <div class="stat-value">{{ recovery_rate|default:0 }}%</div>
+            <div class="stat-change stat-positive">
+                <i class="fas fa-undo"></i>
+                {{ recovered_this_month|default:0 }} recovered
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Legal Actions</div>
+            <div class="stat-value">{{ legal_actions|default:0 }}</div>
+            <div class="stat-change stat-negative">
+                <i class="fas fa-gavel"></i>
+                {{ pending_legal|default:0 }} pending
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search Loans</label>
+                    <input type="text" name="search" value="{{ request.GET.search }}" 
+                           placeholder="Loan number or borrower..." class="filter-input" id="loanSearch">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Default Type</label>
+                    <select name="default_type" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="payment_default" {% if request.GET.default_type == 'payment_default' %}selected{% endif %}>Payment Default</option>
+                        <option value="breach_of_terms" {% if request.GET.default_type == 'breach_of_terms' %}selected{% endif %}>Breach of Terms</option>
+                        <option value="fraud" {% if request.GET.default_type == 'fraud' %}selected{% endif %}>Fraud</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Days Overdue</label>
+                    <select name="days_overdue" class="filter-select">
+                        <option value="">All</option>
+                        <option value="90-180" {% if request.GET.days_overdue == '90-180' %}selected{% endif %}>90-180 days</option>
+                        <option value="180-365" {% if request.GET.days_overdue == '180-365' %}selected{% endif %}>180-365 days</option>
+                        <option value="365+" {% if request.GET.days_overdue == '365+' %}selected{% endif %}>365+ days</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Recovery Status</label>
+                    <select name="recovery_status" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.recovery_status == 'active' %}selected{% endif %}>Active Recovery</option>
+                        <option value="legal" {% if request.GET.recovery_status == 'legal' %}selected{% endif %}>Legal Action</option>
+                        <option value="written_off" {% if request.GET.recovery_status == 'written_off' %}selected{% endif %}>Written Off</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="btn btn-outline">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Defaulted Loans Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2 class="table-title">
+                <i class="fas fa-list"></i>
+                Defaulted Loans ({{ loans.count }})
+            </h2>
+            <div class="table-actions">
+                <button onclick="exportTable()" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <a href="{% url 'loans:penalties' %}" class="btn btn-warning">
+                    <i class="fas fa-gavel"></i> Manage Penalties
+                </a>
+            </div>
+        </div>
+
+        {% if loans %}
+        <table class="styled-table" id="defaultedLoanTable">
+            <thead>
+                <tr>
+                    <th>Loan Details</th>
+                    <th>Borrower</th>
+                    <th>Outstanding Amount</th>
+                    <th>Days Overdue</th>
+                    <th>Default Type</th>
+                    <th>Recovery Status</th>
+                    <th>Last Contact</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td>
+                        <div class="loan-info">
+                            <span class="loan-number">{{ loan.loan_number }}</span>
+                            <span class="loan-type">{{ loan.loan_type.name }}</span>
+                            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+                                Disbursed: {{ loan.disbursement_date|date:"M d, Y" }}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="borrower-info">
+                            <span class="borrower-name">{{ loan.borrower.get_full_name }}</span>
+                            <span class="borrower-contact">{{ loan.borrower.phone_number }}</span>
+                            <div style="font-size: 0.8rem; color: #6b7280;">
+                                ID: {{ loan.borrower.id_number }}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="amount-info">
+                            <span class="amount-value">TZS {{ loan.outstanding_balance|floatformat:0 }}</span>
+                            <span class="amount-label">Outstanding</span>
+                        </div>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #6b7280;">
+                            <div>Principal: TZS {{ loan.outstanding_principal|floatformat:0 }}</div>
+                            <div>Interest: TZS {{ loan.outstanding_interest|floatformat:0 }}</div>
+                            <div>Penalties: TZS {{ loan.total_penalties|floatformat:0 }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="days-overdue {% if loan.days_overdue > 365 %}critical{% elif loan.days_overdue > 180 %}severe{% endif %}">
+                            {{ loan.days_overdue }} days
+                        </span>
+                        <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+                            Since: {{ loan.last_payment_date|date:"M d, Y"|default:"No payments" }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge status-defaulted">
+                            {{ loan.get_default_type_display|default:"Payment Default" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div>
+                            <span class="recovery-status {% if loan.recovery_status == 'active' %}recovery-active{% elif loan.recovery_status == 'legal' %}recovery-legal{% else %}recovery-none{% endif %}">
+                                {{ loan.get_recovery_status_display|default:"None" }}
+                            </span>
+                        </div>
+                        {% if loan.assigned_collector %}
+                            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+                                Assigned: {{ loan.assigned_collector }}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="font-size: 0.8rem;">
+                            {% if loan.last_contact_date %}
+                                <div>{{ loan.last_contact_date|date:"M d, Y" }}</div>
+                                <div class="text-muted">{{ loan.last_contact_type }}</div>
+                            {% else %}
+                                <div class="text-muted">No contact</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'loans:loan_repayments' loan.id %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'borrowers:borrower_detail' loan.borrower.id %}" class="btn btn-warning" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-user"></i> Borrower
+                            </a>
+                            <a href="{% url 'loans:penalties' %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-gavel"></i> Penalty
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h3>No Defaulted Loans</h3>
+            <p>Great! There are no loans currently in default status.</p>
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-outline">
+                <i class="fas fa-list"></i> View Outstanding Loans
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live search filter
+    document.getElementById('loanSearch').addEventListener('input', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#defaultedLoanTable tbody tr');
+
+        rows.forEach(row => {
+            const rowText = row.textContent.toLowerCase();
+            row.style.display = rowText.includes(filter) ? '' : 'none';
+        });
+    });
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('defaultedLoanTable');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'defaulted_loans.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

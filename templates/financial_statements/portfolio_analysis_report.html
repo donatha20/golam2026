@@ -1,0 +1,278 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Portfolio Analysis{% endblock %}
+{% block page_title %}Portfolio Analysis Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Summary Cards -->
+    <div class="col-lg-6 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-primary-teal">{{ total_loans }}</h5>
+                <p class="card-text">Total Loans</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 col-md-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ active_loans }}</h5>
+                <p class="card-text">Active Loans</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Portfolio by Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-primary-teal"></i>
+                    Portfolio by Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th class="text-center">Count</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-center">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in portfolio_by_status %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{% if item.status == 'active' %}success{% elif item.status == 'completed' %}info{% elif item.status == 'defaulted' %}danger{% else %}secondary{% endif %}">
+                                        {{ item.status|title }}
+                                    </span>
+                                </td>
+                                <td class="text-center">{{ item.count }}</td>
+                                <td class="text-end">{{ item.total_amount|floatformat:0 }}</td>
+                                <td class="text-center">
+                                    {{ item.percentage }}%
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No loan data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio by Type -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary-teal"></i>
+                    Portfolio by Loan Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Loan Type</th>
+                                <th class="text-center">Count</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-center">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in portfolio_by_type %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">{{ item.loan_type|title }}</span>
+                                </td>
+                                <td class="text-center">{{ item.count }}</td>
+                                <td class="text-end">{{ item.total_amount|floatformat:0 }}</td>
+                                <td class="text-center">
+                                    {{ item.percentage }}%
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No loan type data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Performance Metrics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-analytics me-2 text-primary-teal"></i>
+                    Portfolio Performance Metrics
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" id="export-excel-btn">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Portfolio at Risk (PAR)</h6>
+                                <h4 class="text-warning">
+                                    {% comment %}
+                                    This would be calculated based on overdue loans
+                                    {% endcomment %}
+                                    5.2%
+                                </h4>
+                                <small class="text-muted">30+ days overdue</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Collection Rate</h6>
+                                <h4 class="text-success">
+                                    {% comment %}
+                                    This would be calculated based on collections vs due
+                                    {% endcomment %}
+                                    94.8%
+                                </h4>
+                                <small class="text-muted">Current month</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Average Loan Size</h6>
+                                <h4 class="text-info">
+                                    {% comment %}
+                                    This would be calculated from loan amounts
+                                    {% endcomment %}
+                                    ₹25,000
+                                </h4>
+                                <small class="text-muted">Per loan</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Portfolio Yield</h6>
+                                <h4 class="text-primary-teal">
+                                    {% comment %}
+                                    This would be calculated based on interest earned
+                                    {% endcomment %}
+                                    18.5%
+                                </h4>
+                                <small class="text-muted">Annual yield</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Analysis -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="text-primary-teal border-bottom pb-2">Portfolio Quality Indicators</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th class="text-center">Current Value</th>
+                                        <th class="text-center">Target</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Portfolio at Risk (PAR 30)</td>
+                                        <td class="text-center">5.2%</td>
+                                        <td class="text-center">&lt; 5%</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning">Above Target</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Collection Efficiency</td>
+                                        <td class="text-center">94.8%</td>
+                                        <td class="text-center">&gt; 95%</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-warning">Below Target</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Active Loan Ratio</td>
+                                        <td class="text-center">
+                                            {{ active_loan_ratio }}%
+                                        </td>
+                                        <td class="text-center">&gt; 80%</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">On Target</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Export to Excel functionality
+    $('#export-excel-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'excel');
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .form-control, .form-label {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

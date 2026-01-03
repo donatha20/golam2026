@@ -1,0 +1,568 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Repayment Management - Golam Financial Services{% endblock %}
+{% block page_title %}Repayment Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .repayment-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.collections {
+        border-left: 4px solid #16a34a;
+    }
+
+    .stat-card.overdue {
+        border-left: 4px solid #ef4444;
+    }
+
+    .stat-card.outstanding {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .stat-card.efficiency {
+        border-left: 4px solid #2b7a76;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .stat-icon.collections {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .stat-icon.overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .stat-icon.outstanding {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-icon.efficiency {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .actions-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .action-card {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .action-card:hover {
+        background: #f3f4f6;
+        border-color: #16a34a;
+        text-decoration: none;
+        color: inherit;
+        transform: translateY(-1px);
+    }
+
+    .action-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #16a34a;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .action-content {
+        flex: 1;
+    }
+
+    .action-title {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .action-description {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* Content Sections */
+    .content-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .main-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Recent Items */
+    .recent-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .recent-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+    }
+
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+
+    .recent-info {
+        flex: 1;
+    }
+
+    .recent-name {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .recent-details {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .recent-amount {
+        font-weight: 600;
+        color: #16a34a;
+        font-family: monospace;
+    }
+
+    .overdue-amount {
+        font-weight: 600;
+        color: #ef4444;
+        font-family: monospace;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .status-completed {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    /* Collection Chart */
+    .collection-chart {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .chart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .chart-item:last-child {
+        border-bottom: none;
+    }
+
+    .chart-date {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .chart-amount {
+        font-weight: 600;
+        color: #16a34a;
+        font-family: monospace;
+    }
+
+    .chart-count {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        .repayment-container {
+            margin: 1rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .content-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="repayment-container">
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="actions-title">
+            <i class="fas fa-bolt"></i>
+            Quick Actions
+        </div>
+        
+        <div class="actions-grid">
+            <a href="{% url 'repayments:process_payment' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Process Payment</div>
+                    <div class="action-description">Record new payment</div>
+                </div>
+            </a>
+
+            <a href="{% url 'repayments:overdue_payments' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Overdue Payments</div>
+                    <div class="action-description">View overdue installments</div>
+                </div>
+            </a>
+
+            <a href="{% url 'repayments:outstanding_balances' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Outstanding Balances</div>
+                    <div class="action-description">View loan balances</div>
+                </div>
+            </a>
+
+            <a href="{% url 'repayments:payment_list' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Payment History</div>
+                    <div class="action-description">View all payments</div>
+                </div>
+            </a>
+
+            <a href="{% url 'repayments:collection_report' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Collection Reports</div>
+                    <div class="action-description">Generate reports</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card collections">
+            <div class="stat-header">
+                <div class="stat-title">Today's Collections</div>
+                <div class="stat-icon collections">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ payment_stats.today_collections|floatformat:0 }}</div>
+            <div class="stat-description">
+                {{ payment_stats.today_payments_count }} payments received
+            </div>
+        </div>
+
+        <div class="stat-card overdue">
+            <div class="stat-header">
+                <div class="stat-title">Overdue Payments</div>
+                <div class="stat-icon overdue">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ overdue_stats.overdue_installments }}</div>
+            <div class="stat-description">
+                ₹{{ overdue_stats.overdue_amount|floatformat:0 }} overdue<br>
+                {{ overdue_stats.overdue_borrowers }} borrowers affected
+            </div>
+        </div>
+
+        <div class="stat-card outstanding">
+            <div class="stat-header">
+                <div class="stat-title">Total Outstanding</div>
+                <div class="stat-icon outstanding">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+            </div>
+            <div class="stat-value">₹{{ payment_stats.total_outstanding|floatformat:0 }}</div>
+            <div class="stat-description">Across all active loans</div>
+        </div>
+
+        <div class="stat-card efficiency">
+            <div class="stat-header">
+                <div class="stat-title">Pending Payments</div>
+                <div class="stat-icon efficiency">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ payment_stats.pending_payments }}</div>
+            <div class="stat-description">
+                Payments awaiting processing
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="content-section">
+        <!-- Recent Payments -->
+        <div class="main-card">
+            <div class="card-title">
+                <i class="fas fa-money-bill-wave"></i>
+                Recent Payments
+            </div>
+            
+            <div class="recent-list">
+                {% if recent_payments %}
+                    {% for payment in recent_payments %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">
+                                    <a href="{% url 'repayments:payment_detail' payment.id %}" style="text-decoration: none; color: inherit;">
+                                        {{ payment.payment_reference }}
+                                    </a>
+                                </div>
+                                <div class="recent-details">
+                                    {{ payment.borrower.get_full_name }} | {{ payment.loan.loan_number }} | {{ payment.payment_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="recent-amount">₹{{ payment.amount|floatformat:2 }}</div>
+                                <div class="status-badge status-{{ payment.status }}">
+                                    {{ payment.get_status_display }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-inbox" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No payments recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Overdue -->
+        <div class="main-card">
+            <div class="card-title">
+                <i class="fas fa-exclamation-triangle"></i>
+                Recent Overdue
+            </div>
+            
+            <div class="recent-list">
+                {% if recent_overdue %}
+                    {% for installment in recent_overdue %}
+                        <div class="recent-item">
+                            <div class="recent-info">
+                                <div class="recent-name">
+                                    <a href="{% url 'repayments:repayment_schedule' installment.loan.id %}" style="text-decoration: none; color: inherit;">
+                                        {{ installment.loan.borrower.get_full_name }}
+                                    </a>
+                                </div>
+                                <div class="recent-details">
+                                    {{ installment.loan.loan_number }} | Installment {{ installment.installment_number }} | {{ installment.days_overdue }} days overdue
+                                </div>
+                            </div>
+                            <div class="overdue-amount">₹{{ installment.outstanding_amount|floatformat:2 }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                        <i class="fas fa-check-circle" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem; color: #16a34a;"></i>
+                        <p>No overdue payments</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Collections Chart -->
+    <div class="collection-chart">
+        <div class="card-title">
+            <i class="fas fa-chart-line"></i>
+            Daily Collections (Last 7 Days)
+        </div>
+        
+        <div>
+            {% if daily_collections %}
+                {% for collection in daily_collections %}
+                    <div class="chart-item">
+                        <div class="chart-date">{{ collection.collection_date|date:"M d, Y" }}</div>
+                        <div>
+                            <div class="chart-amount">₹{{ collection.total_amount|floatformat:0 }}</div>
+                            <div class="chart-count">{{ collection.payment_count }} payments</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; color: #6b7280; padding: 2rem;">
+                    <p>No collection data available</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh dashboard data every 30 seconds
+    setInterval(function() {
+        console.log('Checking for payment updates...');
+    }, 30000);
+    
+    // Add click handlers for quick stats
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any interactive functionality here
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Logs - Golam Financial Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .log-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .section-count {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .log-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.2s ease;
+    }
+    
+    .log-item:hover {
+        background: #f9fafb;
+    }
+    
+    .log-item:last-child {
+        border-bottom: none;
+    }
+    
+    .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+    
+    .log-user {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+    
+    .log-time {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .log-action {
+        font-size: 0.85rem;
+        color: #2b7a76;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    
+    .log-description {
+        font-size: 0.8rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+    
+    .log-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .session-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background-color 0.2s ease;
+    }
+    
+    .session-item:hover {
+        background: #f9fafb;
+    }
+    
+    .session-item:last-child {
+        border-bottom: none;
+    }
+    
+    .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .session-user {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.9rem;
+    }
+    
+    .session-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .session-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .session-ended {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .session-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0 0 2rem 0;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .logs-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .session-details {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="page-title">User Activity Logs</h1>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_activities }}</div>
+            <div class="stat-label">Total Activities</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_sessions }}</div>
+            <div class="stat-label">Active Sessions</div>
+        </div>
+    </div>
+    
+    <!-- Logs Container -->
+    <div class="logs-container">
+        <!-- User Activities -->
+        <div class="log-section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Activities</h2>
+                <span class="section-count">{{ activities|length }} shown</span>
+            </div>
+            
+            <div class="activities-list">
+                {% for activity in activities %}
+                <div class="log-item">
+                    <div class="log-header">
+                        <span class="log-user">{{ activity.user.get_full_name }}</span>
+                        <span class="log-time">{{ activity.timestamp|date:"M d, H:i" }}</span>
+                    </div>
+                    <div class="log-action">{{ activity.action|title }}</div>
+                    <div class="log-description">{{ activity.description }}</div>
+                    <div class="log-meta">
+                        <span><i class="fas fa-globe"></i> {{ activity.ip_address }}</span>
+                        {% if activity.content_type %}
+                        <span><i class="fas fa-tag"></i> {{ activity.content_type }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <h3>No activities found</h3>
+                    <p>User activities will appear here as they occur.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- User Sessions -->
+        <div class="log-section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Sessions</h2>
+                <span class="section-count">{{ sessions|length }} shown</span>
+            </div>
+            
+            <div class="sessions-list">
+                {% for session in sessions %}
+                <div class="session-item">
+                    <div class="session-header">
+                        <span class="session-user">{{ session.user.get_full_name }}</span>
+                        <span class="session-status {% if session.is_active %}session-active{% else %}session-ended{% endif %}">
+                            {% if session.is_active %}Active{% else %}Ended{% endif %}
+                        </span>
+                    </div>
+                    <div class="session-details">
+                        <span><strong>Login:</strong> {{ session.login_time|date:"M d, H:i" }}</span>
+                        <span><strong>IP:</strong> {{ session.ip_address }}</span>
+                        {% if session.logout_time %}
+                        <span><strong>Logout:</strong> {{ session.logout_time|date:"M d, H:i" }}</span>
+                        {% endif %}
+                        <span><strong>Browser:</strong> {{ session.user_agent|truncatechars:30 }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-desktop"></i>
+                    <h3>No sessions found</h3>
+                    <p>User sessions will appear here when users log in.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

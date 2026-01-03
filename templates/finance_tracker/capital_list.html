@@ -1,0 +1,644 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Capital Transactions - Golam Financial Services{% endblock %}
+{% block page_title %}Capital Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .capital-management-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+    
+    .action-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .action-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .btn-injection {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: white;
+    }
+    
+    .btn-injection:hover {
+        background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-withdrawal {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+    }
+    
+    .btn-withdrawal:hover {
+        background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-view {
+        background: white;
+        color: #2b7a76;
+        border-color: #2b7a76;
+    }
+    
+    .btn-view:hover {
+        background: #2b7a76;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .stats-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    
+    .stat-card.capital {
+        border-left: 4px solid #16a34a;
+    }
+    
+    .stat-card.withdrawal {
+        border-left: 4px solid #dc2626;
+    }
+    
+    .stat-card.pending {
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .stat-card.total {
+        border-left: 4px solid #2b7a76;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-icon.capital {
+        color: #16a34a;
+    }
+    
+    .stat-icon.withdrawal {
+        color: #dc2626;
+    }
+    
+    .stat-icon.pending {
+        color: #f59e0b;
+    }
+    
+    .stat-icon.total {
+        color: #2b7a76;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-value.capital {
+        color: #16a34a;
+    }
+    
+    .stat-value.withdrawal {
+        color: #dc2626;
+    }
+    
+    .stat-value.pending {
+        color: #f59e0b;
+    }
+    
+    .stat-value.total {
+        color: #2b7a76;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    
+    .btn-filter:hover {
+        background: #1f5d5a;
+    }
+    
+    .btn-clear {
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-clear:hover {
+        background: #4b5563;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .transactions-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .transactions-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .transactions-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .transactions-count {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .transactions-table th {
+        background: #f9fafb;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.9rem;
+    }
+    
+    .transactions-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9rem;
+    }
+    
+    .transactions-table tr:hover {
+        background: #f9fafb;
+    }
+    
+    .transaction-id {
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .transaction-type {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .transaction-type.injection {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    
+    .transaction-type.withdrawal {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .transaction-amount {
+        font-weight: 600;
+    }
+    
+    .transaction-amount.injection {
+        color: #16a34a;
+    }
+    
+    .transaction-amount.withdrawal {
+        color: #dc2626;
+    }
+    
+    .transaction-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .transaction-status.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .transaction-status.approved {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .transaction-status.completed {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    
+    .transaction-status.cancelled {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .no-transactions {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+    
+    .no-transactions-icon {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    
+    .pagination {
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: center;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .pagination-list {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 0.5rem;
+    }
+    
+    .pagination-item a {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #374151;
+        transition: all 0.3s ease;
+    }
+    
+    .pagination-item a:hover {
+        background: #f3f4f6;
+    }
+    
+    .pagination-item.active a {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+    
+    @media (max-width: 768px) {
+        .capital-management-container {
+            padding: 0.5rem;
+        }
+        
+        .action-buttons {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .transactions-table {
+            font-size: 0.8rem;
+        }
+        
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="capital-management-container">
+    <!-- Action Buttons -->
+    <div class="action-section">
+        <div class="action-buttons">
+            <a href="{% url 'finance_tracker:add_capital' %}" class="btn-action btn-injection">
+                <i class="fas fa-plus-circle"></i>
+                Add Capital Injection
+            </a>
+            <a href="{% url 'finance_tracker:withdraw_capital' %}" class="btn-action btn-withdrawal">
+                <i class="fas fa-minus-circle"></i>
+                Withdraw Capital
+            </a>
+            <a href="{% url 'finance_tracker:shareholder_list' %}" class="btn-action btn-view">
+                <i class="fas fa-users"></i>
+                View Shareholders
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+        <div class="stat-card capital">
+            <div class="stat-icon capital">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="stat-value capital">₹{{ stats.total_capital|floatformat:0 }}</div>
+            <div class="stat-label">Total Capital Injected</div>
+        </div>
+        
+        <div class="stat-card withdrawal">
+            <div class="stat-icon withdrawal">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="stat-value withdrawal">₹{{ stats.pending_capital|floatformat:0 }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+        
+        <div class="stat-card total">
+            <div class="stat-icon total">
+                <i class="fas fa-university"></i>
+            </div>
+            <div class="stat-value total">{{ stats.total_transactions }}</div>
+            <div class="stat-label">Total Transactions</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="get" id="filterForm">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Capital Type</label>
+                    <select name="capital_type" class="filter-select">
+                        <option value="">All Types</option>
+                        {% for value, label in capital_type_choices %}
+                            <option value="{{ value }}" {% if filters.capital_type == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Transaction Type</label>
+                    <select name="transaction_type" class="filter-select">
+                        <option value="">All Transactions</option>
+                        {% for value, label in transaction_type_choices %}
+                            <option value="{{ value }}" {% if filters.transaction_type == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-select">
+                        <option value="">All Statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <a href="{% url 'finance_tracker:capital_list' %}" class="btn-clear">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="transactions-section">
+        <div class="transactions-header">
+            <div class="transactions-title">
+                <i class="fas fa-exchange-alt"></i>
+                Capital Transactions
+            </div>
+            <div class="transactions-count">
+                {{ page_obj.paginator.count }} total transactions
+            </div>
+        </div>
+
+        {% if page_obj %}
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Type</th>
+                        <th>Capital Type</th>
+                        <th>Amount</th>
+                        <th>Shareholder</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in page_obj %}
+                        <tr>
+                            <td class="transaction-id">{{ transaction.capital_id }}</td>
+                            <td>
+                                <span class="transaction-type {{ transaction.transaction_type }}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>{{ transaction.get_capital_type_display }}</td>
+                            <td class="transaction-amount {{ transaction.transaction_type }}">
+                                {% if transaction.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if transaction.shareholder %}
+                                    {{ transaction.shareholder.name }}
+                                {% else %}
+                                    <span style="color: #6b7280;">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.transaction_date|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="transaction-status {{ transaction.status }}">
+                                    {{ transaction.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if transaction.created_by %}
+                                    {{ transaction.created_by.get_full_name|default:transaction.created_by.username }}
+                                {% else %}
+                                    <span style="color: #6b7280;">System</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="pagination">
+                    <ul class="pagination-list">
+                        {% if page_obj.has_previous %}
+                            <li class="pagination-item">
+                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="pagination-item active">
+                                    <a href="#">{{ num }}</a>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="pagination-item">
+                                    <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="pagination-item">
+                                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="no-transactions">
+                <div class="no-transactions-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h3>No Capital Transactions Found</h3>
+                <p>Start by adding your first capital injection or withdrawal.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when filter changes
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+</script>
+{% endblock %}

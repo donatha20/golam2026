@@ -1,0 +1,480 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Record Repayment - Golam Financial Services{% endblock %}
+{% block page_title %}Record Loan Repayment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0 0 2rem 0;
+        text-align: center;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2b7a76;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #2b7a76;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-right: 1rem;
+    }
+    
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(43, 122, 118, 0.25);
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .btn-secondary:hover {
+        background: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .success-message {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* Loan Details Card */
+    .loan-details-card {
+        background: #f0fdfa;
+        border: 1px solid #5eead4;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .loan-details-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0f766e;
+        margin-bottom: 1rem;
+    }
+
+    .loan-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .loan-detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #a7f3d0;
+    }
+
+    .loan-detail-label {
+        font-weight: 500;
+        color: #065f46;
+    }
+
+    .loan-detail-value {
+        font-weight: 600;
+        color: #064e3b;
+    }
+
+    /* Payment Calculator */
+    .payment-calculator {
+        background: #fffbeb;
+        border: 1px solid #fbbf24;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .calculator-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 1rem;
+    }
+
+    .calculator-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #fde68a;
+    }
+
+    .calculator-label {
+        font-weight: 500;
+        color: #78350f;
+    }
+
+    .calculator-value {
+        font-weight: 600;
+        color: #451a03;
+    }
+
+    .total-due {
+        background: #fef3c7;
+        margin: 0 -1rem;
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="page-title">Record Loan Repayment</h1>
+    
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Loan Details (if available) -->
+    {% if loan %}
+    <div class="loan-details-card">
+        <h3 class="loan-details-title">Loan Information</h3>
+        <div class="loan-details-grid">
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Loan Number:</span>
+                <span class="loan-detail-value">{{ loan.loan_number }}</span>
+            </div>
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Borrower:</span>
+                <span class="loan-detail-value">{{ loan.borrower.get_full_name }}</span>
+            </div>
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Loan Product:</span>
+                <span class="loan-detail-value">{{ loan.loan_product.name }}</span>
+            </div>
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Outstanding Balance:</span>
+                <span class="loan-detail-value">₹{{ loan.outstanding_balance|floatformat:2 }}</span>
+            </div>
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Next Due Date:</span>
+                <span class="loan-detail-value">{{ loan.next_due_date|date:"d M Y" }}</span>
+            </div>
+            <div class="loan-detail-item">
+                <span class="loan-detail-label">Status:</span>
+                <span class="loan-detail-value">{{ loan.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Payment Calculator (if available) -->
+    {% if payment_breakdown %}
+    <div class="payment-calculator">
+        <h3 class="calculator-title">Payment Breakdown</h3>
+        <div class="calculator-row">
+            <span class="calculator-label">Principal Due:</span>
+            <span class="calculator-value">₹{{ payment_breakdown.principal_due|floatformat:2 }}</span>
+        </div>
+        <div class="calculator-row">
+            <span class="calculator-label">Interest Due:</span>
+            <span class="calculator-value">₹{{ payment_breakdown.interest_due|floatformat:2 }}</span>
+        </div>
+        <div class="calculator-row">
+            <span class="calculator-label">Penalty/Fees:</span>
+            <span class="calculator-value">₹{{ payment_breakdown.penalty_due|floatformat:2 }}</span>
+        </div>
+        <div class="calculator-row total-due">
+            <span class="calculator-label">Total Due:</span>
+            <span class="calculator-value">₹{{ payment_breakdown.total_due|floatformat:2 }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'loans:record_repayment' %}">
+        {% csrf_token %}
+
+        <!-- Payment Information -->
+        <div class="form-section">
+            <h3 class="section-title">Payment Information</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.loan.id_for_label }}" class="form-label required">Loan</label>
+                    {{ form.loan }}
+                    {% if form.loan.help_text %}
+                        <div class="form-help">{{ form.loan.help_text }}</div>
+                    {% endif %}
+                    {% if form.loan.errors %}
+                        <div class="error-message">{{ form.loan.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_date.id_for_label }}" class="form-label required">Payment Date</label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.help_text %}
+                        <div class="form-help">{{ form.payment_date.help_text }}</div>
+                    {% endif %}
+                    {% if form.payment_date.errors %}
+                        <div class="error-message">{{ form.payment_date.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.amount_paid.id_for_label }}" class="form-label required">Amount Paid</label>
+                    {{ form.amount_paid }}
+                    {% if form.amount_paid.help_text %}
+                        <div class="form-help">{{ form.amount_paid.help_text }}</div>
+                    {% endif %}
+                    {% if form.amount_paid.errors %}
+                        <div class="error-message">{{ form.amount_paid.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_method.id_for_label }}" class="form-label required">Payment Method</label>
+                    {{ form.payment_method }}
+                    {% if form.payment_method.help_text %}
+                        <div class="form-help">{{ form.payment_method.help_text }}</div>
+                    {% endif %}
+                    {% if form.payment_method.errors %}
+                        <div class="error-message">{{ form.payment_method.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.receipt_number.id_for_label }}" class="form-label">Receipt Number</label>
+                    {{ form.receipt_number }}
+                    {% if form.receipt_number.help_text %}
+                        <div class="form-help">{{ form.receipt_number.help_text }}</div>
+                    {% endif %}
+                    {% if form.receipt_number.errors %}
+                        <div class="error-message">{{ form.receipt_number.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.paid_by.id_for_label }}" class="form-label">Paid By</label>
+                    {{ form.paid_by }}
+                    {% if form.paid_by.help_text %}
+                        <div class="form-help">{{ form.paid_by.help_text }}</div>
+                    {% endif %}
+                    {% if form.paid_by.errors %}
+                        <div class="error-message">{{ form.paid_by.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if form.notes %}
+            <div class="form-group">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                {{ form.notes }}
+                {% if form.notes.help_text %}
+                    <div class="form-help">{{ form.notes.help_text }}</div>
+                {% endif %}
+                {% if form.notes.errors %}
+                    <div class="error-message">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Advanced Options -->
+        {% if form.is_penalty_payment or form.is_partial_payment %}
+        <div class="form-section">
+            <h3 class="section-title">Payment Options</h3>
+            
+            <div class="form-row">
+                {% if form.is_penalty_payment %}
+                <div class="form-group">
+                    <label class="form-label">
+                        {{ form.is_penalty_payment }} {{ form.is_penalty_payment.label }}
+                    </label>
+                    {% if form.is_penalty_payment.help_text %}
+                        <div class="form-help">{{ form.is_penalty_payment.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if form.is_partial_payment %}
+                <div class="form-group">
+                    <label class="form-label">
+                        {{ form.is_partial_payment }} {{ form.is_partial_payment.label }}
+                    </label>
+                    {% if form.is_partial_payment.help_text %}
+                        <div class="form-help">{{ form.is_partial_payment.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Form Errors -->
+        {% if form.non_field_errors %}
+            <div class="error-message">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- Submit Buttons -->
+        <div class="button-group">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Record Payment
+            </button>
+            <a href="{% url 'loans:loan_repayments' %}" class="btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+// Auto-calculate payment breakdown when loan is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const loanSelect = document.getElementById('{{ form.loan.id_for_label }}');
+    const amountInput = document.getElementById('{{ form.amount_paid.id_for_label }}');
+    
+    if (loanSelect) {
+        loanSelect.addEventListener('change', function() {
+            // Here you could add AJAX to fetch loan details and payment breakdown
+            // For now, we'll just clear the amount field
+            if (amountInput) {
+                amountInput.value = '';
+            }
+        });
+    }
+    
+    // Set payment date to today if not set
+    const paymentDateInput = document.getElementById('{{ form.payment_date.id_for_label }}');
+    if (paymentDateInput && !paymentDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        paymentDateInput.value = today;
+    }
+});
+</script>
+{% endblock %}

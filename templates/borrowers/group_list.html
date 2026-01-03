@@ -1,0 +1,549 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Borrower Groups - Golam Financial Services{% endblock %}
+
+{% block page_title %}Borrower Groups{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+
+    .header-buttons {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* Dashboard-style quick action buttons */
+    .btn-outline-primary,
+    .btn-outline-success {
+        background: transparent;
+        border: 2px solid;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-success {
+        border-color: #22c55e;
+        color: #22c55e;
+    }
+
+    /* Universal teal hover effect for all outline buttons */
+    .btn-outline-primary:hover,
+    .btn-outline-success:hover {
+        background-color: #2b7a76 !important;
+        border-color: #2b7a76 !important;
+        color: white !important;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 65vh;
+        overflow-y: auto;
+    }
+
+    .group-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1300px;
+        width: 100%;
+    }
+
+    .group-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        border-top: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .group-table thead th:hover {
+        background: rgba(43, 122, 118, 0.05);
+        color: #1f5d5a;
+        cursor: pointer;
+    }
+
+    .group-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .group-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+    
+    /* Group Avatar */
+    .table-avatar.group-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(43, 122, 118, 0.1), rgba(43, 122, 118, 0.2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin: 0 auto;
+        border: 2px solid rgba(43, 122, 118, 0.1);
+    }
+    
+    /* Member Count with Progress */
+    .member-count {
+        min-width: 80px;
+    }
+    
+    .member-progress {
+        width: 100%;
+        height: 6px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .member-progress-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    
+    /* Status Badges */
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-inactive {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-suspended {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .btn-view {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+    
+    .btn-view:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .btn-members {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .btn-members:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    .btn-loan {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+    
+    .btn-loan:hover {
+        background: rgba(34, 197, 94, 0.2);
+        transform: translateY(-1px);
+    }
+    
+    /* Table Controls */
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+    }
+    
+    .table-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .search-input {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        width: 250px;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+    
+    .btn-export {
+        background: rgba(43, 122, 118, 0.1);
+        color: #2b7a76;
+        border: 1px solid rgba(43, 122, 118, 0.2);
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-export:hover {
+        background: rgba(43, 122, 118, 0.2);
+        color: #1f5d5a;
+        text-decoration: none;
+    }
+    
+    /* Pagination */
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+    
+    .pagination .page-link {
+        color: #2b7a76;
+        border-color: #e5e7eb;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .pagination .page-link:hover {
+        background: rgba(43, 122, 118, 0.1);
+        border-color: #2b7a76;
+        color: #1f5d5a;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: #2b7a76;
+        border-color: #2b7a76;
+    }
+    
+    /* Text Utilities */
+    .text-success { color: #16a34a !important; }
+    .text-warning { color: #d97706 !important; }
+    .text-info { color: #0ea5e9 !important; }
+    .text-muted { color: #6b7280 !important; }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .header-buttons {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .btn-outline-primary,
+        .btn-outline-success {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .table-controls {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .table-actions {
+            justify-content: center;
+        }
+        
+        .search-input {
+            width: 100%;
+        }
+        
+        .group-table {
+            font-size: 0.8rem;
+        }
+        
+        .group-table thead th,
+        .group-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-title">Borrower Groups</h1>
+        <div class="header-buttons">
+            <a href="{% url 'borrowers:register_group' %}" class="btn-outline-primary">
+                <i class="fas fa-plus-circle"></i>
+                Register New Group
+            </a>
+            <a href="{% url 'loans:add_group_loan' %}" class="btn-outline-primary">
+                <i class="fas fa-money-bill-wave"></i>
+                Add Group Loan
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_groups }}</div>
+            <div class="stat-label">Total Groups</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.active_groups }}</div>
+            <div class="stat-label">Active Groups</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.inactive_groups }}</div>
+            <div class="stat-label">Inactive Groups</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.total_members }}</div>
+            <div class="stat-label">Total Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.average_group_size }}</div>
+            <div class="stat-label">Average Group Size</div>
+        </div>
+    </div>
+    
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="table-controls">
+            <div class="table-info">
+                Showing {{ table.paginated_rows|length }} of {{ stats.total_groups }} groups
+            </div>
+            <div class="table-actions">
+                <input type="text" class="search-input" placeholder="Search groups..." id="groupSearch">
+                <button class="btn-export" onclick="exportTable()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn-export" onclick="groupAnalytics()">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </button>
+            </div>
+        </div>
+        
+        {% render_table table %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('groupSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const tableRows = document.querySelectorAll('#group-table tbody tr');
+        
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+    
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('group-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => cell.textContent.trim()).join(',');
+        }).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'borrower_groups.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Group analytics functionality
+    function groupAnalytics() {
+        alert('Group analytics feature will show detailed insights about group performance, loan history, and member engagement.');
+        // TODO: Implement group analytics dashboard
+    }
+
+    // Add Group Loan functionality
+    function addGroupLoan() {
+        // Check if there are any active groups first
+        const activeGroupsCount = {{ stats.active_groups }};
+        if (activeGroupsCount === 0) {
+            alert('No active groups available. Please register a group first before creating group loans.');
+            return;
+        }
+        
+        // Redirect to group loan creation page
+        window.location.href = "{% url 'loans:add_group_loan' %}";
+    }
+    
+    // Action button handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-view')) {
+            const id = e.target.closest('.btn-view').dataset.id;
+            alert('View group details: ' + id);
+            // TODO: Implement view group details
+        }
+        
+        if (e.target.closest('.btn-members')) {
+            const id = e.target.closest('.btn-members').dataset.id;
+            alert('Manage group members: ' + id);
+            // TODO: Implement member management
+        }
+        
+        if (e.target.closest('.btn-loan')) {
+            const id = e.target.closest('.btn-loan').dataset.id;
+            if (confirm('Create a group loan for this group?')) {
+                alert('Redirecting to group loan creation for group ID: ' + id);
+                // TODO: Redirect to group loan creation
+            }
+        }
+    });
+</script>
+{% endblock %}

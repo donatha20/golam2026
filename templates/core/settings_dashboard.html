@@ -1,0 +1,230 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Settings Dashboard - Golam Financial Services{% endblock %}
+{% block page_title %}Settings Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title" style="color: #2b7a76;">{{ stats.total_settings }}</h5>
+                <p class="card-text">System Settings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ stats.company_profiles }}</h5>
+                <p class="card-text">Company Profiles</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ stats.branches }}</h5>
+                <p class="card-text">Branches</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ stats.loan_categories }}</h5>
+                <p class="card-text">Loan Categories</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-danger">{{ stats.penalty_configs }}</h5>
+                <p class="card-text">Penalty Configs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">{{ stats.active_settings }}</h5>
+                <p class="card-text">Active Settings</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Settings Menu -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2 text-primary-teal"></i>
+                    Settings Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- System Settings -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-sliders-h fa-3x text-primary-teal mb-3"></i>
+                                <h6 class="card-title">System Settings</h6>
+                                <p class="card-text">Configure system-wide settings and preferences</p>
+                                <a href="{% url 'core:system_settings' %}" class="btn btn-primary-teal">
+                                    <i class="fas fa-cog me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Profile -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-building fa-3x text-success mb-3"></i>
+                                <h6 class="card-title">Company Profile</h6>
+                                <p class="card-text">Manage company information and branding</p>
+                                <a href="{% url 'core:company_profile' %}" class="btn btn-success">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Branch Management -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-map-marker-alt fa-3x text-info mb-3"></i>
+                                <h6 class="card-title">Branch Management</h6>
+                                <p class="card-text">Manage company branches and locations</p>
+                                <a href="{% url 'core:branch_management' %}" class="btn btn-info">
+                                    <i class="fas fa-map me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Categories -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tags fa-3x text-warning mb-3"></i>
+                                <h6 class="card-title">Loan Categories</h6>
+                                <p class="card-text">Configure loan types and their parameters</p>
+                                <a href="{% url 'core:loan_categories' %}" class="btn btn-warning">
+                                    <i class="fas fa-list me-1"></i>Configure
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Penalty Configurations -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                                <h6 class="card-title">Penalty Settings</h6>
+                                <p class="card-text">Configure penalties and late fees</p>
+                                <a href="{% url 'core:penalty_configurations' %}" class="btn btn-danger">
+                                    <i class="fas fa-percent me-1"></i>Configure
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Management -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-secondary mb-3"></i>
+                                <h6 class="card-title">User Management</h6>
+                                <p class="card-text">Manage users, roles, and permissions</p>
+                                <a href="{% url 'core:user_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-user-cog me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Settings Changes -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Settings Changes
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_settings %}
+                    <div class="list-group list-group-flush">
+                        {% for setting in recent_settings %}
+                        <div class="list-group-item border-0 px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ setting.key }}</h6>
+                                    <p class="mb-1 small text-muted">{{ setting.description|default:"No description" }}</p>
+                                    <small class="text-muted">{{ setting.updated_at|timesince }} ago</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ setting.category }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No recent settings changes.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'core:system_settings' %}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-cog me-1"></i>System Settings
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'core:company_profile' %}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-building me-1"></i>Company Info
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'core:user_list' %}" class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-users me-1"></i>User Management
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'financial_statements:dashboard' %}" class="btn btn-outline-warning w-100 mb-2">
+                            <i class="fas fa-chart-bar me-1"></i>Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1 @@
+{{ transaction_type }} of ₹{{ amount|floatformat:0 }} processed for savings account {{ account_number }} on {{ transaction_date|date:"M d, Y" }}. Current balance: ₹{{ balance|floatformat:0 }}. - {{ organization_name }}

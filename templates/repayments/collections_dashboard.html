@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+
+{% block title %}Collections Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collections-header {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .collections-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    
+    .efficiency-meter {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .efficiency-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .collector-item {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .collector-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .collector-item:last-child {
+        border-bottom: none;
+    }
+    
+    .collector-info {
+        flex: 1;
+    }
+    
+    .collector-name {
+        font-weight: 600;
+        color: #1e7570;
+        margin-bottom: 0.25rem;
+    }
+    
+    .collector-details {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .collector-performance {
+        text-align: right;
+        margin-left: 1rem;
+    }
+    
+    .performance-amount {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e7570;
+    }
+    
+    .performance-efficiency {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    .efficiency-excellent {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .efficiency-good {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .efficiency-average {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .efficiency-poor {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .collection-target {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .target-progress {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .target-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .target-percentage {
+        font-weight: 600;
+        color: #1e7570;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+    }
+    
+    .progress-bar {
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
+    }
+    
+    .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: none;
+        border-radius: 8px;
+        color: #856404;
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .action-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+    }
+    
+    .action-card:hover {
+        border-color: #1e7570;
+        transform: translateY(-2px);
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .action-icon {
+        font-size: 2rem;
+        color: #1e7570;
+        margin-bottom: 1rem;
+    }
+    
+    .action-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .action-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Collections Header -->
+    <div class="collections-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="h3 mb-2">Collections Dashboard</h1>
+                <p class="mb-0">
+                    <i class="fas fa-calendar me-2"></i>{{ today|date:"l, F d, Y" }}
+                    <span class="mx-3">|</span>
+                    <i class="fas fa-users me-2"></i>{{ active_collectors }} Active Collectors
+                </p>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'repayments:daily_collection_create' %}" class="btn btn-light">
+                    <i class="fas fa-plus me-2"></i>New Collection
+                </a>
+            </div>
+        </div>
+        
+        <div class="collections-stats">
+            <div class="stat-card">
+                <div class="stat-value">₹{{ today_stats.collected|floatformat:0 }}</div>
+                <div class="stat-label">Today's Collections</div>
+                <div class="efficiency-meter">
+                    <div class="efficiency-bar" style="width: {{ today_stats.efficiency }}%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">₹{{ today_stats.target|floatformat:0 }}</div>
+                <div class="stat-label">Today's Target</div>
+                <div class="efficiency-meter">
+                    <div class="efficiency-bar" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ today_stats.efficiency|floatformat:1 }}%</div>
+                <div class="stat-label">Collection Efficiency</div>
+                <div class="efficiency-meter">
+                    <div class="efficiency-bar" style="width: {{ today_stats.efficiency }}%"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ today_stats.payment_count }}</div>
+                <div class="stat-label">Payments Processed</div>
+                <div class="efficiency-meter">
+                    <div class="efficiency-bar" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{% url 'repayments:daily_collection_list' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="action-title">Daily Collections</div>
+            <div class="action-description">View and manage daily collection records</div>
+        </a>
+        
+        <a href="{% url 'repayments:collector_performance' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="action-title">Performance Reports</div>
+            <div class="action-description">Analyze collector performance metrics</div>
+        </a>
+        
+        <a href="{% url 'repayments:collection_targets' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="action-title">Set Targets</div>
+            <div class="action-description">Manage collection targets and goals</div>
+        </a>
+        
+        <a href="{% url 'repayments:overdue_analysis' %}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="action-title">Overdue Analysis</div>
+            <div class="action-description">Track and manage overdue accounts</div>
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Collector Performance -->
+            <div class="dashboard-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2 text-primary"></i>
+                        Collector Performance Today
+                    </h5>
+                    <a href="{% url 'repayments:collector_performance' %}" class="btn btn-outline-primary btn-sm">
+                        View Details
+                    </a>
+                </div>
+                
+                {% for collector in collector_performance %}
+                <div class="collector-item">
+                    <div class="collector-info">
+                        <div class="collector-name">{{ collector.name }}</div>
+                        <div class="collector-details">
+                            {{ collector.collections_count }} collections | 
+                            Target: ₹{{ collector.target|floatformat:0 }}
+                        </div>
+                    </div>
+                    <div class="collector-performance">
+                        <div class="performance-amount">₹{{ collector.collected|floatformat:0 }}</div>
+                        <div class="performance-efficiency efficiency-{{ collector.efficiency_class }}">
+                            {{ collector.efficiency|floatformat:1 }}%
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4">
+                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No collection data available for today</p>
+                    <a href="{% url 'repayments:daily_collection_create' %}" class="btn btn-primary btn-sm">
+                        Start First Collection
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Collection Targets -->
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-bullseye me-2 text-primary"></i>
+                    Monthly Collection Targets
+                </h5>
+                
+                {% for target in monthly_targets %}
+                <div class="collection-target">
+                    <div class="target-progress">
+                        <div class="target-label">{{ target.month_name }}</div>
+                        <div class="target-percentage">{{ target.achievement_percentage|floatformat:1 }}%</div>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" style="width: {{ target.achievement_percentage }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">Collected: ₹{{ target.collected|floatformat:0 }}</small>
+                        <small class="text-muted">Target: ₹{{ target.target|floatformat:0 }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3">
+                    <i class="fas fa-bullseye fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No targets set for this month</p>
+                    <a href="{% url 'repayments:collection_targets' %}" class="btn btn-outline-primary btn-sm">
+                        Set Monthly Target
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Today's Summary -->
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-calendar-day me-2 text-primary"></i>
+                    Today's Summary
+                </h5>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h6 text-success">{{ today_summary.on_time }}</div>
+                            <small class="text-muted">On Time</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h6 text-warning">{{ today_summary.late }}</div>
+                        <small class="text-muted">Late</small>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h6 text-info">{{ today_summary.partial }}</div>
+                            <small class="text-muted">Partial</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h6 text-danger">{{ today_summary.missed }}</div>
+                        <small class="text-muted">Missed</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overdue Alerts -->
+            {% if overdue_alerts %}
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Overdue Alerts</h6>
+                <ul class="mb-0 small">
+                    {% for alert in overdue_alerts %}
+                    <li>
+                        <strong>{{ alert.borrower_name }}</strong> - 
+                        {{ alert.days_overdue }} days overdue 
+                        (₹{{ alert.amount|floatformat:0 }})
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="mt-2">
+                    <a href="{% url 'repayments:overdue_analysis' %}" class="btn btn-warning btn-sm">
+                        View All Overdue
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Collections -->
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-clock me-2 text-primary"></i>
+                    Recent Collections
+                </h5>
+                
+                {% for collection in recent_collections %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <div class="fw-bold">{{ collection.collector_name }}</div>
+                        <small class="text-muted">{{ collection.time_ago }}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-success">₹{{ collection.amount|floatformat:0 }}</div>
+                        <small class="text-muted">{{ collection.payment_count }} payments</small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3">
+                    <i class="fas fa-clock fa-2x text-muted mb-2"></i>
+                    <p class="text-muted small">No recent collections</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Collection Methods -->
+            <div class="dashboard-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-credit-card me-2 text-primary"></i>
+                    Payment Methods Today
+                </h5>
+                
+                {% for method in payment_methods %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ method.name }}</span>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ method.count }}</div>
+                        <small class="text-muted">₹{{ method.amount|floatformat:0 }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-muted small text-center">No payment data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

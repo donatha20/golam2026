@@ -1,0 +1,197 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Income Statement{% endblock %}
+{% block page_title %}Income Statement Report{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary-teal"></i>
+                    Income Statement
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn btn-outline-info" id="export-excel-btn">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Date Range Filter -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary-teal">
+                                        <i class="fas fa-search me-1"></i>Generate Report
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Report Header -->
+                <div class="text-center mb-4">
+                    <h4>Income Statement</h4>
+                    <p class="text-muted">For the period from {{ start_date }} to {{ end_date }}</p>
+                </div>
+
+                <!-- Income Statement -->
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <!-- REVENUE SECTION -->
+                        <div class="mb-4">
+                            <h5 class="text-primary-teal border-bottom pb-2">REVENUE</h5>
+                            <table class="table table-sm">
+                                {% for income in income_data %}
+                                <tr>
+                                    <td>{{ income.source|title }}</td>
+                                    <td class="text-end">{{ income.total|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">No income recorded for this period</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-light">
+                                    <td><strong>Total Revenue</strong></td>
+                                    <td class="text-end"><strong>{{ total_income|floatformat:2 }}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- EXPENSES SECTION -->
+                        <div class="mb-4">
+                            <h5 class="text-danger border-bottom pb-2">EXPENSES</h5>
+                            <table class="table table-sm">
+                                {% for expense in expenditure_data %}
+                                <tr>
+                                    <td>{{ expense.expenditure_type|title }}</td>
+                                    <td class="text-end">{{ expense.total|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">No expenses recorded for this period</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-light">
+                                    <td><strong>Total Expenses</strong></td>
+                                    <td class="text-end"><strong>{{ total_expenses|floatformat:2 }}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- NET INCOME SECTION -->
+                        <div class="mb-4">
+                            <table class="table table-bordered">
+                                <tr class="{% if net_income >= 0 %}table-success{% else %}table-danger{% endif %}">
+                                    <td><strong>NET INCOME</strong></td>
+                                    <td class="text-end">
+                                        <strong>{{ net_income|floatformat:2 }}</strong>
+                                        {% if net_income >= 0 %}
+                                            <i class="fas fa-arrow-up text-success ms-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-arrow-down text-danger ms-2"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success">{{ total_income|floatformat:0 }}</h5>
+                                <p class="card-text">Total Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger">{{ total_expenses|floatformat:0 }}</h5>
+                                <p class="card-text">Total Expenses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ net_income|floatformat:0 }}
+                                </h5>
+                                <p class="card-text">Net Income</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info">
+                                    {% if total_income > 0 %}
+                                        {% widthratio net_income total_income 100 %}%
+                                    {% else %}
+                                        0%
+                                    {% endif %}
+                                </h5>
+                                <p class="card-text">Profit Margin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Export to Excel functionality
+    $('#export-excel-btn').click(function() {
+        var params = new URLSearchParams(window.location.search);
+        params.append('export', 'excel');
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .form-control, .form-label {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

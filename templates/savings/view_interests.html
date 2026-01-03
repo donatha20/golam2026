@@ -1,0 +1,662 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}View Interests - Golam Financial Services{% endblock %}
+{% block page_title %}View Interest Transactions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .interests-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .title-text h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .title-text p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .summary-card.earned {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border-color: #a7f3d0;
+    }
+
+    .summary-card.paid {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: #93c5fd;
+    }
+
+    .summary-card.monthly {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-color: #fcd34d;
+    }
+
+    .summary-card.yearly {
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+        border-color: #f9a8d4;
+    }
+
+    .summary-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-family: monospace;
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .filters-section {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .filters-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #374151;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-control {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1f5f5b;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .transactions-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .transactions-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    .transaction-amount {
+        font-family: monospace;
+        font-weight: 600;
+        color: #059669;
+        font-size: 1.1rem;
+    }
+
+    .interest-rate {
+        font-family: monospace;
+        font-weight: 600;
+        color: #7c3aed;
+        font-size: 0.9rem;
+    }
+
+    .transaction-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .period-info {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .account-info {
+        font-size: 0.875rem;
+    }
+
+    .account-number {
+        font-weight: 600;
+        color: #2b7a76;
+    }
+
+    .account-holder {
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .calculation-method {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .method-simple {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .method-compound {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .method-daily {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #374151;
+    }
+
+    .pagination a:hover {
+        background: #f3f4f6;
+        text-decoration: none;
+    }
+
+    .pagination .current {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+
+    .calculation-details {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .calculation-formula {
+        font-family: monospace;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .transactions-table {
+            font-size: 0.875rem;
+        }
+
+        .transactions-table th,
+        .transactions-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .summary-cards {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="interests-container">
+    <!-- Header -->
+    <div class="header-section">
+        <div class="header-title">
+            <div class="header-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="title-text">
+                <h1>Interest Transactions</h1>
+                <p>View all interest calculations and payments</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calculate Interest
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card earned">
+            <div class="summary-number">₹{{ total_interest_earned|floatformat:2 }}</div>
+            <div class="summary-label">Total Interest Earned</div>
+        </div>
+        <div class="summary-card paid">
+            <div class="summary-number">₹{{ total_interest_paid|floatformat:2 }}</div>
+            <div class="summary-label">Interest Paid Out</div>
+        </div>
+        <div class="summary-card monthly">
+            <div class="summary-number">₹{{ monthly_interest|floatformat:2 }}</div>
+            <div class="summary-label">This Month</div>
+        </div>
+        <div class="summary-card yearly">
+            <div class="summary-number">₹{{ yearly_interest|floatformat:2 }}</div>
+            <div class="summary-label">This Year</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filters-title">Filter Interest Transactions</div>
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Date From</label>
+                    <input type="date" name="date_from" class="filter-control" value="{{ request.GET.date_from }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Date To</label>
+                    <input type="date" name="date_to" class="filter-control" value="{{ request.GET.date_to }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Account Number</label>
+                    <input type="text" name="account_number" class="filter-control" placeholder="Search by account number" value="{{ request.GET.account_number }}">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Calculation Method</label>
+                    <select name="calculation_method" class="filter-control">
+                        <option value="">All Methods</option>
+                        <option value="simple" {% if request.GET.calculation_method == "simple" %}selected{% endif %}>Simple Interest</option>
+                        <option value="compound" {% if request.GET.calculation_method == "compound" %}selected{% endif %}>Compound Interest</option>
+                        <option value="daily" {% if request.GET.calculation_method == "daily" %}selected{% endif %}>Daily Compounding</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Interest Rate</label>
+                    <select name="interest_rate" class="filter-control">
+                        <option value="">All Rates</option>
+                        <option value="0-5" {% if request.GET.interest_rate == "0-5" %}selected{% endif %}>0% - 5%</option>
+                        <option value="5-10" {% if request.GET.interest_rate == "5-10" %}selected{% endif %}>5% - 10%</option>
+                        <option value="10-15" {% if request.GET.interest_rate == "10-15" %}selected{% endif %}>10% - 15%</option>
+                        <option value="15+" {% if request.GET.interest_rate == "15+" %}selected{% endif %}>15%+</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-control">
+                        <option value="">All Status</option>
+                        <option value="calculated" {% if request.GET.status == "calculated" %}selected{% endif %}>Calculated</option>
+                        <option value="paid" {% if request.GET.status == "paid" %}selected{% endif %}>Paid</option>
+                        <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'savings:view_interests' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear Filters
+                </a>
+                <button type="button" class="btn btn-secondary" onclick="exportInterests()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transactions Table -->
+    {% if interests %}
+        <div class="table-responsive">
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Calculation Date</th>
+                        <th>Account</th>
+                        <th>Principal Amount</th>
+                        <th>Interest Rate</th>
+                        <th>Interest Earned</th>
+                        <th>Method</th>
+                        <th>Period</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interest in interests %}
+                    <tr>
+                        <td>
+                            <div class="transaction-date">
+                                {{ interest.calculation_date|date:"M d, Y" }}<br>
+                                {{ interest.calculation_date|time:"g:i A" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="account-info">
+                                <div class="account-number">{{ interest.account.account_number }}</div>
+                                <div class="account-holder">{{ interest.account.borrower.get_full_name }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="transaction-amount">
+                                ₹{{ interest.principal_amount|floatformat:2 }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="interest-rate">
+                                {{ interest.interest_rate|floatformat:2 }}% 
+                                {% if interest.compounding_frequency %}
+                                    <br><small>{{ interest.get_compounding_frequency_display }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="transaction-amount">
+                                +₹{{ interest.interest_amount|floatformat:2 }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="calculation-method method-{{ interest.calculation_method }}">
+                                {{ interest.get_calculation_method_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="period-info">
+                                {% if interest.period_start_date and interest.period_end_date %}
+                                    {{ interest.period_start_date|date:"M d" }} - {{ interest.period_end_date|date:"M d, Y" }}
+                                    <br><small>{{ interest.calculation_days }} days</small>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="calculation-method {% if interest.is_paid %}method-simple{% else %}method-compound{% endif %}">
+                                {% if interest.is_paid %}Paid{% else %}Pending{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-secondary" onclick="viewInterestDetails('{{ interest.id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if not interest.is_paid %}
+                                <button class="btn btn-sm btn-primary" onclick="markAsPaid('{{ interest.id }}')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    <tr style="display: none;" id="details-{{ interest.id }}">
+                        <td colspan="9">
+                            <div class="calculation-details">
+                                <strong>Calculation Details:</strong><br>
+                                <span class="calculation-formula">
+                                    {% if interest.calculation_method == 'simple' %}
+                                        Interest = Principal × Rate × Time<br>
+                                        ₹{{ interest.interest_amount|floatformat:2 }} = ₹{{ interest.principal_amount|floatformat:2 }} × {{ interest.interest_rate }}% × {{ interest.calculation_days }}/365 days
+                                    {% elif interest.calculation_method == 'compound' %}
+                                        A = P(1 + r/n)^(nt)<br>
+                                        Interest = A - P = ₹{{ interest.interest_amount|floatformat:2 }}
+                                    {% else %}
+                                        Daily compounding calculation applied
+                                    {% endif %}
+                                </span>
+                                {% if interest.notes %}
+                                    <br><br><strong>Notes:</strong> {{ interest.notes }}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{{ query_params }}">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{{ query_params }}">&lsaquo; Previous</a>
+            {% endif %}
+            
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{{ query_params }}">Next &rsaquo;</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{{ query_params }}">Last &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <h3>No Interest Calculations Found</h3>
+            <p>No interest transactions match your current filters.</p>
+            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Calculate First Interest
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewInterestDetails(interestId) {
+    const detailsRow = document.getElementById('details-' + interestId);
+    if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+        detailsRow.style.display = 'table-row';
+    } else {
+        detailsRow.style.display = 'none';
+    }
+}
+
+function markAsPaid(interestId) {
+    if (confirm('Mark this interest calculation as paid?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "savings:view_interests" %}';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = '{{ csrf_token }}';
+        
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'mark_paid';
+        
+        const interestIdInput = document.createElement('input');
+        interestIdInput.type = 'hidden';
+        interestIdInput.name = 'interest_id';
+        interestIdInput.value = interestId;
+        
+        form.appendChild(csrfToken);
+        form.appendChild(actionInput);
+        form.appendChild(interestIdInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function exportInterests() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{% url "savings:view_interests" %}?' + params.toString();
+}
+
+// Auto-submit filters on change
+document.querySelectorAll('.filter-control').forEach(function(element) {
+    element.addEventListener('change', function() {
+        if (this.type === 'text') {
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        } else {
+            this.form.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

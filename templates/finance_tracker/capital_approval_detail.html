@@ -1,0 +1,221 @@
+{% extends 'dashboard_base.html' %}
+
+{% block page_title %}Capital Detail - {{ capital.capital_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-container {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .transaction-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    }
+    
+    .transaction-amount {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .injection .transaction-amount {
+        color: #059669;
+    }
+    
+    .withdrawal .transaction-amount {
+        color: #dc2626;
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .detail-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        background: #f9fafb;
+        border-left: 4px solid #667eea;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-value {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">
+                <i class="fas fa-info-circle"></i>
+                Capital Transaction Details
+            </h1>
+            <p class="page-subtitle">{{ capital.capital_id }}</p>
+        </div>
+    </div>
+
+    <!-- Detail Container -->
+    <div class="detail-container">
+        <!-- Transaction Header -->
+        <div class="transaction-header {{ capital.transaction_type }}">
+            <div class="transaction-amount">
+                {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
+            </div>
+            <div>{{ capital.get_transaction_type_display }} - {{ capital.get_capital_type_display }}</div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="details-grid">
+            <div class="detail-card">
+                <div class="detail-label">Transaction ID</div>
+                <div class="detail-value">{{ capital.capital_id }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="status-badge status-{{ capital.status }}">{{ capital.get_status_display }}</span>
+                </div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">Transaction Date</div>
+                <div class="detail-value">{{ capital.transaction_date|date:"F d, Y" }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">Requested By</div>
+                <div class="detail-value">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</div>
+            </div>
+            {% if capital.shareholder %}
+            <div class="detail-card">
+                <div class="detail-label">Shareholder</div>
+                <div class="detail-value">{{ capital.shareholder.name }}</div>
+            </div>
+            {% endif %}
+            {% if capital.reference_number %}
+            <div class="detail-card">
+                <div class="detail-label">Reference Number</div>
+                <div class="detail-value">{{ capital.reference_number }}</div>
+            </div>
+            {% endif %}
+            <div class="detail-card">
+                <div class="detail-label">Created On</div>
+                <div class="detail-value">{{ capital.created_at|date:"M d, Y H:i" }}</div>
+            </div>
+            {% if capital.approved_by %}
+            <div class="detail-card">
+                <div class="detail-label">Approved By</div>
+                <div class="detail-value">{{ capital.approved_by.get_full_name|default:capital.approved_by.username }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Description -->
+        {% if capital.description %}
+        <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Description</h3>
+            <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea;">
+                {{ capital.description }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="{% url 'finance_tracker:capital_approval_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Approvals
+            </a>
+            {% if capital.status == 'pending' %}
+            <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary" style="background-color: #667eea; color: white;">
+                <i class="fas fa-clipboard-check"></i>
+                Review & Approve
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

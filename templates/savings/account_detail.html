@@ -1,0 +1,521 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Account Details - {{ account.account_number }} - Golam Financial Services{% endblock %}
+{% block page_title %}Account Details - {{ account.account_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .account-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .account-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .account-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border-left: 4px solid #1e7570;
+    }
+
+    .info-title {
+        font-size: 0.875rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1e7570;
+    }
+
+    .balance-card {
+        background: linear-gradient(135deg, #1e7570 0%, #2d8a82 100%);
+        color: white;
+        text-align: center;
+        border-left: none !important;
+    }
+
+    .balance-amount {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-dormant {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #1e7570 0%, #2d8a82 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #16635d 0%, #1e7570 100%);
+        transform: translateY(-1px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+        color: white;
+        text-decoration: none;
+    }
+
+    .content-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-content {
+        padding: 1.5rem;
+    }
+
+    .transaction-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .transaction-item:last-child {
+        border-bottom: none;
+    }
+
+    .transaction-info {
+        flex: 1;
+    }
+
+    .transaction-type {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .transaction-deposit {
+        color: #16a34a;
+    }
+
+    .transaction-withdrawal {
+        color: #dc2626;
+    }
+
+    .transaction-details {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    .transaction-amount {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 1.125rem;
+    }
+
+    .amount-positive {
+        color: #16a34a;
+    }
+
+    .amount-negative {
+        color: #dc2626;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1e7570;
+    }
+
+    .loan-eligibility {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .eligibility-item {
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .eligibility-eligible {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+    }
+
+    .eligibility-not-eligible {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+    }
+
+    .eligibility-title {
+        font-weight: 600;
+        text-transform: capitalize;
+        margin-bottom: 0.5rem;
+    }
+
+    .eligibility-message {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+        .account-container {
+            margin: 1rem;
+        }
+        
+        .account-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="account-container">
+    <!-- Account Header -->
+    <div class="account-header">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">{{ account.account_number }}</h2>
+            <span class="status-badge status-{{ account.status }}">
+                {{ account.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="account-info">
+            <div class="info-card">
+                <div class="info-title">Account Holder</div>
+                <div class="info-value">{{ account.borrower.get_full_name }}</div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-title">Product Type</div>
+                <div class="info-value">{{ account.savings_product.name }}</div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-title">Opening Date</div>
+                <div class="info-value">{{ account.opening_date|date:"M d, Y" }}</div>
+            </div>
+            
+            <div class="info-card balance-card">
+                <div class="info-title">Current Balance</div>
+                <div class="balance-amount">₹{{ account.balance|floatformat:2 }}</div>
+                <div>Available: ₹{{ account.available_balance|floatformat:2 }}</div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{% url 'savings:process_transaction' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                New Transaction
+            </a>
+            <a href="#" class="btn btn-success" onclick="processDeposit()">
+                <i class="fas fa-arrow-down"></i>
+                Deposit
+            </a>
+            <a href="#" class="btn btn-warning" onclick="processWithdrawal()">
+                <i class="fas fa-arrow-up"></i>
+                Withdrawal
+            </a>
+            <a href="{% url 'savings:account_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Accounts
+            </a>
+        </div>
+    </div>
+
+    <!-- Account Statistics -->
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-chart-bar"></i>
+                Account Statistics
+            </h3>
+        </div>
+        <div class="section-content">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Total Deposits</div>
+                    <div class="stat-value">₹{{ stats.total_deposits|floatformat:2 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Withdrawals</div>
+                    <div class="stat-value">₹{{ stats.total_withdrawals|floatformat:2 }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Transaction Count</div>
+                    <div class="stat-value">{{ stats.transaction_count }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Average Balance</div>
+                    <div class="stat-value">₹{{ stats.average_balance|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-exchange-alt"></i>
+                Recent Transactions
+            </h3>
+        </div>
+        <div class="section-content">
+            {% if transactions %}
+                {% for transaction in transactions %}
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-type transaction-{{ transaction.transaction_type }}">
+                                <i class="fas fa-{% if transaction.transaction_type == 'deposit' %}arrow-down{% else %}arrow-up{% endif %} me-2"></i>
+                                {{ transaction.get_transaction_type_display }}
+                            </div>
+                            <div class="transaction-details">
+                                {{ transaction.transaction_date|date:"M d, Y" }} at {{ transaction.created_at|time:"H:i" }} | 
+                                ID: {{ transaction.transaction_id }}
+                            </div>
+                        </div>
+                        <div class="transaction-amount {% if transaction.transaction_type == 'deposit' %}amount-positive{% else %}amount-negative{% endif %}">
+                            {% if transaction.transaction_type == 'deposit' %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3" style="opacity: 0.3;"></i>
+                    <p>No transactions recorded yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Interest Calculations -->
+    {% if interest_calculations %}
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-percentage"></i>
+                Interest History
+            </h3>
+        </div>
+        <div class="section-content">
+            {% for calculation in interest_calculations %}
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-type" style="color: #16a34a;">
+                            <i class="fas fa-percentage me-2"></i>
+                            Interest Calculation
+                        </div>
+                        <div class="transaction-details">
+                            {{ calculation.calculation_date|date:"M d, Y" }} | 
+                            Period: {{ calculation.period_start|date:"M d" }} - {{ calculation.period_end|date:"M d, Y" }}
+                        </div>
+                    </div>
+                    <div class="transaction-amount amount-positive">
+                        +₹{{ calculation.interest_amount|floatformat:2 }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Loan Eligibility -->
+    {% if loan_eligibility %}
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-hand-holding-usd"></i>
+                Loan Eligibility
+            </h3>
+        </div>
+        <div class="section-content">
+            <div class="loan-eligibility">
+                {% for loan_type, eligibility in loan_eligibility.items %}
+                    <div class="eligibility-item {% if eligibility.eligible %}eligibility-eligible{% else %}eligibility-not-eligible{% endif %}">
+                        <div class="eligibility-title">{{ loan_type|title }} Loan</div>
+                        <div class="eligibility-message">{{ eligibility.message }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Account Holds -->
+    {% if active_holds %}
+    <div class="content-section">
+        <div class="section-header">
+            <h3 class="section-title">
+                <i class="fas fa-lock"></i>
+                Active Holds
+            </h3>
+        </div>
+        <div class="section-content">
+            {% for hold in active_holds %}
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-type" style="color: #f59e0b;">
+                            <i class="fas fa-lock me-2"></i>
+                            {{ hold.hold_type|title }} Hold
+                        </div>
+                        <div class="transaction-details">
+                            Created: {{ hold.created_at|date:"M d, Y" }} | 
+                            {{ hold.reason }}
+                        </div>
+                    </div>
+                    <div class="transaction-amount" style="color: #f59e0b;">
+                        ₹{{ hold.hold_amount|floatformat:2 }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function processDeposit() {
+    const amount = prompt('Enter deposit amount:');
+    if (amount && parseFloat(amount) > 0) {
+        alert(`Deposit of ₹${amount} would be processed here (functionality to be implemented)`);
+    }
+}
+
+function processWithdrawal() {
+    const availableBalance = {{ account.available_balance }};
+    const amount = prompt(`Enter withdrawal amount (Available: ₹${availableBalance.toFixed(2)}):`);
+    if (amount && parseFloat(amount) > 0) {
+        if (parseFloat(amount) <= availableBalance) {
+            alert(`Withdrawal of ₹${amount} would be processed here (functionality to be implemented)`);
+        } else {
+            alert('Insufficient available balance for this withdrawal');
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,343 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Add Penalty - Golam Financial Services{% endblock %}
+
+{% block page_title %}Add Penalty{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Form Container */
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .form-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    /* Form Styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    /* Button Styling */
+    .btn-danger {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .btn-danger:hover {
+        background: #b91c1c;
+        border-color: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6b7280;
+        border-color: #6b7280;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-secondary:hover {
+        background: #4b5563;
+        border-color: #4b5563;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Alert Section */
+    .alert-section {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 2px solid #fca5a5;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    }
+
+    .alert-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #991b1b;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alert-message {
+        color: #7f1d1d;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Schedule Selection */
+    .schedule-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .schedule-card:hover {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.05);
+    }
+
+    .schedule-card.selected {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.1);
+    }
+
+    .schedule-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .borrower-info {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .loan-info {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+
+    .amount-info {
+        font-weight: 600;
+        color: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 0 1rem;
+            padding: 1.5rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .schedule-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Alert Section -->
+    <div class="alert-section">
+        <h2 class="alert-title">
+            <i class="fas fa-gavel"></i>
+            Apply Penalty
+        </h2>
+        <p class="alert-message">
+            Select a missed payment schedule and apply appropriate penalties. Penalties will be added to the borrower's outstanding balance.
+        </p>
+    </div>
+    
+    <!-- Form Container -->
+    <div class="form-container">
+        <h2 class="form-title">
+            <i class="fas fa-exclamation-triangle"></i>
+            Add Penalty
+        </h2>
+        
+        <form method="post" id="penaltyForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-calendar-times"></i> Select Missed Payment Schedule *
+                </label>
+                <div id="scheduleSelection">
+                    {% for schedule in missed_schedules %}
+                    <div class="schedule-card" data-schedule-id="{{ schedule.id }}">
+                        <div class="schedule-info">
+                            <div>
+                                <div class="borrower-info">{{ schedule.loan.borrower.get_full_name }}</div>
+                                <div class="loan-info">
+                                    Loan: {{ schedule.loan.loan_number }} | 
+                                    Due: {{ schedule.due_date|date:"M d, Y" }} |
+                                    Installment: {{ schedule.installment_number }}
+                                </div>
+                            </div>
+                            <div class="amount-info">
+                                ${{ schedule.amount_due|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fa-2x mb-2" style="color: #16a34a;"></i><br>
+                        No missed payment schedules found
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="schedule_id" id="selectedScheduleId" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="penalty_type">
+                    <i class="fas fa-tag"></i> Penalty Type *
+                </label>
+                <select name="penalty_type" id="penalty_type" class="form-control" required>
+                    <option value="">Select penalty type</option>
+                    <option value="LATE_PAYMENT">Late Payment Fee</option>
+                    <option value="MISSED_PAYMENT">Missed Payment Penalty</option>
+                    <option value="DEFAULT">Default Penalty</option>
+                    <option value="ADMINISTRATIVE">Administrative Fee</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="penalty_amount">
+                    <i class="fas fa-dollar-sign"></i> Penalty Amount *
+                </label>
+                <input type="number" name="penalty_amount" id="penalty_amount" class="form-control" 
+                       step="0.01" min="0" placeholder="Enter penalty amount" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="reason">
+                    <i class="fas fa-comment"></i> Reason for Penalty *
+                </label>
+                <textarea name="reason" id="reason" class="form-control" rows="3" 
+                          placeholder="Explain the reason for applying this penalty" required></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-danger">
+                    <i class="fas fa-gavel"></i> Apply Penalty
+                </button>
+                <a href="{% url 'loans:penalties' %}" class="btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Schedule selection functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleCards = document.querySelectorAll('.schedule-card');
+        const selectedScheduleInput = document.getElementById('selectedScheduleId');
+        
+        scheduleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards
+                scheduleCards.forEach(c => c.classList.remove('selected'));
+                
+                // Add selected class to clicked card
+                this.classList.add('selected');
+                
+                // Set the hidden input value
+                selectedScheduleInput.value = this.dataset.scheduleId;
+            });
+        });
+        
+        // Form validation
+        const form = document.getElementById('penaltyForm');
+        form.addEventListener('submit', function(e) {
+            if (!selectedScheduleInput.value) {
+                e.preventDefault();
+                alert('Please select a payment schedule to apply penalty to.');
+                return false;
+            }
+            
+            const penaltyAmount = document.getElementById('penalty_amount').value;
+            if (!penaltyAmount || parseFloat(penaltyAmount) <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid penalty amount.');
+                return false;
+            }
+            
+            // Confirm before applying penalty
+            const confirmed = confirm('Are you sure you want to apply this penalty? This action cannot be undone.');
+            if (!confirmed) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

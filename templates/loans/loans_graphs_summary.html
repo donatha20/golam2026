@@ -1,0 +1,465 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Loan Analytics Dashboard - Golam Financial Services{% endblock %}
+
+{% block page_title %}Loan Analytics & Summary{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Chart Container Styling */
+    .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 400px;
+        margin-bottom: 1rem;
+    }
+
+    /* Statistics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin: 0;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Chart Grid */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Custom button styling */
+    .btn-outline-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #2b7a76;
+        border-color: #2b7a76;
+        color: white;
+    }
+
+    /* Chart Controls */
+    .chart-controls {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .chart-control-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .chart-control-btn.active {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+
+    .chart-control-btn:hover {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    /* Info Section */
+    .info-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #93c5fd;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-message {
+        color: #1e3a8a;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-wrapper {
+            height: 300px;
+        }
+
+        .chart-controls {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Info Section -->
+    <div class="info-section">
+        <h2 class="info-title">
+            <i class="fas fa-chart-pie"></i>
+            Loan Portfolio Analytics
+        </h2>
+        <p class="info-message">
+            Comprehensive visual analysis of your loan portfolio including disbursement trends, repayment patterns, and portfolio performance metrics.
+        </p>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <div class="btn-group">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list"></i> All Loans
+            </a>
+            <a href="{% url 'loans:portfolio_at_risk' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-chart-area"></i> Portfolio at Risk
+            </a>
+            <a href="{% url 'loans:customer_portfolio' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-user-chart"></i> Customer Portfolio
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_loans|default:0 }}</div>
+            <div class="stat-label">Total Loans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${{ total_disbursed|default:0|floatformat:0 }}</div>
+            <div class="stat-label">Total Disbursed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ active_loans|default:0 }}</div>
+            <div class="stat-label">Active Loans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ repayment_rate|default:0|floatformat:1 }}%</div>
+            <div class="stat-label">Repayment Rate</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <!-- Loan Disbursement Chart -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-bar"></i>
+                Loan Disbursements
+            </h3>
+            <div class="chart-controls">
+                <button class="chart-control-btn active" onclick="updateChart('monthly')">Monthly</button>
+                <button class="chart-control-btn" onclick="updateChart('quarterly')">Quarterly</button>
+                <button class="chart-control-btn" onclick="updateChart('yearly')">Yearly</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="disbursementChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Loan Status Distribution -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-pie"></i>
+                Loan Status Distribution
+            </h3>
+            <div class="chart-wrapper">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Repayment Performance -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-line"></i>
+                Repayment Performance
+            </h3>
+            <div class="chart-wrapper">
+                <canvas id="repaymentChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Portfolio Risk Analysis -->
+        <div class="chart-container">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-area"></i>
+                Portfolio Risk Analysis
+            </h3>
+            <div class="chart-wrapper">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ chart_data|json_script:"chart-data" }}
+<script>
+    // Chart.js configuration
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6b7280';
+
+    const chartColors = {
+        primary: '#2b7a76',
+        secondary: '#1e7570',
+        success: '#16a34a',
+        warning: '#d97706',
+        danger: '#dc2626',
+        info: '#3b82f6'
+    };
+
+    // Get chart data
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent) || {};
+
+    // Disbursement Chart
+    const disbursementCtx = document.getElementById('disbursementChart').getContext('2d');
+    const disbursementChart = new Chart(disbursementCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.disbursement_labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Disbursements',
+                data: chartData.disbursement_data || [12, 19, 3, 5, 2, 3],
+                backgroundColor: chartColors.primary,
+                borderColor: chartColors.secondary,
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    const statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.status_labels || ['Active', 'Completed', 'Defaulted', 'Pending'],
+            datasets: [{
+                data: chartData.status_data || [65, 25, 5, 5],
+                backgroundColor: [
+                    chartColors.primary,
+                    chartColors.success,
+                    chartColors.danger,
+                    chartColors.warning
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Repayment Performance Chart
+    const repaymentCtx = document.getElementById('repaymentChart').getContext('2d');
+    const repaymentChart = new Chart(repaymentCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.repayment_labels || ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Expected',
+                data: chartData.expected_repayments || [100, 120, 110, 130, 125, 140],
+                borderColor: chartColors.info,
+                backgroundColor: chartColors.info + '20',
+                tension: 0.4,
+                fill: false
+            }, {
+                label: 'Actual',
+                data: chartData.actual_repayments || [95, 115, 105, 125, 120, 135],
+                borderColor: chartColors.success,
+                backgroundColor: chartColors.success + '20',
+                tension: 0.4,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Risk Analysis Chart
+    const riskCtx = document.getElementById('riskChart').getContext('2d');
+    const riskChart = new Chart(riskCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.risk_labels || ['0-30 days', '31-60 days', '61-90 days', '90+ days'],
+            datasets: [{
+                label: 'Portfolio at Risk',
+                data: chartData.risk_data || [5, 3, 2, 1],
+                backgroundColor: [
+                    chartColors.success,
+                    chartColors.warning,
+                    chartColors.danger,
+                    '#7f1d1d'
+                ],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f3f4f6'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Chart control functions
+    function updateChart(period) {
+        // Update active button
+        document.querySelectorAll('.chart-control-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Update chart data based on period
+        // This would typically fetch new data from the server
+        console.log('Updating chart for period:', period);
+    }
+
+    // Export functionality
+    function exportChart(chartId) {
+        const chart = Chart.getChart(chartId);
+        const url = chart.toBase64Image();
+        const link = document.createElement('a');
+        link.download = chartId + '_chart.png';
+        link.href = url;
+        link.click();
+    }
+</script>
+{% endblock %}
