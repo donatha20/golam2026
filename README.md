@@ -4,7 +4,7 @@
 
 [![Django](https://img.shields.io/badge/Django-5.2.3-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)<br>
 [![License](https://img.shields.io/badge/License-MIT-green. svg?style=for-the-badge)](LICENSE)
 
 **A comprehensive, enterprise-grade microfinance management system built with Django**
@@ -842,7 +842,7 @@ For enterprise support, customization, and training:
 
 **⭐ Star this repo if you find it helpful!**
 
-Made with ❤️ by @donatha20
+Made with ❤️ by [@donatha20](https://github.com/donatha20)
 
 [Report Bug](https://github.com/donatha20/golam2026/issues) • [Request Feature](https://github.com/donatha20/golam2026/issues) • [Documentation](docs/)
 
