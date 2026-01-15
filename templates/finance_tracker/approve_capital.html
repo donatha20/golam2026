@@ -4,194 +4,219 @@
 
 {% block extra_css %}
 <style>
+    .approval-page {
+        background: #f5f7fa;
+        min-height: 100vh;
+        padding: 0;
+        margin: 0;
+    }
+
     .page-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-        border-radius: 10px;
+        padding: 2.5rem 2rem;
+        margin: 0 0 2rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .page-title {
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     
     .page-subtitle {
-        opacity: 0.9;
-        font-size: 1.1rem;
+        opacity: 0.95;
+        font-size: 0.95rem;
     }
     
-    .approval-container {
+    .content-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem 2rem 2rem;
+    }
+    
+    .approval-layout {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr 380px;
         gap: 2rem;
-        margin-bottom: 2rem;
+        align-items: start;
     }
     
-    .main-content {
+    .main-section {
         background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
     }
     
-    .sidebar {
-        background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        height: fit-content;
-    }
-    
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e5e7eb;
-    }
-    
-    .transaction-header {
+    .transaction-showcase {
         text-align: center;
-        margin-bottom: 2rem;
-        padding: 2rem;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #dee2e6;
     }
     
-    .transaction-id {
-        font-size: 1.5rem;
-        font-weight: bold;
+    .transaction-id-display {
+        font-size: 2.25rem;
+        font-weight: 700;
         color: #1f2937;
-        margin-bottom: 0.5rem;
-    }
-    
-    .transaction-type {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
-        font-weight: 600;
         margin-bottom: 1rem;
+        letter-spacing: 1px;
     }
     
-    .injection {
+    .transaction-badge {
+        display: inline-block;
+        padding: 0.6rem 1.5rem;
+        border-radius: 30px;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+        text-transform: capitalize;
+    }
+    
+    .transaction-badge.injection {
         background-color: #d1fae5;
         color: #065f46;
     }
     
-    .withdrawal {
+    .transaction-badge.withdrawal {
         background-color: #fee2e2;
         color: #991b1b;
     }
     
-    .transaction-amount {
-        font-size: 3rem;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
+    .amount-display {
+        font-size: 4rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        line-height: 1;
     }
     
-    .injection .transaction-amount {
+    .injection .amount-display {
         color: #059669;
     }
     
-    .withdrawal .transaction-amount {
+    .withdrawal .amount-display {
         color: #dc2626;
     }
     
-    .transaction-date {
+    .date-display {
         color: #6b7280;
-        font-size: 1.1rem;
+        font-size: 1.05rem;
+        font-weight: 500;
     }
     
-    .details-grid {
+    .details-section {
+        padding: 2rem;
+    }
+    
+    .section-heading {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.25rem;
         margin-bottom: 2rem;
     }
     
-    .detail-card {
-        padding: 1.5rem;
-        border-radius: 8px;
+    .info-card {
+        padding: 1.25rem;
+        border-radius: 10px;
         background: #f9fafb;
         border-left: 4px solid #667eea;
+        transition: all 0.2s ease;
     }
     
-    .detail-label {
-        font-size: 0.8rem;
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .info-label {
+        font-size: 0.75rem;
         color: #6b7280;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.6rem;
+        font-weight: 600;
     }
     
-    .detail-value {
+    .info-value {
         font-weight: 600;
         color: #1f2937;
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
     
-    .description-section {
+    .description-box {
         margin-bottom: 2rem;
     }
     
-    .description-content {
+    .description-text {
         background: #f9fafb;
-        padding: 1.5rem;
-        border-radius: 8px;
+        padding: 1.25rem;
+        border-radius: 10px;
         border-left: 4px solid #667eea;
-        font-style: italic;
         color: #4b5563;
-        line-height: 1.6;
+        line-height: 1.7;
+        font-size: 0.95rem;
     }
     
-    .approval-form {
-        background: #f8fafc;
+    .approval-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         padding: 2rem;
         border-radius: 10px;
-        border: 2px solid #e5e7eb;
+        border: 2px solid #e2e8f0;
     }
     
-    .form-group {
+    .form-field {
         margin-bottom: 1.5rem;
     }
     
-    .form-label {
+    .field-label {
         display: block;
         font-weight: 600;
         color: #374151;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
     }
     
-    .form-textarea {
+    .text-input {
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 0.9rem;
+        padding: 0.875rem;
+        border: 2px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.95rem;
         resize: vertical;
-        min-height: 100px;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        min-height: 120px;
+        transition: all 0.2s ease;
+        font-family: inherit;
     }
     
-    .form-textarea:focus {
+    .text-input:focus {
         outline: none;
         border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
     
-    .form-actions {
+    .button-group {
         display: flex;
         gap: 1rem;
-        margin-top: 2rem;
+        flex-wrap: wrap;
     }
     
-    .btn {
-        padding: 0.75rem 2rem;
-        border-radius: 6px;
+    .action-btn {
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
         font-weight: 600;
         text-decoration: none;
         border: none;
@@ -199,45 +224,64 @@
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
-        font-size: 1rem;
+        font-size: 0.95rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
-    .btn-success {
+    .action-btn:active {
+        transform: translateY(1px);
+    }
+    
+    .btn-approve {
         background-color: #059669;
         color: white;
     }
     
-    .btn-success:hover {
+    .btn-approve:hover {
         background-color: #047857;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
     }
     
-    .btn-danger {
+    .btn-reject {
         background-color: #dc2626;
         color: white;
     }
     
-    .btn-danger:hover {
+    .btn-reject:hover {
         background-color: #b91c1c;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
     }
     
-    .btn-secondary {
+    .btn-neutral {
         background-color: #6b7280;
         color: white;
     }
     
-    .btn-secondary:hover {
+    .btn-neutral:hover {
         background-color: #4b5563;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(107, 114, 128, 0.3);
     }
     
-    .status-badge {
+    .side-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+    
+    .status-tag {
         display: inline-block;
         padding: 0.5rem 1rem;
         border-radius: 20px;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -248,35 +292,128 @@
         color: #92400e;
     }
     
-    .audit-info {
-        background: #f3f4f6;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
+    .status-approved {
+        background-color: #d1fae5;
+        color: #065f46;
     }
     
-    .audit-item {
+    .status-rejected {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .audit-box {
+        background: #f9fafb;
+        padding: 1.25rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .audit-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
+        align-items: flex-start;
+        margin-bottom: 0.875rem;
+        padding-bottom: 0.875rem;
+        border-bottom: 1px solid #e5e7eb;
+        gap: 1rem;
     }
     
-    .audit-label {
+    .audit-row:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .audit-key {
         font-weight: 500;
         color: #6b7280;
+        font-size: 0.875rem;
+        flex-shrink: 0;
     }
     
-    .audit-value {
+    .audit-val {
         color: #1f2937;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-align: right;
+    }
+    
+    .actions-area {
+        margin-top: 2rem;
+    }
+    
+    .actions-heading {
+        color: #1f2937;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .action-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .action-links .action-btn {
+        font-size: 0.875rem;
+        padding: 0.75rem 1rem;
+        justify-content: flex-start;
+    }
+
+    @media (max-width: 1100px) {
+        .approval-layout {
+            grid-template-columns: 1fr;
+        }
+        
+        .side-panel {
+            position: static;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .content-wrapper {
+            padding: 0 1rem 1rem 1rem;
+        }
+        
+        .page-header {
+            padding: 2rem 1rem;
+        }
+        
+        .transaction-showcase {
+            padding: 2rem 1rem;
+        }
+        
+        .amount-display {
+            font-size: 3rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .button-group {
+            flex-direction: column;
+        }
+        
+        .action-btn {
+            width: 100%;
+        }
+        
+        .approval-layout {
+            gap: 1rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="approval-page">
     <!-- Page Header -->
     <div class="page-header">
-        <div class="container">
+        <div class="content-wrapper">
             <h1 class="page-title">
                 <i class="fas fa-clipboard-check"></i>
                 Capital Approval
@@ -285,142 +422,146 @@
         </div>
     </div>
 
-    <div class="approval-container">
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Transaction Header -->
-            <div class="transaction-header {{ capital.transaction_type }}">
-                <div class="transaction-id">{{ capital.capital_id }}</div>
-                <div class="transaction-type {{ capital.transaction_type }}">
-                    {{ capital.get_transaction_type_display }}
-                </div>
-                <div class="transaction-amount">
-                    {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
-                </div>
-                <div class="transaction-date">{{ capital.transaction_date|date:"F d, Y" }}</div>
-            </div>
-
-            <!-- Details Grid -->
-            <div class="details-grid">
-                <div class="detail-card">
-                    <div class="detail-label">Capital Type</div>
-                    <div class="detail-value">{{ capital.get_capital_type_display }}</div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-label">Requested By</div>
-                    <div class="detail-value">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-label">Status</div>
-                    <div class="detail-value">
-                        <span class="status-badge status-{{ capital.status }}">{{ capital.get_status_display }}</span>
+    <div class="content-wrapper">
+        <div class="approval-layout">
+            <!-- Main Content -->
+            <div class="main-section">
+                <!-- Transaction Showcase -->
+                <div class="transaction-showcase {{ capital.transaction_type }}">
+                    <div class="transaction-id-display">{{ capital.capital_id }}</div>
+                    <div class="transaction-badge {{ capital.transaction_type }}">
+                        {{ capital.get_transaction_type_display }}
                     </div>
-                </div>
-                <div class="detail-card">
-                    <div class="detail-label">Submitted On</div>
-                    <div class="detail-value">{{ capital.created_at|date:"M d, Y H:i" }}</div>
-                </div>
-                {% if capital.shareholder %}
-                <div class="detail-card">
-                    <div class="detail-label">Shareholder</div>
-                    <div class="detail-value">{{ capital.shareholder.name }}</div>
-                </div>
-                {% endif %}
-                {% if capital.reference_number %}
-                <div class="detail-card">
-                    <div class="detail-label">Reference Number</div>
-                    <div class="detail-value">{{ capital.reference_number }}</div>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Description -->
-            {% if capital.description %}
-            <div class="description-section">
-                <h3 class="section-title">Transaction Description</h3>
-                <div class="description-content">
-                    {{ capital.description }}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Approval Form -->
-            {% if capital.status == 'pending' %}
-            <div class="approval-form">
-                <h3 class="section-title">Approval Decision</h3>
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label class="form-label">Comments (Optional)</label>
-                        <textarea name="comments" class="form-textarea" 
-                                placeholder="Add any comments about this approval/rejection decision..."></textarea>
+                    <div class="amount-display">
+                        {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
                     </div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" name="action" value="approve" class="btn btn-success">
-                            <i class="fas fa-check"></i>
-                            Approve Transaction
-                        </button>
-                        <button type="submit" name="action" value="reject" class="btn btn-danger">
-                            <i class="fas fa-times"></i>
-                            Reject Transaction
-                        </button>
-                        <a href="{% url 'finance_tracker:capital_approval_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i>
-                            Back to List
+                    <div class="date-display">{{ capital.transaction_date|date:"F d, Y" }}</div>
+                </div>
+
+                <div class="details-section">
+                    <!-- Details Grid -->
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-label">Capital Type</div>
+                            <div class="info-value">{{ capital.get_capital_type_display }}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Requested By</div>
+                            <div class="info-value">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span class="status-tag status-{{ capital.status }}">{{ capital.get_status_display }}</span>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Submitted On</div>
+                            <div class="info-value">{{ capital.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        {% if capital.shareholder %}
+                        <div class="info-card">
+                            <div class="info-label">Shareholder</div>
+                            <div class="info-value">{{ capital.shareholder.name }}</div>
+                        </div>
+                        {% endif %}
+                        {% if capital.reference_number %}
+                        <div class="info-card">
+                            <div class="info-label">Reference Number</div>
+                            <div class="info-value">{{ capital.reference_number }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    {% if capital.description %}
+                    <div class="description-box">
+                        <h3 class="section-heading">Transaction Description</h3>
+                        <div class="description-text">
+                            {{ capital.description }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Approval Form -->
+                    {% if capital.status == 'pending' %}
+                    <div class="approval-section">
+                        <h3 class="section-heading">Approval Decision</h3>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-field">
+                                <label class="field-label">Comments (Optional)</label>
+                                <textarea name="comments" class="text-input" 
+                                        placeholder="Add any comments about this approval/rejection decision..."></textarea>
+                            </div>
+                            
+                            <div class="button-group">
+                                <button type="submit" name="action" value="approve" class="action-btn btn-approve">
+                                    <i class="fas fa-check"></i>
+                                    Approve Transaction
+                                </button>
+                                <button type="submit" name="action" value="reject" class="action-btn btn-reject">
+                                    <i class="fas fa-times"></i>
+                                    Reject Transaction
+                                </button>
+                                <a href="{% url 'finance_tracker:capital_approval_list' %}" class="action-btn btn-neutral">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back to List
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="side-panel">
+                <h3 class="section-heading">Audit Information</h3>
+                
+                <div class="audit-box">
+                    <div class="audit-row">
+                        <span class="audit-key">Created By:</span>
+                        <span class="audit-val">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</span>
+                    </div>
+                    <div class="audit-row">
+                        <span class="audit-key">Created On:</span>
+                        <span class="audit-val">{{ capital.created_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="audit-row">
+                        <span class="audit-key">Last Updated:</span>
+                        <span class="audit-val">{{ capital.updated_at|date:"M d, Y H:i" }}</span>
+                    </div>
+                    {% if capital.approved_by %}
+                    <div class="audit-row">
+                        <span class="audit-key">Approved By:</span>
+                        <span class="audit-val">{{ capital.approved_by.get_full_name|default:capital.approved_by.username }}</span>
+                    </div>
+                    {% endif %}
+                    {% if capital.approval_date %}
+                    <div class="audit-row">
+                        <span class="audit-key">Approval Date:</span>
+                        <span class="audit-val">{{ capital.approval_date|date:"M d, Y H:i" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if capital.status == 'pending' %}
+                <div class="actions-area">
+                    <h4 class="actions-heading">Quick Actions</h4>
+                    <div class="action-links">
+                        <a href="{% url 'finance_tracker:capital_list' %}" class="action-btn btn-neutral">
+                            <i class="fas fa-list"></i>
+                            View All Capital
+                        </a>
+                        <a href="{% url 'finance_tracker:capital_approval_list' %}" class="action-btn btn-neutral">
+                            <i class="fas fa-hourglass-half"></i>
+                            Pending Approvals
                         </a>
                     </div>
-                </form>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h3 class="section-title">Audit Information</h3>
-            
-            <div class="audit-info">
-                <div class="audit-item">
-                    <span class="audit-label">Created By:</span>
-                    <span class="audit-value">{{ capital.created_by.get_full_name|default:capital.created_by.username }}</span>
-                </div>
-                <div class="audit-item">
-                    <span class="audit-label">Created On:</span>
-                    <span class="audit-value">{{ capital.created_at|date:"M d, Y H:i" }}</span>
-                </div>
-                <div class="audit-item">
-                    <span class="audit-label">Last Updated:</span>
-                    <span class="audit-value">{{ capital.updated_at|date:"M d, Y H:i" }}</span>
-                </div>
-                {% if capital.approved_by %}
-                <div class="audit-item">
-                    <span class="audit-label">Approved By:</span>
-                    <span class="audit-value">{{ capital.approved_by.get_full_name|default:capital.approved_by.username }}</span>
-                </div>
-                {% endif %}
-                {% if capital.approval_date %}
-                <div class="audit-item">
-                    <span class="audit-label">Approval Date:</span>
-                    <span class="audit-value">{{ capital.approval_date|date:"M d, Y H:i" }}</span>
                 </div>
                 {% endif %}
             </div>
-
-            {% if capital.status == 'pending' %}
-            <div style="margin-top: 2rem;">
-                <h4 style="color: #1f2937; margin-bottom: 1rem;">Quick Actions</h4>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <a href="{% url 'finance_tracker:capital_list' %}" class="btn btn-secondary" style="font-size: 0.9rem;">
-                        <i class="fas fa-list"></i>
-                        View All Capital
-                    </a>
-                    <a href="{% url 'finance_tracker:capital_approval_list' %}" class="btn btn-secondary" style="font-size: 0.9rem;">
-                        <i class="fas fa-hourglass-half"></i>
-                        Pending Approvals
-                    </a>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>

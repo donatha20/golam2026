@@ -721,7 +721,7 @@ def record_payment(request):
                     UserActivity.objects.create(
                         user=request.user,
                         action='payment_recorded',
-                        description=f'Recorded payment of ₹{payment.amount} for loan {payment.loan.loan_number}',
+                        description=f'Recorded payment of Tsh {payment.amount} for loan {payment.loan.loan_number}',
                         ip_address=request.META.get('REMOTE_ADDR')
                     )
 
@@ -732,18 +732,18 @@ def record_payment(request):
                         if sms_result.get('success'):
                             messages.success(
                                 request,
-                                f'Payment of ₹{payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}. SMS confirmation sent.'
+                                f'Payment of Tsh {payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}. SMS confirmation sent.'
                             )
                         else:
                             messages.success(
                                 request,
-                                f'Payment of ₹{payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}'
+                                f'Payment of Tsh {payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}'
                             )
                             messages.warning(request, f'SMS notification failed: {sms_result.get("error", "Unknown error")}')
                     except Exception as e:
                         messages.success(
                             request,
-                            f'Payment of ₹{payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}'
+                            f'Payment of Tsh {payment.amount:,.2f} recorded successfully for loan {payment.loan.loan_number}'
                         )
                         messages.warning(request, f'SMS notification failed: {str(e)}')
 
@@ -1361,15 +1361,23 @@ def record_repayment(request):
                 # Process payment allocation
                 # This would include logic to allocate payment to principal, interest, etc.
                 
-                messages.success(request, f'Payment of ₹{payment.amount} recorded successfully.')
+                messages.success(request, f'Payment of Tsh {payment.amount} recorded successfully.')
                 return redirect('repayments:dashboard')
     else:
         form = PaymentForm()
+    
+    # Get loan officers and admins for the collected_by field
+    from apps.accounts.models import CustomUser, UserRole
+    loan_officers = CustomUser.objects.filter(
+        role__in=[UserRole.LOAN_OFFICER, UserRole.ADMIN],
+        is_active=True
+    ).order_by('first_name', 'last_name')
     
     context = {
         'form': form,
         'title': 'Record Payment',
         'page_title': 'Record Payment',
+        'loan_officers': loan_officers,
     }
     return render(request, 'repayments/record_repayment.html', context)
 

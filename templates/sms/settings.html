@@ -9,13 +9,13 @@
     <div class="col-lg-10 mx-auto">
         <!-- Current Configuration -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-cog me-2 text-primary-teal"></i>
                     Current SMS Configuration
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -47,13 +47,13 @@
 
         <!-- Provider Configuration -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-server me-2 text-primary-teal"></i>
                     SMS Provider Configuration
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Note:</strong> SMS provider settings are configured through environment variables. 
@@ -81,7 +81,7 @@
                                     {% endif %}
                                 </h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 {% if provider == 'twilio' %}
                                     <p class="card-text">
                                         <strong>Twilio</strong> - Global SMS service with high delivery rates.
@@ -126,13 +126,13 @@
 
         <!-- Environment Variables Guide -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-code me-2 text-primary-teal"></i>
                     Environment Variables Configuration
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <p>Add these variables to your <code>.env</code> file to configure SMS services:</p>
                 
                 <div class="accordion" id="providerAccordion">
@@ -220,18 +220,18 @@ MSG91_SENDER_ID=MSGIND</code></pre>
 
         <!-- Test SMS -->
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-vial me-2 text-primary-teal"></i>
                     Test SMS Configuration
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <p>Test your SMS configuration by sending a test message:</p>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="testPhoneNumber" 
+                            <input type="text" class="form-control form-control-sm" id="testPhoneNumber" 
                                    placeholder="+91 9876543210" aria-label="Phone number">
                             <button class="btn btn-primary-teal" type="button" onclick="sendTestSMS()">
                                 <i class="fas fa-paper-plane me-1"></i>Send Test SMS
@@ -245,13 +245,13 @@ MSG91_SENDER_ID=MSGIND</code></pre>
 
         <!-- SMS Guidelines -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-lightbulb me-2 text-primary-teal"></i>
                     SMS Best Practices
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Technical Guidelines</h6>

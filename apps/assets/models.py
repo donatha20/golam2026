@@ -688,7 +688,7 @@ class AssetValuation(models.Model):
         ordering = ['-valuation_date']
 
     def __str__(self):
-        return f"{self.asset.asset_id} - {self.valuation_date} - ₹{self.valuation_value:,.2f}"
+        return f"{self.asset.asset_id} - {self.valuation_date} - Tsh {self.valuation_value:,.2f}"
 
 
 class CollateralValuation(models.Model):
@@ -748,7 +748,7 @@ class CollateralValuation(models.Model):
         ordering = ['-valuation_date']
 
     def __str__(self):
-        return f"{self.collateral.collateral_id} - {self.valuation_date} - ₹{self.market_value:,.2f}"
+        return f"{self.collateral.collateral_id} - {self.valuation_date} - Tsh {self.market_value:,.2f}"
 
 
 class AssetDepreciationSchedule(models.Model):

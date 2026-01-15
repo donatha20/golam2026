@@ -9,12 +9,17 @@ app_name = 'loans'
 urlpatterns = [
     # API endpoints
     path('api/borrowers/', views.borrowers_api, name='borrowers_api'),
+    path('api/borrowers/search/', views.borrower_search_api, name='borrower_search_api'),
+    path('api/borrowers/with-loans/', views.borrowers_with_loans_api, name='borrowers_with_loans_api'),
+    path('api/loans/borrower/<int:borrower_id>/active/', views.borrower_loans_api, name='borrower_loans_api'),
     
     # Main Views - Using Class-Based Views where available
     path('', views.DisbursedLoanListView.as_view(), name='disbursed_loans'),
+    path('<int:loan_id>/', views.loan_detail, name='loan_detail'),
     path('disbursed/', views.DisbursedLoanListView.as_view(), name='disbursed_loans_list'),
     path('expected-repayments/', views.ExpectedRepaymentsView.as_view(), name='expected_repayments'),
     path('repaid/', views.RepaidLoansView.as_view(), name='repaid_loans'),
+    path('non-performing/', views.NonPerformingLoansView.as_view(), name='non_performing_loans'),
     
     # Function-Based Views that exist
     path('add/', views.add_new_loan, name='add_loan'),
@@ -24,6 +29,7 @@ urlpatterns = [
     path('repayments/group/<int:schedule_id>/', views.record_group_repayment, name='record_group_repayment'),
     path('repayments/rollover/<int:schedule_id>/', views.rollover_repayment, name='rollover_repayment'),
     path('approval/<int:loan_id>/', views.loan_approval, name='loan_approval'),
+    path('rejection/<int:loan_id>/', views.loan_rejection, name='loan_rejection'),
     path('disbursement/<int:loan_id>/', views.loan_disbursement, name='loan_disbursement'),
     path('nearing-last/', views.nearing_last_installments, name='loans_approaching_last_installment'),
     path('interest-summary/', views.interest_summary, name='interest_summary'),

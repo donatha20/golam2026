@@ -22,7 +22,7 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Report Header -->
                 <div class="text-center mb-4">
                     <h4>Loan Aging Analysis</h4>
@@ -34,7 +34,7 @@
                     {% for bucket_name, bucket_data in aging_buckets.items %}
                     <div class="col-md-2">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title 
                                     {% if bucket_name == 'current' %}text-success
                                     {% elif bucket_name == '1_30_days' %}text-info
@@ -60,7 +60,7 @@
 
                 <!-- Detailed Aging Table -->
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
                                 <th>Aging Category</th>
@@ -119,7 +119,7 @@
 
                 <!-- Detailed Loan List -->
                 {% if aging_buckets %}
-                <div class="mt-4">
+                <div class="mt-compact">
                     <h6 class="text-primary-teal border-bottom pb-2">Overdue Loans Detail</h6>
                     <div class="table-responsive">
                         <table class="table table-sm">

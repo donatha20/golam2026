@@ -19,13 +19,13 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
     
     .stat-card {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
         backdrop-filter: blur(10px);
     }
@@ -50,7 +50,7 @@
     
     .schedule-header {
         background: #f8f9fa;
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 12px 12px 0 0;
         border-bottom: 1px solid #e9ecef;
     }
@@ -201,6 +201,7 @@
                     <i class="fas fa-calendar me-2"></i>{{ loan.disbursement_date|date:"M d, Y" }}
                 </p>
             </div>
+            
             <div class="text-end">
                 <a href="{% url 'repayments:record_repayment' %}" class="btn btn-light">
                     <i class="fas fa-plus me-2"></i>Record Payment
@@ -315,7 +316,7 @@
                             <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No payments recorded yet</h5>
                             <p class="text-muted">Start by recording the first payment for this loan.</p>
-                            <a href="{% url 'repayments:record_repayment' %}?loan={{ loan.pk }}" class="btn btn-primary">
+                            <a href="{% url 'repayments:record_repayment' %}?loan={{ loan.pk }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus me-2"></i>Record First Payment
                             </a>
                         </div>
@@ -364,12 +365,12 @@
 
             <!-- Quick Actions -->
             <div class="card mt-3">
-                <div class="card-header">
+                <div class="card-header py-compact">
                     <h6 class="mb-0">
                         <i class="fas fa-bolt me-2"></i>Quick Actions
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-compact">
                     <div class="d-grid gap-2">
                         <a href="{% url 'repayments:record_repayment' %}?loan={{ loan.pk }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-2"></i>Record Payment
@@ -389,12 +390,12 @@
 
             <!-- Loan Summary -->
             <div class="card mt-3">
-                <div class="card-header">
+                <div class="card-header py-compact">
                     <h6 class="mb-0">
                         <i class="fas fa-chart-pie me-2"></i>Loan Summary
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-compact">
                     <div class="row text-center">
                         <div class="col-6">
                             <div class="border-end">
@@ -440,7 +441,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label">Reversal Reason</label>
-                        <textarea class="form-control" name="reversal_reason" rows="3" required 
+                        <textarea class="form-control form-control-sm" name="reversal_reason" rows="3" required 
                                   placeholder="Enter reason for payment reversal..."></textarea>
                     </div>
                     
@@ -452,8 +453,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reverse Payment</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Reverse Payment</button>
                 </div>
             </form>
         </div>

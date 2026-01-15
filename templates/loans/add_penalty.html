@@ -24,7 +24,7 @@
         font-size: 1.5rem;
         font-weight: 700;
         color: #dc2626;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         text-align: center;
         display: flex;
         align-items: center;
@@ -34,7 +34,7 @@
 
     /* Form Styling */
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .form-label {
@@ -118,7 +118,7 @@
         background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
         border: 2px solid #fca5a5;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
     }
@@ -183,7 +183,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 0 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .form-actions {
@@ -257,7 +257,7 @@
                 <label class="form-label" for="penalty_type">
                     <i class="fas fa-tag"></i> Penalty Type *
                 </label>
-                <select name="penalty_type" id="penalty_type" class="form-control" required>
+                <select name="penalty_type" id="penalty_type" class="form-control form-control-sm" required>
                     <option value="">Select penalty type</option>
                     <option value="LATE_PAYMENT">Late Payment Fee</option>
                     <option value="MISSED_PAYMENT">Missed Payment Penalty</option>
@@ -270,7 +270,7 @@
                 <label class="form-label" for="penalty_amount">
                     <i class="fas fa-dollar-sign"></i> Penalty Amount *
                 </label>
-                <input type="number" name="penalty_amount" id="penalty_amount" class="form-control" 
+                <input type="number" name="penalty_amount" id="penalty_amount" class="form-control form-control-sm" 
                        step="0.01" min="0" placeholder="Enter penalty amount" required>
             </div>
             
@@ -278,7 +278,7 @@
                 <label class="form-label" for="reason">
                     <i class="fas fa-comment"></i> Reason for Penalty *
                 </label>
-                <textarea name="reason" id="reason" class="form-control" rows="3" 
+                <textarea name="reason" id="reason" class="form-control form-control-sm" rows="3" 
                           placeholder="Explain the reason for applying this penalty" required></textarea>
             </div>
             

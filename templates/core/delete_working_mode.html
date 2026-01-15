@@ -1,0 +1,113 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Working Mode - Golam Financial Services{% endblock %}
+
+{% block page_title %}Delete Working Mode{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-trash text-danger"></i> Delete Working Mode
+                    </h4>
+                    <a href="{% url 'core:view_working_modes' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Working Modes
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning!</strong> Are you sure you want to delete this working mode? This action cannot be undone.
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header py-compact">
+                            <h5>Working Mode Details</h5>
+                        </div>
+                        <div class="card-body p-compact">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Name:</strong> {{ mode.name }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Working Days:</strong>
+                                    {% if mode.monday_enabled %}Mon {% endif %}
+                                    {% if mode.tuesday_enabled %}Tue {% endif %}
+                                    {% if mode.wednesday_enabled %}Wed {% endif %}
+                                    {% if mode.thursday_enabled %}Thu {% endif %}
+                                    {% if mode.friday_enabled %}Fri {% endif %}
+                                    {% if mode.saturday_enabled %}Sat {% endif %}
+                                    {% if mode.sunday_enabled %}Sun {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Start Time:</strong> {{ mode.start_time }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>End Time:</strong> {{ mode.end_time }}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Lunch Break:</strong> {{ mode.lunch_start }} - {{ mode.lunch_end }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Timezone:</strong> {{ mode.get_timezone_display }}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <strong>Status:</strong> 
+                                    {% if mode.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Allow Backdating:</strong> 
+                                    {% if mode.allow_backdating %}
+                                        <span class="badge badge-info">Yes</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">No</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if False %}
+                        <div class="alert alert-danger mt-3">
+                            <i class="fas fa-ban"></i>
+                            <strong>Cannot Delete:</strong> This is the current working mode. Please set another working mode as current before deleting this one.
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <a href="{% url 'core:view_working_modes' %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Back to Working Modes
+                            </a>
+                        </div>
+                    {% else %}
+                        <form method="post" class="mt-3">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Yes, Delete Working Mode
+                                </button>
+                                <a href="{% url 'core:view_working_modes' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

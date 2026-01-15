@@ -18,13 +18,13 @@
         {% endif %}
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-broadcast-tower me-2 text-primary-teal"></i>
                     Send Bulk SMS
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <form method="post">
                     {% csrf_token %}
                     
@@ -107,7 +107,7 @@
                     </div>
                     
                     <!-- Confirmation -->
-                    <div class="mb-4">
+                    <div class="mb-compact">
                         <div class="form-check">
                             {{ form.confirm_send }}
                             <label class="form-check-label" for="{{ form.confirm_send.id_for_label }}">
@@ -131,14 +131,14 @@
                     
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'sms:dashboard' %}" class="btn btn-secondary">
+                        <a href="{% url 'sms:dashboard' %}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
                         <div>
                             <button type="button" class="btn btn-outline-primary me-2" onclick="previewBulkSMS()">
                                 <i class="fas fa-eye me-1"></i>Preview
                             </button>
-                            <button type="submit" class="btn btn-success" onclick="return confirmBulkSend()">
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirmBulkSend()">
                                 <i class="fas fa-broadcast-tower me-1"></i>Send Bulk SMS
                             </button>
                         </div>
@@ -155,7 +155,7 @@
                     Important Notice
                 </h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <ul class="mb-0">
                     <li><strong>Bulk SMS Impact:</strong> This will send SMS to multiple recipients simultaneously</li>
                     <li><strong>Cost Consideration:</strong> Each SMS may incur charges based on your provider</li>

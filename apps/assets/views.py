@@ -16,7 +16,7 @@ from .models import (
     Asset, AssetCategory, AssetDocument, AssetValuation,
     Collateral, CollateralType, CollateralDocument, CollateralValuation
 )
-from apps.accounts.models import UserActivity
+from apps.accounts.models import UserActivity, CustomUser
 from apps.borrowers.models import Borrower
 from apps.loans.models import Loan
 
@@ -221,7 +221,7 @@ def collateral_list(request):
     
     # Get filter options
     collateral_types = CollateralType.objects.filter(is_active=True)
-    borrowers = Borrower.objects.filter(is_active=True).order_by('first_name', 'last_name')
+    borrowers = Borrower.objects.filter(status='active').order_by('first_name', 'last_name')
     
     context = {
         'collaterals': collaterals,
@@ -269,10 +269,35 @@ def collateral_detail(request, collateral_id):
 
 @login_required
 def add_asset(request):
-    """Add new asset."""
+    """Add new asset with simplified purchase recording."""
     if request.method == 'POST':
-        # This will be implemented with forms
-        pass
+        try:
+            # Create asset from simplified form data
+            # Note: payment_method, account, and is_new_asset fields can be added to Asset model if needed for accounting
+            asset = Asset(
+                asset_name=request.POST.get('asset_name'),
+                category_id=request.POST.get('category') if request.POST.get('category') else None,
+                purchase_date=request.POST.get('purchase_date'),
+                purchase_value=request.POST.get('purchase_value'),
+                current_value=request.POST.get('purchase_value'),  # Initially same as purchase value
+                supplier=request.POST.get('supplier', ''),
+                notes=request.POST.get('notes', ''),
+                status='active',
+                condition='good',
+                created_by=request.user
+            )
+            asset.save()
+            
+            # Additional form data for potential future use or logging
+            payment_method = request.POST.get('payment_method', 'cash')
+            account = request.POST.get('account', 'cash')
+            is_new_asset = request.POST.get('is_new_asset', 'yes') == 'yes'
+            
+            messages.success(request, f'Asset "{asset.asset_name}" has been recorded successfully!')
+            return redirect('assets:asset_detail', asset_id=asset.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error recording asset: {str(e)}')
 
     categories = AssetCategory.objects.filter(is_active=True)
     users = CustomUser.objects.filter(is_active=True).order_by('first_name', 'last_name')
@@ -280,8 +305,9 @@ def add_asset(request):
     context = {
         'categories': categories,
         'users': users,
-        'title': 'Add Asset',
-        'page_title': 'New Asset',
+        'title': 'Record Purchases Of Assets',
+        'page_title': 'Record Purchases Of Assets',
+        'current_year': timezone.now().year,
     }
 
     return render(request, 'assets/add_asset.html', context)
@@ -291,11 +317,50 @@ def add_asset(request):
 def add_collateral(request):
     """Add new collateral."""
     if request.method == 'POST':
-        # This will be implemented with forms
-        pass
+        try:
+            # Create collateral from form data
+            collateral = Collateral(
+                borrower_id=request.POST.get('borrower'),
+                loan_id=request.POST.get('loan') if request.POST.get('loan') else None,
+                collateral_type_id=request.POST.get('collateral_type'),
+                title=request.POST.get('title'),
+                description=request.POST.get('description'),
+                brand_model=request.POST.get('brand_model', ''),
+                serial_number=request.POST.get('serial_number', ''),
+                year_of_manufacture=request.POST.get('year_of_manufacture') if request.POST.get('year_of_manufacture') else None,
+                condition=request.POST.get('condition', 'good'),
+                estimated_value=request.POST.get('estimated_value'),
+                market_value=request.POST.get('market_value') if request.POST.get('market_value') else None,
+                forced_sale_value=request.POST.get('forced_sale_value') if request.POST.get('forced_sale_value') else None,
+                valuation_method=request.POST.get('valuation_method', 'self_declared'),
+                valuated_by=request.POST.get('valuated_by', ''),
+                location=request.POST.get('location'),
+                ownership_status=request.POST.get('ownership_status', 'owned'),
+                owner_name=request.POST.get('owner_name', ''),
+                owner_relationship=request.POST.get('owner_relationship', ''),
+                registration_number=request.POST.get('registration_number', ''),
+                registration_authority=request.POST.get('registration_authority', ''),
+                legal_title_holder=request.POST.get('legal_title_holder', ''),
+                encumbrance_details=request.POST.get('encumbrance_details', ''),
+                is_insured=bool(request.POST.get('is_insured')),
+                insurance_company=request.POST.get('insurance_company', ''),
+                insurance_policy_number=request.POST.get('insurance_policy_number', ''),
+                insurance_value=request.POST.get('insurance_value') if request.POST.get('insurance_value') else None,
+                insurance_expiry=request.POST.get('insurance_expiry') if request.POST.get('insurance_expiry') else None,
+                special_conditions=request.POST.get('special_conditions', ''),
+                notes=request.POST.get('notes', ''),
+                created_by=request.user
+            )
+            collateral.save()
+            
+            messages.success(request, f'Collateral "{collateral.title}" has been created successfully!')
+            return redirect('assets:collateral_detail', collateral_id=collateral.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error creating collateral: {str(e)}')
 
     collateral_types = CollateralType.objects.filter(is_active=True)
-    borrowers = Borrower.objects.filter(is_active=True).order_by('first_name', 'last_name')
+    borrowers = Borrower.objects.filter(status='active').order_by('first_name', 'last_name')
     loans = Loan.objects.filter(status__in=['approved', 'disbursed']).order_by('-created_at')
 
     context = {
@@ -304,6 +369,7 @@ def add_collateral(request):
         'loans': loans,
         'title': 'Add Collateral',
         'page_title': 'New Collateral',
+        'current_year': timezone.now().year,
     }
 
     return render(request, 'assets/add_collateral.html', context)

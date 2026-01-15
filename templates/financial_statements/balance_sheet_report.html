@@ -22,14 +22,14 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Date Filter -->
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <form method="get" class="row g-3">
                             <div class="col-md-8">
                                 <label for="as_of_date" class="form-label">As of Date</label>
-                                <input type="date" class="form-control" id="as_of_date" name="as_of_date" value="{{ as_of_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="as_of_date" name="as_of_date" value="{{ as_of_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">&nbsp;</label>
@@ -57,7 +57,7 @@
                             <div class="card-header bg-success text-white">
                                 <h6 class="mb-0">ASSETS</h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h6 class="text-success">Current Assets</h6>
                                 <table class="table table-sm">
                                     <tr>
@@ -110,7 +110,7 @@
                             <div class="card-header bg-danger text-white">
                                 <h6 class="mb-0">LIABILITIES & EQUITY</h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h6 class="text-danger">Current Liabilities</h6>
                                 <table class="table table-sm">
                                     <tr>

@@ -12,7 +12,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -107,7 +107,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         transition: all 0.3s ease;
@@ -142,14 +142,14 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
 
     .filters-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -210,7 +210,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stats Cards -->
+<!-- Stats Cards 
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-title">Total Repayments Today</div>
@@ -233,8 +233,9 @@
         <div class="stat-change">This Month</div>
     </div>
 </div>
+-->
 
-<!-- Filters Section -->
+<!-- Filters Section 
 <div class="filters-section">
     <h3 class="filters-title">Filter Repayments</h3>
     <form method="get" class="filters-form">
@@ -267,25 +268,25 @@
                 <button type="submit" class="btn-filter">Apply Filters</button>
             </div>
             <div class="filter-group">
-                <a href="{% url 'loans:loan_repayments' %}" class="btn-clear">Clear All</a>
+                <a href="{% url 'loans:loan_repayments' loan.id %}" class="btn-clear">Clear All</a>
             </div>
         </div>
     </form>
 </div>
-
-<!-- Action Buttons -->
-<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary">
+-->
+<!-- Action Buttons 
+<div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary btn-sm">
         <i class="fas fa-plus-circle"></i> Record New Payment
     </a>
-    <a href="{% url 'loans:record_group_repayment' %}" class="btn btn-secondary">
+    <a href="{% url 'loans:record_group_repayment' %}" class="btn btn-secondary btn-sm">
         <i class="fas fa-users"></i> Record Group Payment
     </a>
     <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary">
         <i class="fas fa-calendar-alt"></i> Expected Repayments
     </a>
 </div>
-
+-->
 <!-- Repayments Table -->
 <div class="table-container">
     {% if table.data %}
@@ -295,7 +296,7 @@
             <i class="fas fa-credit-card" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
             <h3>No Repayments Found</h3>
             <p>No loan repayments match your criteria. Try adjusting your filters or record a new payment.</p>
-            <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary" style="margin-top: 1rem;">
+            <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
                 <i class="fas fa-plus-circle"></i> Record First Payment
             </a>
         </div>

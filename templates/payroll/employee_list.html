@@ -1,0 +1,185 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Employee List{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users"></i> Employee Management</h2>
+        <div class="btn-group" role="group">
+            <a href="{% url 'payroll:employee_create' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Add Employee
+            </a>
+            <a href="{% url 'payroll:department_list' %}" class="btn btn-secondary">
+                <i class="fas fa-building"></i> Departments
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ request.GET.search }}" placeholder="Name, email, employee ID...">
+                </div>
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Department</label>
+                    <select class="form-control" id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" 
+                                {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <a href="{% url 'payroll:employee_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee List Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Employees ({{ employees.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if employees %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Photo</th>
+                            <th>Employee ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th>Salary</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees %}
+                        <tr>
+                            <td class="text-center">
+                                {% if employee.photo %}
+                                    <img src="{{ employee.photo.url }}" alt="{{ employee.get_full_name }}" 
+                                         class="rounded-circle" width="40" height="40">
+                                {% else %}
+                                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white" 
+                                         style="width: 40px; height: 40px;">
+                                        {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ employee.employee_id }}</td>
+                            <td>
+                                <strong>{{ employee.get_full_name }}</strong>
+                                {% if not employee.is_active %}
+                                    <span class="badge badge-secondary ml-1">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ employee.email }}</td>
+                            <td>{{ employee.department.name|default:"-" }}</td>
+                            <td>{{ employee.position.title|default:"-" }}</td>
+                            <td>Tsh {{ employee.basic_salary|floatformat:2 }}</td>
+                            <td>
+                                {% if employee.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'payroll:employee_detail' employee.pk %}" 
+                                       class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'payroll:employee_update' employee.pk %}" 
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if employees.has_other_pages %}
+            <nav aria-label="Employee pagination">
+                <ul class="pagination justify-content-center">
+                    {% if employees.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ employees.previous_page_number }}&{{ request.GET.urlencode }}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in employees.paginator.page_range %}
+                        {% if employees.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > employees.number|add:'-3' and num < employees.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if employees.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ employees.next_page_number }}&{{ request.GET.urlencode }}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h4>No Employees Found</h4>
+                <p class="text-muted">There are no employees matching your search criteria.</p>
+                <a href="{% url 'payroll:employee_create' %}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Add First Employee
+                </a>
+            </div>
+            {% endif %}
+        </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any employee list specific JavaScript here
+</script>
+{% endblock %}

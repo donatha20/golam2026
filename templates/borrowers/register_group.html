@@ -27,14 +27,14 @@
     
     .form-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: #f9fafb;
     }
     
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #2b7a76;
         margin: 0 0 1.5rem 0;
@@ -170,7 +170,7 @@
         border: 1px solid #fbbf24;
         border-radius: 6px;
         padding: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .group-requirements h4 {
@@ -216,7 +216,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .form-row {
@@ -278,7 +278,7 @@
                     </div>
                     <div class="form-group">
                         <label for="branch" class="form-label required">Branch</label>
-                        <select id="branch" name="branch" class="form-select" required>
+                        <select id="branch" name="branch" class="form-select form-select-sm" required>
                             <option value="">Select Branch</option>
                             {% for branch in branches %}
                             <option value="{{ branch.id }}" {% if branch == user.branch %}selected{% endif %}>
@@ -319,7 +319,7 @@
                 
                 <div class="form-group">
                     <label for="group_leader" class="form-label required">Group Leader</label>
-                    <select id="group_leader" name="group_leader" class="form-select" required>
+                    <select id="group_leader" name="group_leader" class="form-select form-select-sm" required>
                         <option value="">Select Group Leader</option>
                         {% for borrower in available_borrowers %}
                         <option value="{{ borrower.id }}">
@@ -385,7 +385,7 @@
                 
                 <div class="form-group">
                     <label for="selected_members" class="form-label">Select Group Members</label>
-                    <select id="selected_members" name="selected_members" class="form-select" multiple size="8">
+                    <select id="selected_members" name="selected_members" class="form-select form-select-sm" multiple size="8">
                         {% for borrower in available_borrowers %}
                         <option value="{{ borrower.id }}">
                             {{ borrower.get_full_name }} ({{ borrower.borrower_id }}) - {{ borrower.phone_number }} - {{ borrower.branch }}

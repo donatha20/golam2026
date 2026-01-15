@@ -35,7 +35,7 @@
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .form-label {
@@ -134,7 +134,7 @@
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         padding: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .info-title {
@@ -187,7 +187,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .form-grid {
@@ -227,7 +227,7 @@
                 <label for="borrower" class="form-label">
                     Select Borrower <span class="required">*</span>
                 </label>
-                <select name="borrower" id="borrower" class="form-select" required>
+                <select name="borrower" id="borrower" class="form-select form-select-sm" required>
                     <option value="">-- Select Borrower --</option>
                     {% for borrower in borrowers %}
                         <option value="{{ borrower.id }}" 
@@ -270,7 +270,7 @@
                     <label for="savings_product" class="form-label">
                         Savings Product <span class="required">*</span>
                     </label>
-                    <select name="savings_product" id="savings_product" class="form-select" required>
+                    <select name="savings_product" id="savings_product" class="form-select form-select-sm" required>
                         <option value="">-- Select Product --</option>
                         {% for product in products %}
                             <option value="{{ product.id }}"
@@ -290,7 +290,7 @@
                     <input type="number" 
                            name="initial_deposit" 
                            id="initial_deposit" 
-                           class="form-control" 
+                           class="form-control form-control-sm" 
                            step="0.01" 
                            min="0" 
                            placeholder="Enter initial deposit amount"
@@ -302,7 +302,7 @@
                 <label for="purpose" class="form-label">
                     Purpose of Account
                 </label>
-                <select name="purpose" id="purpose" class="form-select">
+                <select name="purpose" id="purpose" class="form-select form-select-sm">
                     <option value="">-- Select Purpose --</option>
                     <option value="general_savings">General Savings</option>
                     <option value="emergency_fund">Emergency Fund</option>
@@ -319,7 +319,7 @@
                 </label>
                 <textarea name="notes" 
                           id="notes" 
-                          class="form-control" 
+                          class="form-control form-control-sm" 
                           rows="3" 
                           placeholder="Enter any additional notes or comments"></textarea>
             </div>

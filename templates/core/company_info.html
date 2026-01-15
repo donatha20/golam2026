@@ -1,0 +1,338 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Company Information{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-building text-primary"></i> Company Information
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .company-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .company-section {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .form-group label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .logo-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        background: #f8f9fa;
+    }
+    .logo-preview img {
+        max-width: 100%;
+        max-height: 120px;
+        border-radius: 5px;
+    }
+    .save-button {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    .save-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    .char-counter {
+        font-size: 0.8rem;
+        color: #6c757d;
+        float: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card company-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building"></i> Company Information Settings
+                    </h5>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Company Information -->
+                        <div class="company-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-info-circle"></i> Basic Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="name">Company Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-sm" id="name" name="name" 
+                                               value="{{ company_info.name|default:'' }}" required maxlength="200">
+                                        <small class="char-counter">
+                                            <span id="name-count">0</span>/200 characters
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="registration_number">Registration Number</label>
+                                        <input type="text" class="form-control form-control-sm" id="registration_number" 
+                                               name="registration_number" value="{{ company_info.registration_number|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="tax_number">Tax Number</label>
+                                        <input type="text" class="form-control form-control-sm" id="tax_number" name="tax_number" 
+                                               value="{{ company_info.tax_number|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="business_type">Business Type</label>
+                                        <select class="form-control form-control-sm" id="business_type" name="business_type">
+                                            <option value="">Select Business Type</option>
+                                            <option value="microfinance" {% if company_info.business_type == 'microfinance' %}selected{% endif %}>
+                                                Microfinance Institution
+                                            </option>
+                                            <option value="cooperative" {% if company_info.business_type == 'cooperative' %}selected{% endif %}>
+                                                Cooperative Society
+                                            </option>
+                                            <option value="ngo" {% if company_info.business_type == 'ngo' %}selected{% endif %}>
+                                                Non-Governmental Organization
+                                            </option>
+                                            <option value="company" {% if company_info.business_type == 'company' %}selected{% endif %}>
+                                                Private Company
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="company-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-phone"></i> Contact Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="phone">Phone Number</label>
+                                        <input type="tel" class="form-control form-control-sm" id="phone" name="phone" 
+                                               value="{{ company_info.phone|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="email">Email Address</label>
+                                        <input type="email" class="form-control form-control-sm" id="email" name="email" 
+                                               value="{{ company_info.email|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="website">Website</label>
+                                        <input type="url" class="form-control form-control-sm" id="website" name="website" 
+                                               value="{{ company_info.website|default:'' }}" placeholder="https://www.example.com">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fax">Fax Number</label>
+                                        <input type="tel" class="form-control form-control-sm" id="fax" name="fax" 
+                                               value="{{ company_info.fax|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="company-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-map-marker-alt"></i> Address Information
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label for="address">Street Address</label>
+                                        <textarea class="form-control form-control-sm" id="address" name="address" rows="3" 
+                                                  maxlength="500">{{ company_info.address|default:'' }}</textarea>
+                                        <small class="char-counter">
+                                            <span id="address-count">0</span>/500 characters
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" class="form-control form-control-sm" id="city" name="city" 
+                                               value="{{ company_info.city|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="state">State/Province</label>
+                                        <input type="text" class="form-control form-control-sm" id="state" name="state" 
+                                               value="{{ company_info.state|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="postal_code">Postal Code</label>
+                                        <input type="text" class="form-control form-control-sm" id="postal_code" name="postal_code" 
+                                               value="{{ company_info.postal_code|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="country">Country</label>
+                                        <input type="text" class="form-control form-control-sm" id="country" name="country" 
+                                               value="{{ company_info.country|default:'' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logo and Branding -->
+                        <div class="company-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-image"></i> Logo and Branding
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="logo">Company Logo</label>
+                                        <input type="file" class="form-control-file" id="logo" name="logo" 
+                                               accept="image/*" onchange="previewLogo(this)">
+                                        <small class="form-text text-muted">
+                                            Recommended size: 300x200 pixels. Supported formats: JPG, PNG, GIF
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="logo-preview" id="logo-preview">
+                                        {% if company_info.logo %}
+                                            <img src="{{ company_info.logo.url }}" alt="Company Logo" class="img-fluid">
+                                        {% else %}
+                                            <i class="fas fa-image text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-2">No logo uploaded</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="text-center">
+                                    <button type="submit" class="btn save-button">
+                                        <i class="fas fa-save"></i> Save Company Information
+                                    </button>
+                                    <a href="{% url 'core:view_company_info' %}" class="btn btn-outline-info ml-3">
+                                        <i class="fas fa-eye"></i> View Current Info
+                                    </a>
+                                    <a href="{% url 'core:settings_dashboard' %}" class="btn btn-outline-secondary ml-3">
+                                        <i class="fas fa-arrow-left"></i> Back to Settings
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Character counters
+    function updateCharCounter(inputId, counterId) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
+        if (input && counter) {
+            counter.textContent = input.value.length;
+            input.addEventListener('input', function() {
+                counter.textContent = this.value.length;
+            });
+        }
+    }
+
+    // Logo preview
+    function previewLogo(input) {
+        const preview = document.getElementById('logo-preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = '<img src="' + e.target.result + '" alt="Logo Preview" class="img-fluid">';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        if (!name) {
+            alert('Company name is required.');
+            e.preventDefault();
+            return false;
+        }
+        
+        const email = document.getElementById('email').value.trim();
+        if (email && !isValidEmail(email)) {
+            alert('Please enter a valid email address.');
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Initialize character counters
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCharCounter('name', 'name-count');
+        updateCharCounter('address', 'address-count');
+    });
+</script>
+{% endblock %}

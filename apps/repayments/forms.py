@@ -75,7 +75,7 @@ class PaymentForm(forms.ModelForm):
         
         # Set field labels
         self.fields['loan'].label = 'Loan'
-        self.fields['amount'].label = 'Payment Amount (₹)'
+        self.fields['amount'].label = 'Payment Amount (Tsh)'
         self.fields['payment_method'].label = 'Payment Method'
         self.fields['payment_date'].label = 'Payment Date'
         self.fields['payment_type'].label = 'Payment Type'
@@ -246,16 +246,16 @@ class PaymentAllocationForm(forms.ModelForm):
         installment = cleaned_data.get('installment')
         if installment:
             if principal > installment.outstanding_principal:
-                raise forms.ValidationError(f'Principal allocation exceeds outstanding amount (₹{installment.outstanding_principal})')
+                raise forms.ValidationError(f'Principal allocation exceeds outstanding amount (Tsh {installment.outstanding_principal})')
             
             if interest > installment.outstanding_interest:
-                raise forms.ValidationError(f'Interest allocation exceeds outstanding amount (₹{installment.outstanding_interest})')
+                raise forms.ValidationError(f'Interest allocation exceeds outstanding amount (Tsh {installment.outstanding_interest})')
             
             if penalty > installment.outstanding_penalty:
-                raise forms.ValidationError(f'Penalty allocation exceeds outstanding amount (₹{installment.outstanding_penalty})')
+                raise forms.ValidationError(f'Penalty allocation exceeds outstanding amount (Tsh {installment.outstanding_penalty})')
             
             if fees > installment.outstanding_fees:
-                raise forms.ValidationError(f'Fees allocation exceeds outstanding amount (₹{installment.outstanding_fees})')
+                raise forms.ValidationError(f'Fees allocation exceeds outstanding amount (Tsh {installment.outstanding_fees})')
         
         return cleaned_data
 
@@ -437,7 +437,7 @@ class DailyCollectionForm(forms.ModelForm):
         # Set field labels
         self.fields['collection_date'].label = 'Collection Date'
         self.fields['collector'].label = 'Collector'
-        self.fields['target_amount'].label = 'Target Amount (₹)'
+        self.fields['target_amount'].label = 'Target Amount (Tsh)'
         self.fields['target_payments'].label = 'Target Payments'
         self.fields['collection_start_time'].label = 'Start Time'
         self.fields['collection_end_time'].label = 'End Time'
@@ -584,7 +584,7 @@ class CollectionTargetForm(forms.Form):
             'placeholder': 'Enter target amount per collector',
             'required': True
         }),
-        label='Target Amount per Collector (₹)',
+        label='Target Amount per Collector (Tsh)',
         min_value=Decimal('0.01')
     )
 

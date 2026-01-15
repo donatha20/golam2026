@@ -1,0 +1,230 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Payslips{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-file-invoice"></i> Employee Payslips</h2>
+        <div class="btn-group">
+            <a href="{% url 'payroll:period_list' %}" class="btn btn-secondary">
+                <i class="fas fa-calendar-alt"></i> Payroll Periods
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="period" class="form-label">Payroll Period</label>
+                    <select class="form-control" id="period" name="period">
+                        <option value="">All Periods</option>
+                        {% for period in periods %}
+                        <option value="{{ period.id }}" 
+                                {% if request.GET.period == period.id|stringformat:"s" %}selected{% endif %}>
+                            {{ period.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="employee" class="form-label">Employee</label>
+                    <select class="form-control" id="employee" name="employee">
+                        <option value="">All Employees</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}" 
+                                {% if request.GET.employee == employee.id|stringformat:"s" %}selected{% endif %}>
+                            {{ employee.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <a href="{% url 'payroll:payslip_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payslips List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Payslips ({{ payroll_records.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if payroll_records %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Period</th>
+                            <th>Basic Salary</th>
+                            <th>Allowances</th>
+                            <th>Deductions</th>
+                            <th>Gross Pay</th>
+                            <th>Net Pay</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in payroll_records %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if record.employee.photo %}
+                                        <img src="{{ record.employee.photo.url }}" alt="{{ record.employee.get_full_name }}" 
+                                             class="rounded-circle me-2" width="30" height="30">
+                                    {% else %}
+                                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white me-2" 
+                                             style="width: 30px; height: 30px; font-size: 12px;">
+                                            {{ record.employee.first_name.0 }}{{ record.employee.last_name.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ record.employee.get_full_name }}</strong>
+                                        <br><small class="text-muted">{{ record.employee.employee_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {{ record.period.name }}
+                                <br><small class="text-muted">{{ record.period.start_date|date:"M d" }} - {{ record.period.end_date|date:"M d, Y" }}</small>
+                            </td>
+                            <td>Tsh {{ record.basic_salary|floatformat:2 }}</td>
+                            <td>Tsh {{ record.total_allowances|floatformat:2 }}</td>
+                            <td>Tsh {{ record.total_deductions|floatformat:2 }}</td>
+                            <td><strong>Tsh {{ record.gross_pay|floatformat:2 }}</strong></td>
+                            <td><strong class="text-success">Tsh {{ record.net_pay|floatformat:2 }}</strong></td>
+                            <td>
+                                {% if record.is_paid %}
+                                    <span class="badge badge-success">Paid</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-primary" 
+                                            onclick="viewPayslip('{{ record.pk }}')"
+                                            title="View Payslip">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="downloadPayslip('{{ record.pk }}')"
+                                            title="Download PDF">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    {% if not record.is_paid %}
+                                    <button type="button" class="btn btn-sm btn-success" 
+                                            onclick="markAsPaid('{{ record.pk }}')"
+                                            title="Mark as Paid">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                <h4>No Payslips Found</h4>
+                <p class="text-muted">No payslips match your current filter criteria.</p>
+                <a href="{% url 'payroll:period_list' %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i> Create Payroll Period
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Payslip Modal -->
+<div class="modal fade" id="payslipModal" tabindex="-1" aria-labelledby="payslipModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="payslipModalLabel">Employee Payslip</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="payslipContent">
+                <!-- Payslip content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewPayslip(recordId) {
+    // Load payslip content via AJAX
+    fetch(`/payroll/payslip/${recordId}/view/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('payslipContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('payslipModal')).show();
+        })
+        .catch(error => {
+            console.error('Error loading payslip:', error);
+            alert('Error loading payslip. Please try again.');
+        });
+}
+
+function downloadPayslip(recordId) {
+    window.open(`/payroll/payslip/${recordId}/pdf/`, '_blank');
+}
+
+function markAsPaid(recordId) {
+    if (confirm('Are you sure you want to mark this payslip as paid?')) {
+        fetch(`/payroll/record/${recordId}/mark-paid/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error marking payslip as paid');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error marking payslip as paid. Please try again.');
+        });
+    }
+}
+</script>
+{% endblock %}

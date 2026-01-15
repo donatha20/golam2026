@@ -51,7 +51,7 @@
         font-size: 1.25rem;
         font-weight: 600;
         color: #2b7a76;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #2b7a76;
         display: flex;
@@ -59,7 +59,7 @@
         gap: 0.5rem;
     }
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     .form-label {
         display: block;
@@ -256,10 +256,6 @@
 {% block content %}
 <div class="calculator-container">
     <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-calculator"></i>
-            Interest Calculator & Loan Simulator
-        </h1>
         <p class="page-subtitle">Calculate interest rates, payments, and repayment schedules</p>
     </div>
 
@@ -292,7 +288,7 @@
                         <span class="input-addon">Months</span>
                     </div>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="calculateSimpleInterest()">
+                <button type="button" class="btn btn-primary btn-sm" onclick="calculateSimpleInterest()">
                     <i class="fas fa-calculator"></i> Calculate
                 </button>
             </form>
@@ -321,7 +317,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Compounding Frequency</label>
-                    <select id="compound-frequency" class="form-select">
+                    <select id="compound-frequency" class="form-select form-select-sm">
                         <option value="12">Monthly</option>
                         <option value="4">Quarterly</option>
                         <option value="2">Semi-annually</option>
@@ -335,7 +331,7 @@
                         <span class="input-addon">Years</span>
                     </div>
                 </div>
-                <button type="button" class="btn btn-primary" onclick="calculateCompoundInterest()">
+                <button type="button" class="btn btn-primary btn-sm" onclick="calculateCompoundInterest()">
                     <i class="fas fa-calculator"></i> Calculate
                 </button>
             </form>
@@ -385,16 +381,16 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Payment Method</label>
-                        <select id="payment-method" class="form-select">
+                        <select id="payment-method" class="form-select form-select-sm">
                             <option value="equal-installments">Equal Monthly Installments</option>
                             <option value="equal-principal">Equal Principal Payments</option>
                             <option value="interest-only">Interest Only</option>
                         </select>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="calculateLoanPayment()">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="calculateLoanPayment()">
                         <i class="fas fa-calculator"></i> Calculate Payment
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="generateSchedule()">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="generateSchedule()">
                         <i class="fas fa-table"></i> Generate Schedule
                     </button>
                 </form>

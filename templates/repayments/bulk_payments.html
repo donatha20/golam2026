@@ -93,7 +93,7 @@
     .summary-card {
         background: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
@@ -300,7 +300,7 @@ LN003,10000.00,2025-08-05,mobile_money,RCP003,Full settlement</div>
                 <p class="text-muted">or click to browse files</p>
                 <input type="file" id="file-input" name="csv_file" accept=".csv" style="display: none;">
                 <div class="mt-3">
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('file-input').click()">
                         <i class="fas fa-folder-open me-2"></i>Browse Files
                     </button>
                 </div>
@@ -318,7 +318,7 @@ LN003,10000.00,2025-08-05,mobile_money,RCP003,Full settlement</div>
                     </button>
                 </div>
                 <div class="mt-3">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary btn-sm">
                         <i class="fas fa-check me-2"></i>Validate & Preview
                     </button>
                 </div>
@@ -357,7 +357,7 @@ LN003,10000.00,2025-08-05,mobile_money,RCP003,Full settlement</div>
             <form method="post" action="{% url 'repayments:process_bulk_payments' %}" style="display: inline;">
                 {% csrf_token %}
                 <input type="hidden" name="validated_data" value="{{ validated_data_json }}">
-                <button type="submit" class="btn btn-success" onclick="showProcessingOverlay()">
+                <button type="submit" class="btn btn-success btn-sm" onclick="showProcessingOverlay()">
                     <i class="fas fa-play me-2"></i>Process {{ validation_summary.valid_count }} Payments
                 </button>
             </form>
@@ -433,7 +433,7 @@ LN003,10000.00,2025-08-05,mobile_money,RCP003,Full settlement</div>
                 <strong>{{ processing_status.success_count }}</strong> payments processed successfully,
                 <strong>{{ processing_status.failed_count }}</strong> failed.
             </div>
-            <a href="{% url 'repayments:payment_list' %}" class="btn btn-primary">
+            <a href="{% url 'repayments:payment_list' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-list me-2"></i>View Payment History
             </a>
         </div>

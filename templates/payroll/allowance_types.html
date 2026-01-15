@@ -1,0 +1,86 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Allowance Types{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-plus-circle"></i> Allowance Types</h2>
+        <a href="{% url 'payroll:allowance_type_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Allowance Type
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Allowance Types ({{ allowance_types.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if allowance_types %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Is Taxable</th>
+                            <th>Is Fixed</th>
+                            <th>Default Amount</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for allowance_type in allowance_types %}
+                        <tr>
+                            <td><strong>{{ allowance_type.name }}</strong></td>
+                            <td>{{ allowance_type.description|default:"-" }}</td>
+                            <td>
+                                {% if allowance_type.is_taxable %}
+                                    <span class="badge badge-warning">Yes</span>
+                                {% else %}
+                                    <span class="badge badge-info">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if allowance_type.is_fixed_amount %}
+                                    <span class="badge badge-primary">Fixed</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Variable</span>
+                                {% endif %}
+                            </td>
+                            <td>Tsh {{ allowance_type.default_amount|floatformat:2|default:"-" }}</td>
+                            <td>
+                                {% if allowance_type.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+                <h4>No Allowance Types Found</h4>
+                <p class="text-muted">Create allowance types to add to employee pay.</p>
+                <a href="{% url 'payroll:allowance_type_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add First Allowance Type
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

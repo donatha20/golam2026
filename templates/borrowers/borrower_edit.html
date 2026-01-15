@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -14,13 +14,13 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-edit me-2 text-primary-teal"></i>
                     Edit Borrower: {{ borrower.get_full_name }}
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
@@ -160,7 +160,7 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'borrowers:borrower_detail' borrower.id %}" class="btn btn-secondary">
+                                <a href="{% url 'borrowers:borrower_detail' borrower.id %}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left me-1"></i>Cancel
                                 </a>
                                 <button type="submit" class="btn btn-primary-teal">

@@ -14,7 +14,7 @@
     .report-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
@@ -93,7 +93,7 @@
     .breadcrumb {
         background: transparent;
         padding: 0;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .breadcrumb-item + .breadcrumb-item::before {
@@ -134,7 +134,7 @@
         <div class="row mb-4">
             <div class="col-md-3">
                 <label for="report_type" class="form-label">Report Type</label>
-                <select class="form-select" id="report_type" name="report_type">
+                <select class="form-select form-select-sm" id="report_type" name="report_type">
                     <option value="account_summary">Account Summary</option>
                     <option value="transaction_summary">Transaction Summary</option>
                     <option value="interest_summary">Interest Summary</option>
@@ -143,15 +143,15 @@
             </div>
             <div class="col-md-3">
                 <label for="date_from" class="form-label">From Date</label>
-                <input type="date" class="form-control" id="date_from" name="date_from">
+                <input type="date" class="form-control form-control-sm" id="date_from" name="date_from">
             </div>
             <div class="col-md-3">
                 <label for="date_to" class="form-label">To Date</label>
-                <input type="date" class="form-control" id="date_to" name="date_to">
+                <input type="date" class="form-control form-control-sm" id="date_to" name="date_to">
             </div>
             <div class="col-md-3">
                 <label for="branch" class="form-label">Branch</label>
-                <select class="form-select" id="branch" name="branch">
+                <select class="form-select form-select-sm" id="branch" name="branch">
                     <option value="">All Branches</option>
                     {% for branch in branches %}
                         <option value="{{ branch.id }}">{{ branch.name }}</option>
@@ -274,7 +274,7 @@ $(document).ready(function() {
     .report-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
@@ -353,7 +353,7 @@ $(document).ready(function() {
     .breadcrumb {
         background: transparent;
         padding: 0;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .breadcrumb-item + .breadcrumb-item::before {
@@ -397,7 +397,7 @@ $(document).ready(function() {
         <div class="row mb-4">
             <div class="col-md-3">
                 <label for="report_type" class="form-label">Report Type</label>
-                <select class="form-select" id="report_type" name="report_type">
+                <select class="form-select form-select-sm" id="report_type" name="report_type">
                     <option value="account_summary">Account Summary</option>
                     <option value="transaction_summary">Transaction Summary</option>
                     <option value="interest_summary">Interest Summary</option>
@@ -406,15 +406,15 @@ $(document).ready(function() {
             </div>
             <div class="col-md-3">
                 <label for="date_from" class="form-label">From Date</label>
-                <input type="date" class="form-control" id="date_from" name="date_from">
+                <input type="date" class="form-control form-control-sm" id="date_from" name="date_from">
             </div>
             <div class="col-md-3">
                 <label for="date_to" class="form-label">To Date</label>
-                <input type="date" class="form-control" id="date_to" name="date_to">
+                <input type="date" class="form-control form-control-sm" id="date_to" name="date_to">
             </div>
             <div class="col-md-3">
                 <label for="branch" class="form-label">Branch</label>
-                <select class="form-select" id="branch" name="branch">
+                <select class="form-select form-select-sm" id="branch" name="branch">
                     <option value="">All Branches</option>
                     {% for branch in branches %}
                         <option value="{{ branch.id }}">{{ branch.name }}</option>
@@ -539,10 +539,10 @@ $(document).ready(function() {
                     <!-- Account Summary Report -->
                     <div class="report-section" id="account-summary-report">
                         <h6 class="text-primary-teal mb-3">Account Summary Report</h6>
-                        <div class="row mb-3">
+                        <div class="row mb-compact">
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-primary-teal">{{ total_accounts }}</h5>
                                         <p class="card-text">Total Accounts</p>
                                     </div>
@@ -550,7 +550,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-success">{{ active_accounts }}</h5>
                                         <p class="card-text">Active Accounts</p>
                                     </div>
@@ -558,7 +558,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-warning">{{ dormant_accounts }}</h5>
                                         <p class="card-text">Dormant Accounts</p>
                                     </div>
@@ -566,7 +566,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-info">{{ total_balance|floatformat:0 }}</h5>
                                         <p class="card-text">Total Balance</p>
                                     </div>
@@ -575,7 +575,7 @@ $(document).ready(function() {
                         </div>
                         
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-sm">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Account Number</th>
@@ -613,10 +613,10 @@ $(document).ready(function() {
                     <!-- Transaction Summary Report -->
                     <div class="report-section" id="transaction-summary-report" style="display: none;">
                         <h6 class="text-primary-teal mb-3">Transaction Summary Report</h6>
-                        <div class="row mb-3">
+                        <div class="row mb-compact">
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-success">{{ total_deposits|floatformat:0 }}</h5>
                                         <p class="card-text">Total Deposits</p>
                                     </div>
@@ -624,7 +624,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-warning">{{ total_withdrawals|floatformat:0 }}</h5>
                                         <p class="card-text">Total Withdrawals</p>
                                     </div>
@@ -632,7 +632,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-info">{{ net_deposits|floatformat:0 }}</h5>
                                         <p class="card-text">Net Deposits</p>
                                     </div>
@@ -640,7 +640,7 @@ $(document).ready(function() {
                             </div>
                             <div class="col-md-3">
                                 <div class="card text-center">
-                                    <div class="card-body">
+                                    <div class="card-body p-compact">
                                         <h5 class="card-title text-primary-teal">{{ transaction_count }}</h5>
                                         <p class="card-text">Total Transactions</p>
                                     </div>
@@ -649,7 +649,7 @@ $(document).ready(function() {
                         </div>
                         
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-sm">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Date</th>

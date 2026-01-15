@@ -14,25 +14,25 @@
                     Savings Transactions
                 </h5>
                 <div class="d-flex gap-2">
-                    <a href="{% url 'savings:process_transaction' %}" class="btn btn-success">
+                    <a href="{% url 'savings:process_transaction' %}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus me-1"></i>New Transaction
                     </a>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Filters -->
-                <div class="row mb-3">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <label for="date_from" class="form-label">From Date</label>
-                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
+                        <input type="date" class="form-control form-control-sm" id="date_from" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
                     </div>
                     <div class="col-md-3">
                         <label for="date_to" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
+                        <input type="date" class="form-control form-control-sm" id="date_to" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
                     </div>
                     <div class="col-md-3">
                         <label for="transaction_type" class="form-label">Type</label>
-                        <select class="form-control" id="transaction_type" name="transaction_type">
+                        <select class="form-control form-control-sm" id="transaction_type" name="transaction_type">
                             <option value="">All Types</option>
                             {% for value, label in transaction_types %}
                                 <option value="{{ value }}">{{ label }}</option>
@@ -51,7 +51,7 @@
 
                 {% if transactions %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-sm">
                             <thead class="table-light">
                                 <tr>
                                     <th>Date</th>
@@ -160,7 +160,7 @@
                         <h5>No Transactions Found</h5>
                         <p class="text-muted">No savings transactions match your criteria.</p>
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="{% url 'savings:process_transaction' %}" class="btn btn-success">
+                            <a href="{% url 'savings:process_transaction' %}" class="btn btn-success btn-sm">
                                 <i class="fas fa-plus me-1"></i>Process Transaction
                             </a>
                         </div>

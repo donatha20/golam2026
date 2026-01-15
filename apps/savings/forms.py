@@ -58,7 +58,7 @@ class SavingsAccountForm(forms.ModelForm):
             self.fields['opened_date'].initial = timezone.now().date()
         
         # Filter querysets
-        self.fields['borrower'].queryset = Borrower.objects.filter(is_active=True).order_by('first_name', 'last_name')
+        self.fields['borrower'].queryset = Borrower.objects.filter(status='active').order_by('first_name', 'last_name')
         self.fields['savings_product'].queryset = SavingsProduct.objects.filter(is_active=True)
     
     def clean_borrower(self):
@@ -144,7 +144,7 @@ class SavingsTransactionForm(forms.ModelForm):
         # Set field labels
         self.fields['savings_account'].label = 'Savings Account'
         self.fields['transaction_type'].label = 'Transaction Type'
-        self.fields['amount'].label = 'Amount (₹)'
+        self.fields['amount'].label = 'Amount (Tsh)'
         self.fields['description'].label = 'Description'
         self.fields['transaction_date'].label = 'Transaction Date'
         self.fields['reference_number'].label = 'Reference Number'
@@ -294,15 +294,15 @@ class SavingsProductForm(forms.ModelForm):
         self.fields['interest_rate'].label = 'Interest Rate (%)'
         self.fields['interest_calculation_method'].label = 'Interest Calculation Method'
         self.fields['interest_posting_frequency'].label = 'Interest Posting Frequency'
-        self.fields['minimum_opening_balance'].label = 'Minimum Opening Balance (₹)'
-        self.fields['minimum_balance'].label = 'Minimum Balance (₹)'
-        self.fields['maximum_balance'].label = 'Maximum Balance (₹)'
-        self.fields['minimum_deposit'].label = 'Minimum Deposit (₹)'
-        self.fields['maximum_deposit_per_day'].label = 'Daily Deposit Limit (₹)'
-        self.fields['minimum_withdrawal'].label = 'Minimum Withdrawal (₹)'
-        self.fields['maximum_withdrawal_per_day'].label = 'Daily Withdrawal Limit (₹)'
-        self.fields['account_maintenance_fee'].label = 'Monthly Maintenance Fee (₹)'
-        self.fields['withdrawal_fee'].label = 'Withdrawal Fee (₹)'
+        self.fields['minimum_opening_balance'].label = 'Minimum Opening Balance (Tsh)'
+        self.fields['minimum_balance'].label = 'Minimum Balance (Tsh)'
+        self.fields['maximum_balance'].label = 'Maximum Balance (Tsh)'
+        self.fields['minimum_deposit'].label = 'Minimum Deposit (Tsh)'
+        self.fields['maximum_deposit_per_day'].label = 'Daily Deposit Limit (Tsh)'
+        self.fields['minimum_withdrawal'].label = 'Minimum Withdrawal (Tsh)'
+        self.fields['maximum_withdrawal_per_day'].label = 'Daily Withdrawal Limit (Tsh)'
+        self.fields['account_maintenance_fee'].label = 'Monthly Maintenance Fee (Tsh)'
+        self.fields['withdrawal_fee'].label = 'Withdrawal Fee (Tsh)'
         self.fields['is_active'].label = 'Is Active'
         self.fields['requires_approval'].label = 'Requires Approval'
         self.fields['allow_overdraft'].label = 'Allow Overdraft'
@@ -404,10 +404,10 @@ class SavingsLoanRuleForm(forms.ModelForm):
         self.fields['description'].label = 'Description'
         self.fields['rule_type'].label = 'Rule Type'
         self.fields['loan_type'].label = 'Loan Type'
-        self.fields['minimum_balance_required'].label = 'Minimum Balance Required (₹)'
+        self.fields['minimum_balance_required'].label = 'Minimum Balance Required (Tsh)'
         self.fields['minimum_savings_period_months'].label = 'Minimum Savings Period (Months)'
         self.fields['savings_to_loan_ratio'].label = 'Savings to Loan Ratio (%)'
-        self.fields['mandatory_savings_amount'].label = 'Mandatory Savings Amount (₹)'
+        self.fields['mandatory_savings_amount'].label = 'Mandatory Savings Amount (Tsh)'
         self.fields['is_active'].label = 'Is Active'
         self.fields['is_mandatory'].label = 'Is Mandatory'
         self.fields['grace_period_days'].label = 'Grace Period (Days)'

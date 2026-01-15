@@ -989,7 +989,7 @@ class DailyCollection(AuditModel):
         if amount_discrepancy > tolerance or count_discrepancy > 0:
             self.has_discrepancy = True
             self.discrepancy_amount = amount_discrepancy
-            self.discrepancy_reason = f"Amount variance: ₹{amount_discrepancy}, Count variance: {count_discrepancy}"
+            self.discrepancy_reason = f"Amount variance: Tsh {amount_discrepancy}, Count variance: {count_discrepancy}"
             self.validation_status = 'discrepancy'
         else:
             self.has_discrepancy = False
@@ -1418,7 +1418,7 @@ class OutstandingBalance(models.Model):
         unique_together = ['loan', 'balance_date']
 
     def __str__(self):
-        return f"{self.loan.loan_number} - {self.balance_date} - ₹{self.total_outstanding}"
+        return f"{self.loan.loan_number} - {self.balance_date} - Tsh {self.total_outstanding}"
 
     def save(self, *args, **kwargs):
         self.total_outstanding = (

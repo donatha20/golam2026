@@ -12,7 +12,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -90,7 +90,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -160,7 +160,7 @@
         background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
         border: 2px solid #fca5a5;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
     }
@@ -187,15 +187,11 @@
 <div class="container-fluid">
     <!-- Alert Section -->
     <div class="alert-section">
-        <h2 class="alert-title">
-            <i class="fas fa-exclamation-triangle"></i>
-            Written Off Loans
-        </h2>
         <p class="alert-message">
             These loans have been written off as uncollectible. This represents a loss to the organization and should be carefully monitored for recovery opportunities.
         </p>
     </div>
-
+<!--
     <div class="d-flex justify-content-end mb-3">
         <div class="btn-group">
             <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-outline-primary btn-sm">
@@ -210,7 +206,7 @@
         </div>
     </div>
 
-    <!-- Statistics -->
+    <!-- Statistics 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value">{{ total_written_off|default:0 }}</div>
@@ -229,7 +225,7 @@
             <div class="stat-label">Recovery Rate</div>
         </div>
     </div>
-
+-->
     <!-- Data Table -->
     <div class="table-container">
         <div class="table-controls">

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 
 {% block title %}Income Records{% endblock %}
@@ -9,11 +9,12 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="row">
-    <!-- Statistics Cards -->
+    <!-- Statistics Cards -
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-success">{{ stats.total_income|floatformat:0 }}</h5>
                 <p class="card-text">Total Income</p>
             </div>
@@ -21,7 +22,7 @@
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-info">{{ stats.monthly_income|floatformat:0 }}</h5>
                 <p class="card-text">This Month</p>
             </div>
@@ -29,7 +30,7 @@
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-warning">{{ stats.pending_income|floatformat:0 }}</h5>
                 <p class="card-text">Pending Income</p>
             </div>
@@ -37,7 +38,7 @@
     </div>
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-primary-teal">{{ stats.income_count }}</h5>
                 <p class="card-text">Total Records</p>
             </div>
@@ -57,12 +58,13 @@
                     <i class="fas fa-plus me-1"></i>Add Income
                 </a>
             </div>
-            <div class="card-body">
+        -->
+            <div class="card-body p-compact">
                 <!-- Filters -->
-                <div class="row mb-3">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <label for="source" class="form-label">Income Source</label>
-                        <select class="form-control" id="source" name="source">
+                        <select class="form-control form-control-sm" id="source" name="source">
                             <option value="">All Sources</option>
                             {% for value, label in income_sources %}
                                 <option value="{{ value }}" {% if filters.source == value %}selected{% endif %}>{{ label }}</option>
@@ -71,7 +73,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="status" class="form-label">Status</label>
-                        <select class="form-control" id="status" name="status">
+                        <select class="form-control form-control-sm" id="status" name="status">
                             <option value="">All Status</option>
                             <option value="PENDING" {% if filters.status == 'PENDING' %}selected{% endif %}>Pending</option>
                             <option value="RECEIVED" {% if filters.status == 'RECEIVED' %}selected{% endif %}>Received</option>
@@ -80,15 +82,15 @@
                     </div>
                     <div class="col-md-3">
                         <label for="date_from" class="form-label">From Date</label>
-                        <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filters.date_from }}">
+                        <input type="date" class="form-control form-control-sm" id="date_from" name="date_from" value="{{ filters.date_from }}">
                     </div>
                     <div class="col-md-3">
                         <label for="date_to" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filters.date_to }}">
+                        <input type="date" class="form-control form-control-sm" id="date_to" name="date_to" value="{{ filters.date_to }}">
                     </div>
                 </div>
                 
-                <div class="row mb-3">
+                <div class="row mb-compact">
                     <div class="col-md-12">
                         <button type="button" class="btn btn-outline-secondary" id="filter-btn">
                             <i class="fas fa-filter me-1"></i>Apply Filters
@@ -104,7 +106,7 @@
 
                 <!-- Income Table -->
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
                                 <th>Income ID</th>

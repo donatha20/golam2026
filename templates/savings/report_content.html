@@ -3,12 +3,12 @@
 <div class="report-results">
     {% if report_type == 'account_summary' %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5><i class="fas fa-chart-bar"></i> Account Summary Report</h5>
                 <small class="text-muted">From {{ date_from }} to {{ date_to }}</small>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-compact">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <div class="stat-card bg-primary text-white">
                             <div class="stat-number">{{ total_accounts|intcomma }}</div>
@@ -30,7 +30,7 @@
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>Account Number</th>
@@ -68,12 +68,12 @@
         
     {% elif report_type == 'transaction_summary' %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5><i class="fas fa-exchange-alt"></i> Transaction Summary Report</h5>
                 <small class="text-muted">From {{ date_from }} to {{ date_to }}</small>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-compact">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <div class="stat-card bg-primary text-white">
                             <div class="stat-number">{{ total_transactions|intcomma }}</div>
@@ -101,7 +101,7 @@
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>Date</th>
@@ -139,12 +139,12 @@
         
     {% elif report_type == 'interest_summary' %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5><i class="fas fa-percentage"></i> Interest Summary Report</h5>
                 <small class="text-muted">From {{ date_from }} to {{ date_to }}</small>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-compact">
+                <div class="row mb-compact">
                     <div class="col-md-6">
                         <div class="stat-card bg-success text-white">
                             <div class="stat-number">₹{{ total_interest|floatformat:2|intcomma }}</div>
@@ -160,7 +160,7 @@
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>Account</th>
@@ -194,12 +194,12 @@
         
     {% elif report_type == 'balance_summary' %}
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5><i class="fas fa-wallet"></i> Balance Summary Report</h5>
                 <small class="text-muted">As of {{ date_to }}</small>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
+            <div class="card-body p-compact">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <div class="stat-card bg-primary text-white">
                             <div class="stat-number">₹{{ total_balance|floatformat:2|intcomma }}</div>
@@ -227,7 +227,7 @@
                 </div>
                 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>Account Number</th>

@@ -16,13 +16,13 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
     
     .health-card {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
         backdrop-filter: blur(10px);
     }
@@ -53,8 +53,8 @@
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
         transition: all 0.3s ease;
     }
     
@@ -534,7 +534,7 @@
                 </h5>
                 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary" onclick="runFullTest()">
+                    <button class="btn btn-primary btn-sm" onclick="runFullTest()">
                         <i class="fas fa-play me-2"></i>Run Full Test Suite
                     </button>
                     <button class="btn btn-outline-primary" onclick="generateReport()">

@@ -5,15 +5,19 @@ Development settings for microfinance_system project.
 from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Database for development
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'golam_db',
+        'USER': 'golam_admin',
+        'PASSWORD': 'donatha@98M',
+        'HOST': 'localhost',
+        'PORT': '15432',
     }
 }
 
@@ -29,24 +33,24 @@ ADMINS = [
 AUTO_APPROVE_USERS = True  # Set to True for testing
 
 # Add debug toolbar for development
-try:
-    import debug_toolbar
-    INSTALLED_APPS += [
-        'debug_toolbar',
-    ]
-
-    MIDDLEWARE += [
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-    ]
-except ImportError:
+#try:
+#    ##import debug_toolbar
+#    INSTALLED_APPS += [
+#        'debug_toolbar',
+#    ]
+#
+ #   MIDDLEWARE += [
+#       'debug_toolbar.middleware.DebugToolbarMiddleware',
+ #   ]
+#except ImportError:
     # Debug toolbar not installed, skip
-    pass
+ #   pass
 
 # Debug toolbar configuration
-INTERNAL_IPS = [
-    '127.0.0.1',
-    'localhost',
-]
+#INTERNAL_IPS = [
+#    '127.0.0.1',
+ #   'localhost',
+#]
 
 # Logging Configuration for Development
 LOGGING = {

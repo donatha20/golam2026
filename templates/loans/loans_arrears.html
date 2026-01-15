@@ -13,7 +13,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .stat-card {
@@ -208,7 +208,7 @@
         background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
         border: 2px solid #fca5a5;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
     }
@@ -233,7 +233,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -368,14 +368,14 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
 
     .filters-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -526,7 +526,7 @@
     </p>
 </div>
 
-<!-- Stats Cards -->
+<!-- Stats Cards 
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-title">Total Arrears</div>
@@ -561,8 +561,8 @@
         </div>
     </div>
 </div>
-
-<!-- Severity Breakdown -->
+-->
+<!-- Severity Breakdown 
 <div class="filters-section">
     <h3 class="filters-title">Arrears by Severity</h3>
     <div class="filters-grid">
@@ -592,8 +592,8 @@
         </div>
     </div>
 </div>
-
-<!-- Filters Section -->
+-->
+<!-- Filters Section 
 <div class="filters-section">
     <h3 class="filters-title">Filter Arrears</h3>
     <form method="get" class="filters-form">
@@ -631,8 +631,8 @@
         </div>
     </form>
 </div>
-
-<!-- Action Buttons -->
+-->
+<!-- Action Buttons 
 <div class="action-buttons-section">
     <div class="action-buttons-grid">
         <a href="{% url 'repayments:record_repayment' %}" class="action-btn action-btn-primary">
@@ -653,7 +653,7 @@
         </a>
     </div>
 </div>
-
+-->
 <!-- Arrears Table -->
 <div class="table-container">
     {% if table.data %}
@@ -663,7 +663,7 @@
             <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: #16a34a;"></i>
             <h3>No Loans in Arrears</h3>
             <p>Excellent! No loans are currently in arrears matching your criteria.</p>
-            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-primary" style="margin-top: 1rem;">
+            <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
                 <i class="fas fa-list"></i> View Outstanding Loans
             </a>
         </div>

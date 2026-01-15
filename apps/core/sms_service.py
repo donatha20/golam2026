@@ -130,6 +130,29 @@ class SMSService:
             template_name='loan_approval'
         )
     
+    def send_loan_rejection(self, loan):
+        """Send loan rejection SMS."""
+        borrower = loan.borrower
+        
+        if not borrower.phone_number:
+            return {'success': False, 'error': 'No phone number available'}
+        
+        context = {
+            'borrower_name': borrower.get_full_name(),
+            'loan_number': loan.loan_number,
+            'rejection_reason': loan.rejection_reason,
+            'contact_info': getattr(settings, 'ORGANIZATION_CONTACT', 'Please contact us for more information'),
+            'organization_name': getattr(settings, 'ORGANIZATION_NAME', 'Microfinance'),
+        }
+        
+        message = render_to_string('sms/loan_rejection.txt', context).strip()
+        
+        return self.send_sms(
+            borrower.phone_number, 
+            message, 
+            template_name='loan_rejection'
+        )
+    
     def send_loan_disbursement(self, loan):
         """Send loan disbursement SMS."""
         borrower = loan.borrower

@@ -26,14 +26,14 @@
     
     .form-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: #f9fafb;
     }
     
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #2b7a76;
         margin: 0 0 1.5rem 0;
@@ -161,12 +161,12 @@
         background: #f0fdfa;
         border: 1px solid #5eead4;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
 
     .loan-details-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #0f766e;
         margin-bottom: 1rem;
@@ -201,7 +201,7 @@
         background: #fffbeb;
         border: 1px solid #fbbf24;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 1rem;
     }
 
@@ -234,7 +234,7 @@
         background: #fef3c7;
         margin: 0 -1rem;
         padding: 0.75rem 1rem;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 700;
     }
 </style>
@@ -445,7 +445,7 @@
             <button type="submit" class="btn-primary">
                 <i class="fas fa-save"></i> Record Payment
             </button>
-            <a href="{% url 'loans:loan_repayments' %}" class="btn-secondary">
+            <a href="{% url 'loans:loan_repayments' schedule.loan.id %}" class="btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
         </div>

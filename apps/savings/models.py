@@ -361,7 +361,7 @@ class SavingsLoanRule(models.Model):
             if savings_account.balance >= self.minimum_balance_required:
                 return True, "Minimum balance requirement met"
             else:
-                return False, f"Minimum balance of ₹{self.minimum_balance_required} required. Current balance: ₹{savings_account.balance}"
+                return False, f"Minimum balance of Tsh {self.minimum_balance_required} required. Current balance: Tsh {savings_account.balance}"
 
         elif self.rule_type == 'savings_period':
             account_age_months = (timezone.now().date() - savings_account.opened_date).days / 30.44
@@ -375,13 +375,13 @@ class SavingsLoanRule(models.Model):
             if savings_account.balance >= required_savings:
                 return True, "Savings to loan ratio requirement met"
             else:
-                return False, f"Savings of ₹{required_savings} required for loan of ₹{loan_amount}. Current savings: ₹{savings_account.balance}"
+                return False, f"Savings of Tsh {required_savings} required for loan of Tsh {loan_amount}. Current savings: Tsh {savings_account.balance}"
 
         elif self.rule_type == 'mandatory_savings':
             if savings_account.balance >= self.mandatory_savings_amount:
                 return True, "Mandatory savings requirement met"
             else:
-                return False, f"Mandatory savings of ₹{self.mandatory_savings_amount} required. Current savings: ₹{savings_account.balance}"
+                return False, f"Mandatory savings of Tsh {self.mandatory_savings_amount} required. Current savings: Tsh {savings_account.balance}"
 
         return True, "Rule check passed"
 
@@ -593,7 +593,7 @@ class SavingsAccount(AuditModel):
 
         remaining_balance = self.balance - amount
         if remaining_balance < self.minimum_balance_required:
-            return False, f"Withdrawal would bring balance below minimum required (₹{self.minimum_balance_required})"
+            return False, f"Withdrawal would bring balance below minimum required (Tsh {self.minimum_balance_required})"
 
         # Check daily withdrawal limit
         if self.savings_product.maximum_withdrawal_per_day:
@@ -603,7 +603,7 @@ class SavingsAccount(AuditModel):
             ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
             if today_withdrawals + amount > self.savings_product.maximum_withdrawal_per_day:
-                return False, f"Daily withdrawal limit of ₹{self.savings_product.maximum_withdrawal_per_day} exceeded"
+                return False, f"Daily withdrawal limit of Tsh {self.savings_product.maximum_withdrawal_per_day} exceeded"
 
         return True, "Withdrawal allowed"
 
@@ -616,12 +616,12 @@ class SavingsAccount(AuditModel):
             return False, "Invalid deposit amount"
 
         if amount < self.savings_product.minimum_deposit:
-            return False, f"Minimum deposit amount is ₹{self.savings_product.minimum_deposit}"
+            return False, f"Minimum deposit amount is Tsh {self.savings_product.minimum_deposit}"
 
         # Check maximum balance limit
         if self.savings_product.maximum_balance:
             if self.balance + amount > self.savings_product.maximum_balance:
-                return False, f"Deposit would exceed maximum balance limit of ₹{self.savings_product.maximum_balance}"
+                return False, f"Deposit would exceed maximum balance limit of Tsh {self.savings_product.maximum_balance}"
 
         # Check daily deposit limit
         if self.savings_product.maximum_deposit_per_day:
@@ -631,7 +631,7 @@ class SavingsAccount(AuditModel):
             ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
             if today_deposits + amount > self.savings_product.maximum_deposit_per_day:
-                return False, f"Daily deposit limit of ₹{self.savings_product.maximum_deposit_per_day} exceeded"
+                return False, f"Daily deposit limit of Tsh {self.savings_product.maximum_deposit_per_day} exceeded"
 
         return True, "Deposit allowed"
 
@@ -867,7 +867,7 @@ class SavingsInterestCalculation(models.Model):
         unique_together = ['savings_account', 'period_start_date', 'period_end_date']
 
     def __str__(self):
-        return f"{self.savings_account.account_number} - {self.calculation_date} - ₹{self.interest_amount}"
+        return f"{self.savings_account.account_number} - {self.calculation_date} - Tsh {self.interest_amount}"
 
 
 class SavingsAccountHold(models.Model):
@@ -930,7 +930,7 @@ class SavingsAccountHold(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.savings_account.account_number} - {self.get_hold_type_display()} - ₹{self.hold_amount}"
+        return f"{self.savings_account.account_number} - {self.get_hold_type_display()} - Tsh {self.hold_amount}"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

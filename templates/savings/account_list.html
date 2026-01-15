@@ -114,14 +114,14 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
 
     .filters-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -224,7 +224,7 @@
     }
 
     .section-header {
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
         display: flex;
         justify-content: space-between;
@@ -232,7 +232,7 @@
     }
 
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         display: flex;
@@ -372,7 +372,7 @@
 
     /* Pagination */
     .pagination-section {
-        padding: 1.5rem;
+        padding: 1rem;
         border-top: 1px solid #e5e7eb;
         display: flex;
         justify-content: space-between;
@@ -493,7 +493,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Product</label>
-                    <select name="product" class="form-select">
+                    <select name="product" class="form-select form-select-sm">
                         <option value="">All Products</option>
                         {% for product in products %}
                             <option value="{{ product.id }}" {% if product.id|stringformat:"s" == product_id %}selected{% endif %}>
@@ -505,7 +505,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
+                    <select name="status" class="form-select form-select-sm">
                         <option value="">All Statuses</option>
                         {% for value, label in account_statuses %}
                             <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>

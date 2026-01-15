@@ -37,14 +37,14 @@
 
     .form-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         background: #f9fafb;
     }
 
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -54,7 +54,7 @@
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .form-label {
@@ -207,7 +207,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         .form-row,
@@ -258,7 +258,7 @@
                         type="text" 
                         id="name" 
                         name="name" 
-                        class="form-control" 
+                        class="form-control form-control-sm" 
                         required
                         placeholder="e.g., ATM Withdrawal Fee"
                         maxlength="100"
@@ -269,7 +269,7 @@
                 {% if charge_type == 'service' %}
                 <div class="form-group">
                     <label for="frequency" class="form-label">Frequency</label>
-                    <select id="frequency" name="frequency" class="form-control">
+                    <select id="frequency" name="frequency" class="form-control form-control-sm">
                         <option value="per_transaction">Per Transaction</option>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -288,7 +288,7 @@
                 <textarea 
                     id="description" 
                     name="description" 
-                    class="form-control"
+                    class="form-control form-control-sm"
                     placeholder="Describe when and how this charge applies..."
                     rows="3"
                 ></textarea>
@@ -344,7 +344,7 @@
                             type="number" 
                             id="fixed_amount" 
                             name="fixed_amount" 
-                            class="form-control" 
+                            class="form-control form-control-sm" 
                             step="0.01"
                             min="0"
                             value="0.00"
@@ -363,7 +363,7 @@
                             type="number" 
                             id="percentage_rate" 
                             name="percentage_rate" 
-                            class="form-control" 
+                            class="form-control form-control-sm" 
                             step="0.01"
                             min="0"
                             max="100"
@@ -379,7 +379,7 @@
                                 type="number" 
                                 id="minimum_amount" 
                                 name="minimum_amount" 
-                                class="form-control" 
+                                class="form-control form-control-sm" 
                                 step="0.01"
                                 min="0"
                                 value="0.00"
@@ -395,7 +395,7 @@
                                 type="number" 
                                 id="maximum_amount" 
                                 name="maximum_amount" 
-                                class="form-control" 
+                                class="form-control form-control-sm" 
                                 step="0.01"
                                 min="0"
                                 placeholder="No limit"
@@ -408,10 +408,10 @@
         </div>
 
         <div class="btn-group">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fas fa-save"></i> Save Charge Configuration
             </button>
-            <a href="{% if charge_type == 'withdrawal' %}{% url 'savings:view_withdraw_charges' %}{% else %}{% url 'savings:view_service_charges' %}{% endif %}" class="btn btn-secondary">
+            <a href="{% if charge_type == 'withdrawal' %}{% url 'savings:view_withdraw_charges' %}{% else %}{% url 'savings:view_service_charges' %}{% endif %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-times"></i> Cancel
             </a>
         </div>

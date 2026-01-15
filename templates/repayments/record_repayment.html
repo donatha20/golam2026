@@ -19,7 +19,7 @@
         background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
         color: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
     
@@ -47,8 +47,8 @@
     .payment-allocation {
         background: #f8f9fa;
         border-radius: 8px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
     }
     
     .allocation-grid {
@@ -150,6 +150,104 @@
         background: #1e7570;
         color: white;
     }
+    
+    /* Consistent teal color scheme */
+    .btn-teal {
+        background: #2b7a76 !important; 
+        color: #ffffff !important;      
+        border: 1px solid #2b7a76;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-teal:hover {
+        background: #1f5d5a !important;
+        border-color: #1f5d5a;
+        color: #ffffff !important; 
+    }
+    
+    .btn-outline-teal {
+        background: transparent;
+        color: #2b7a76;
+        border: 1px solid #2b7a76;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-teal:hover {
+        background: #2b7a76;
+        color: white;
+    }
+    
+    .text-teal {
+        color: #2b7a76 !important;
+    }
+    
+    /* Section styling */
+    .section-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .section-title {
+        color: #2b7a76;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+    }
+    
+    .selected-info-card {
+        background: #f0f9f9;
+        border: 1px solid #2b7a76;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .loan-selection-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    /* Form controls */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 0.2rem rgba(43, 122, 118, 0.25);
+    }
+    
+    /* Dropdown styling */
+    .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .borrower-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f1f1f1;
+        transition: background-color 0.2s;
+    }
+    
+    .borrower-item:hover {
+        background-color: #f0f9f9;
+    }
 </style>
 {% endblock %}
 
@@ -158,11 +256,10 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 mb-0">Record Payment</h1>
             <p class="text-muted">Process loan repayment and update balances</p>
         </div>
         <div>
-            <a href="{% url 'repayments:dashboard' %}" class="btn btn-primary">
+            <a href="{% url 'repayments:dashboard' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
             </a>
         </div>
@@ -172,152 +269,131 @@
         <div class="col-12">
             <!-- Payment Form -->
             <div class="payment-form-container">
-                <div class="row">
-                    <!-- Left side - Form -->
-                    <div class="col-lg-8 col-md-12">
-                        <h4 class="mb-4">
-                            <i class="fas fa-money-bill-wave me-2 text-primary"></i>
-                            Payment Details
-                        </h4>
+                <h4 class="mb-compact">
+                    <i class="fas fa-money-bill-wave me-2 text-teal"></i>
+                    Record Payment
+                </h4>
 
-                        <form method="post" id="payment-form">
-                            {% csrf_token %}
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.loan|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.payment_method|as_crispy_field }}
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        {{ form.amount|as_crispy_field }}
-                                        <div class="quick-amounts">
-                                            <button type="button" class="quick-amount-btn" data-amount="full">Full Outstanding</button>
-                                            <button type="button" class="quick-amount-btn" data-amount="installment">Next Installment</button>
-                                            <button type="button" class="quick-amount-btn" data-amount="overdue">Overdue Amount</button>
-                                        </div>
+                <form method="post" id="payment-form">
+                    {% csrf_token %}
+                    
+                    <!-- Borrower Search Section -->
+                    <div class="section-card mb-4">
+                        <h5 class="section-title">
+                            Search Borrower (Main Branch)
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-lg-8 col-md-10">
+                                <div class="mb-3">
+                                    <label for="borrower-search" class="form-label">Search by name, phone, or member ID</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-sm" id="borrower-search" 
+                                               placeholder="anna" autocomplete="off">
+                                        <button class="btn btn-teal" type="button" id="search-btn">
+                                            <i class="fas fa-search"></i> Click Here To Search
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.payment_date|as_crispy_field }}
+                                    <div id="borrower-results" class="dropdown-menu w-100" style="max-height: 300px; overflow-y: auto;"></div>
                                 </div>
                             </div>
-
+                        </div>
+                        
+                        <!-- Selected Borrower Display -->
+                        <div id="selected-borrower" class="selected-info-card">
                             <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.payment_type|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.receipt_number|as_crispy_field }}
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.transaction_id|as_crispy_field }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.external_reference|as_crispy_field }}
+                                <div class="col-lg-8 col-md-10">
+                                    <label for="borrower-select" class="form-label"><strong>Select Borrower</strong></label>
+                                    <select class="form-select form-select-sm" id="borrower-select" name="borrower">
+                                        <option value="">Select a borrower...</option>
+                                    </select>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                {{ form.notes|as_crispy_field }}
-                            </div>
-
-                            <div class="d-flex gap-3">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Process Payment
-                                </button>
-                                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
-                                    <i class="fas fa-times me-2"></i>Cancel
-                                </button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-
-                    <!-- Right side - Information panels -->
-                    <div class="col-lg-4 col-md-12">
-                        <!-- Loan Information Card -->
-                        <div class="loan-info-card" id="loan-info" style="display: none;">
-                            <h6 class="mb-3">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Loan Information
-                            </h6>
+                    
+                    <!-- Loan Selection -->
+                    <div class="section-card mb-4">
+                        <h5 class="section-title">Select Loan</h5>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="loan-selection-card">
+                                    <select class="form-select form-select-sm" id="loan-select" name="loan">
+                                        <option value="">--Select--</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Details -->
+                    <div class="section-card">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="amount-paid" class="form-label">Amount Paid</label>
+                                    <input type="text" class="form-control form-control-sm" id="amount-paid" name="amount" placeholder="amount">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="payment-method" class="form-label">Pay Method (Cash/Bank/Savings)</label>
+                                    <select class="form-select form-select-sm" id="payment-method" name="payment_method">
+                                        <option value="cash" selected>Cash</option>
+                                        <option value="bank">Bank</option>
+                                        <option value="savings">Savings</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="payment-date" class="form-label">Repayment Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="payment-date" name="payment_date" value="2025-08-25">
+                                </div>
+                            </div>
                             
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <div class="loan-info-item">
-                                        <div class="loan-info-label">Borrower</div>
-                                        <div class="loan-info-value" id="borrower-name">-</div>
-                                    </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="show-balance" class="form-label">Show Loan Balance on Receipt?</label>
+                                    <select class="form-select form-select-sm" id="show-balance" name="show_balance">
+                                        <option value="no" selected>No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
                                 </div>
-                                <div class="col-6">
-                                    <div class="loan-info-item">
-                                        <div class="loan-info-label">Outstanding Balance</div>
-                                        <div class="loan-info-value" id="outstanding-balance">Tsh0.00</div>
-                                    </div>
+                                
+                                <div class="mb-3">
+                                    <label for="account" class="form-label">Account</label>
+                                    <select class="form-select form-select-sm" id="account" name="account">
+                                        <option value="cash" selected>Cash</option>
+                                    </select>
                                 </div>
-                                <div class="col-6">
-                                    <div class="loan-info-item">
-                                        <div class="loan-info-label">Next Due Date</div>
-                                        <div class="loan-info-value" id="next-due-date">-</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="loan-info-item">
-                                        <div class="loan-info-label">Days Overdue</div>
-                                        <div class="loan-info-value" id="days-overdue">0</div>
-                                    </div>
+                                
+                                <div class="mb-3">
+                                    <label for="collected-by" class="form-label">Collected By</label>
+                                    <select class="form-select form-select-sm" id="collected-by" name="collected_by">
+                                        <option value="">Select loan officer...</option>
+                                        {% for officer in loan_officers %}
+                                            <option value="{{ officer.id }}" {% if officer == user %}selected{% endif %}>
+                                                {{ officer.get_full_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-teal">
+                                        <i class="fas fa-link"></i> Link account of staff who collected repayment from Borrower
+                                    </small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Payment Allocation Preview -->
-                        <div class="payment-allocation" id="payment-allocation" style="display: none;">
-                            <h6 class="mb-3">
-                                <i class="fas fa-calculator me-1"></i>
-                                Payment Allocation Preview
-                            </h6>
-                            
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <div class="allocation-item">
-                                        <div class="allocation-label">Principal</div>
-                                        <div class="allocation-amount" id="principal-allocation">Tsh0.00</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="allocation-item">
-                                        <div class="allocation-label">Interest</div>
-                                        <div class="allocation-amount" id="interest-allocation">Tsh0.00</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="allocation-item">
-                                        <div class="allocation-label">Penalty</div>
-                                        <div class="allocation-amount" id="penalty-allocation">Tsh0.00</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="allocation-item">
-                                        <div class="allocation-label">Fees</div>
-                                        <div class="allocation-amount" id="fees-allocation">Tsh0.00</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-3 text-center">
-                                <strong>Total: <span id="total-allocation">Tsh0.00</span></strong>
-                            </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-teal btn-lg">
+                                <i class="fas fa-save me-2"></i>Record Repayment
+                            </button>
+                            <button type="button" class="btn btn-outline-teal btn-lg" onclick="window.history.back()">
+                                <i class="fas fa-arrow-left me-2"></i>Dashboard
+                            </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -325,89 +401,231 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const loanSelect = document.getElementById('id_loan');
-    const amountInput = document.getElementById('id_amount');
-    const loanInfoCard = document.getElementById('loan-info');
-    const paymentAllocation = document.getElementById('payment-allocation');
+    const borrowerSearch = document.getElementById('borrower-search');
+    const borrowerResults = document.getElementById('borrower-results');
+    const searchBtn = document.getElementById('search-btn');
+    const borrowerSelect = document.getElementById('borrower-select');
+    const loanSelect = document.getElementById('loan-select');
+    const amountInput = document.getElementById('amount-paid');
     
-    // Loan selection handler
+    let searchTimeout = null;
+    
+    // Simple borrower search functionality
+    borrowerSearch.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        if (query.length >= 2) {
+            searchTimeout = setTimeout(() => {
+                searchBorrowers(query);
+            }, 300);
+        } else {
+            borrowerResults.innerHTML = '';
+            borrowerResults.classList.remove('show');
+        }
+    });
+    
+    // Search button click
+    searchBtn.addEventListener('click', function() {
+        const query = borrowerSearch.value.trim();
+        if (query.length >= 2) {
+            searchBorrowers(query);
+        } else {
+            // Show all borrowers or default list
+            showDefaultBorrowers();
+        }
+    });
+    
+    // Borrower selection change
+    borrowerSelect.addEventListener('change', function() {
+        if (this.value) {
+            loadBorrowerLoans(this.value);
+        }
+    });
+    
+    // Loan selection change
     loanSelect.addEventListener('change', function() {
-        const loanId = this.value;
-        if (loanId) {
-            fetchLoanInfo(loanId);
-            loanInfoCard.style.display = 'block';
-        } else {
-            loanInfoCard.style.display = 'none';
-            paymentAllocation.style.display = 'none';
+        if (this.value) {
+            console.log('Loan selected:', this.value);
+            // Enable payment form fields
+            amountInput.removeAttribute('disabled');
         }
     });
     
-    // Amount input handler
-    amountInput.addEventListener('input', function() {
-        const amount = parseFloat(this.value) || 0;
-        if (amount > 0 && loanSelect.value) {
-            calculatePaymentAllocation(loanSelect.value, amount);
-            paymentAllocation.style.display = 'block';
+    function searchBorrowers(query) {
+        // Fetch borrowers with active loans from the backend
+        const url = `/loans/api/borrowers/search/?q=${encodeURIComponent(query)}&has_loans=true`;
+        console.log('Searching borrowers with URL:', url);
+        
+        fetch(url)
+            .then(response => {
+                console.log('Search response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Search API Response:', data);
+                if (data.success) {
+                    if (data.borrowers && data.borrowers.length > 0) {
+                        displayBorrowerResults(data.borrowers);
+                    } else {
+                        borrowerResults.innerHTML = '<div class="borrower-item text-muted">No borrowers found matching your search</div>';
+                        borrowerResults.classList.add('show');
+                    }
+                } else {
+                    console.error('Error from server:', data.message);
+                    borrowerResults.innerHTML = `<div class="borrower-item text-muted">Error: ${data.message || 'Unknown error'}</div>`;
+                    borrowerResults.classList.add('show');
+                }
+            })
+            .catch(error => {
+                console.error('Error searching borrowers:', error);
+                borrowerResults.innerHTML = `<div class="borrower-item text-muted">Error: ${error.message}</div>`;
+                borrowerResults.classList.add('show');
+            });
+    }
+    
+    function showDefaultBorrowers() {
+        // Try to fetch borrowers with active loans first, fallback to all active borrowers
+        fetch('/loans/api/borrowers/with-loans/')
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response:', data);
+                if (data.success) {
+                    if (data.borrowers && data.borrowers.length > 0) {
+                        displayBorrowerResults(data.borrowers);
+                    } else {
+                        // Fallback: fetch all active borrowers
+                        console.log('No borrowers with loans found, fetching all active borrowers...');
+                        fetchAllActiveBorrowers();
+                    }
+                } else {
+                    console.error('Error from server:', data.message);
+                    // Fallback: fetch all active borrowers
+                    fetchAllActiveBorrowers();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading borrowers:', error);
+                // Fallback: fetch all active borrowers
+                fetchAllActiveBorrowers();
+            });
+    }
+    
+    function fetchAllActiveBorrowers() {
+        // Fallback: fetch all active borrowers (without loan requirement)
+        fetch('/loans/api/borrowers/search/?q=&has_loans=false')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Fallback API Response:', data);
+                if (data.success && data.borrowers && data.borrowers.length > 0) {
+                    displayBorrowerResults(data.borrowers);
+                } else {
+                    borrowerResults.innerHTML = '<div class="borrower-item text-muted">No active borrowers found in system</div>';
+                    borrowerResults.classList.add('show');
+                }
+            })
+            .catch(error => {
+                console.error('Fallback error:', error);
+                borrowerResults.innerHTML = '<div class="borrower-item text-muted">Unable to load borrowers - Check console for details</div>';
+                borrowerResults.classList.add('show');
+            });
+    }
+    
+    function displayBorrowerResults(borrowers) {
+        if (borrowers.length === 0) {
+            borrowerResults.innerHTML = '<div class="borrower-item text-muted">No borrowers found with active loans</div>';
         } else {
-            paymentAllocation.style.display = 'none';
+            borrowerResults.innerHTML = borrowers.map(borrower => `
+                <div class="borrower-item" data-borrower-id="${borrower.id}">
+                    <div class="fw-medium">${borrower.full_name}</div>
+                    <small class="text-muted">${borrower.identifier || borrower.member_id || 'N/A'}(${borrower.phone || 'No phone'})</small>
+                </div>
+            `).join('');
+            
+            // Add click handlers to borrower items
+            borrowerResults.querySelectorAll('.borrower-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const borrowerId = this.dataset.borrowerId;
+                    const borrowerName = this.querySelector('.fw-medium').textContent;
+                    const borrowerDetails = this.querySelector('.text-muted').textContent;
+                    
+                    selectBorrower(borrowerId, borrowerName, borrowerDetails);
+                });
+            });
         }
-    });
+        
+        borrowerResults.classList.add('show');
+    }
     
-    // Quick amount buttons
-    document.querySelectorAll('.quick-amount-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const amountType = this.dataset.amount;
-            const loanId = loanSelect.value;
+    function selectBorrower(borrowerId, name, details) {
+        // Update the borrower select dropdown
+        borrowerSelect.innerHTML = `<option value="${borrowerId}" selected>${name} -${details}</option>`;
+        
+        // Hide search results
+        borrowerResults.innerHTML = '';
+        borrowerResults.classList.remove('show');
+        borrowerSearch.value = '';
+        
+        // Load borrower's loans
+        loadBorrowerLoans(borrowerId);
+    }
+    
+    function loadBorrowerLoans(borrowerId) {
+        // Fetch borrower's active loans from the backend
+        fetch(`/loans/api/loans/borrower/${borrowerId}/active/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayBorrowerLoans(data.loans || []);
+                } else {
+                    console.error('Error from server:', data.message);
+                    loanSelect.innerHTML = '<option value="">Error loading loans</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading loans:', error);
+                loanSelect.innerHTML = '<option value="">Error loading loans</option>';
+            });
+    }
+    
+    function displayBorrowerLoans(loans) {
+        if (loans.length === 0) {
+            loanSelect.innerHTML = '<option value="">No loans found for repayment</option>';
+        } else {
+            const options = loans.map(loan => {
+                const date = loan.disbursement_date ? new Date(loan.disbursement_date).toLocaleDateString() : 'N/A';
+                const amount = loan.amount.toLocaleString();
+                const interest = loan.interest_amount ? loan.interest_amount.toLocaleString() : '0';
+                const penalty = loan.penalty_balance ? loan.penalty_balance.toLocaleString() : '0';
+                const remaining = loan.outstanding_balance ? loan.outstanding_balance.toLocaleString() : '0';
+                const status = loan.status_display || loan.status;
+                
+                return `<option value="${loan.id}">${date}, Amount: ${amount}, Interest: ${interest}, Penalty: ${penalty}, Remaining: ${remaining} [${status}]</option>`;
+            }).join('');
             
-            if (!loanId) {
-                alert('Please select a loan first');
-                return;
-            }
-            
-            setQuickAmount(loanId, amountType);
-        });
-    });
-    
-    function fetchLoanInfo(loanId) {
-        fetch(`/repayments/api/loan-info/${loanId}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('borrower-name').textContent = data.borrower_name;
-                document.getElementById('outstanding-balance').textContent = `₹${data.outstanding_balance}`;
-                document.getElementById('next-due-date').textContent = data.next_due_date || '-';
-                document.getElementById('days-overdue').textContent = data.days_overdue || '0';
-            })
-            .catch(error => {
-                console.error('Error fetching loan info:', error);
-            });
+            loanSelect.innerHTML = '<option value="">--Select Loan--</option>' + options;
+        }
     }
     
-    function calculatePaymentAllocation(loanId, amount) {
-        fetch(`/repayments/api/calculate-allocation/${loanId}/${amount}/`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('principal-allocation').textContent = `₹${data.principal}`;
-                document.getElementById('interest-allocation').textContent = `₹${data.interest}`;
-                document.getElementById('penalty-allocation').textContent = `₹${data.penalty}`;
-                document.getElementById('fees-allocation').textContent = `₹${data.fees}`;
-                document.getElementById('total-allocation').textContent = `₹${data.total}`;
-            })
-            .catch(error => {
-                console.error('Error calculating allocation:', error);
-            });
-    }
-    
-    function setQuickAmount(loanId, amountType) {
-        fetch(`/repayments/api/quick-amount/${loanId}/${amountType}/`)
-            .then(response => response.json())
-            .then(data => {
-                amountInput.value = data.amount;
-                amountInput.dispatchEvent(new Event('input'));
-            })
-            .catch(error => {
-                console.error('Error getting quick amount:', error);
-            });
-    }
+    // Initialize with default data
+    showDefaultBorrowers();
 });
 </script>
 {% endblock %}

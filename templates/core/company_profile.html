@@ -8,13 +8,13 @@
 <div class="row">
     <div class="col-lg-10 mx-auto">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-building me-2 text-primary-teal"></i>
                     Company Profile
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
@@ -27,19 +27,19 @@
                         </div>
                         <div class="col-md-6">
                             <label for="name" class="form-label">Company Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ company.name|default:'' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ company.name|default:'' }}" required>
                         </div>
                         <div class="col-md-6">
                             <label for="legal_name" class="form-label">Legal Name</label>
-                            <input type="text" class="form-control" id="legal_name" name="legal_name" value="{{ company.legal_name|default:'' }}">
+                            <input type="text" class="form-control form-control-sm" id="legal_name" name="legal_name" value="{{ company.legal_name|default:'' }}">
                         </div>
                         <div class="col-md-6">
                             <label for="registration_number" class="form-label">Registration Number</label>
-                            <input type="text" class="form-control" id="registration_number" name="registration_number" value="{{ company.registration_number|default:'' }}">
+                            <input type="text" class="form-control form-control-sm" id="registration_number" name="registration_number" value="{{ company.registration_number|default:'' }}">
                         </div>
                         <div class="col-md-6">
                             <label for="tax_id" class="form-label">Tax ID</label>
-                            <input type="text" class="form-control" id="tax_id" name="tax_id" value="{{ company.tax_id|default:'' }}">
+                            <input type="text" class="form-control form-control-sm" id="tax_id" name="tax_id" value="{{ company.tax_id|default:'' }}">
                         </div>
                     </div>
 
@@ -52,27 +52,27 @@
                         </div>
                         <div class="col-md-12">
                             <label for="address_line_1" class="form-label">Address Line 1 *</label>
-                            <input type="text" class="form-control" id="address_line_1" name="address_line_1" value="{{ company.address_line_1|default:'' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="address_line_1" name="address_line_1" value="{{ company.address_line_1|default:'' }}" required>
                         </div>
                         <div class="col-md-12">
                             <label for="address_line_2" class="form-label">Address Line 2</label>
-                            <input type="text" class="form-control" id="address_line_2" name="address_line_2" value="{{ company.address_line_2|default:'' }}">
+                            <input type="text" class="form-control form-control-sm" id="address_line_2" name="address_line_2" value="{{ company.address_line_2|default:'' }}">
                         </div>
                         <div class="col-md-4">
                             <label for="city" class="form-label">City *</label>
-                            <input type="text" class="form-control" id="city" name="city" value="{{ company.city|default:'' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="city" name="city" value="{{ company.city|default:'' }}" required>
                         </div>
                         <div class="col-md-4">
                             <label for="state" class="form-label">State *</label>
-                            <input type="text" class="form-control" id="state" name="state" value="{{ company.state|default:'' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="state" name="state" value="{{ company.state|default:'' }}" required>
                         </div>
                         <div class="col-md-4">
                             <label for="postal_code" class="form-label">Postal Code *</label>
-                            <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ company.postal_code|default:'' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="postal_code" name="postal_code" value="{{ company.postal_code|default:'' }}" required>
                         </div>
                         <div class="col-md-6">
                             <label for="country" class="form-label">Country *</label>
-                            <input type="text" class="form-control" id="country" name="country" value="{{ company.country|default:'India' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="country" name="country" value="{{ company.country|default:'India' }}" required>
                         </div>
                     </div>
 
@@ -85,15 +85,15 @@
                         </div>
                         <div class="col-md-4">
                             <label for="phone_number" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone_number" name="phone_number" value="{{ company.phone_number|default:'' }}">
+                            <input type="tel" class="form-control form-control-sm" id="phone_number" name="phone_number" value="{{ company.phone_number|default:'' }}">
                         </div>
                         <div class="col-md-4">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ company.email|default:'' }}">
+                            <input type="email" class="form-control form-control-sm" id="email" name="email" value="{{ company.email|default:'' }}">
                         </div>
                         <div class="col-md-4">
                             <label for="website" class="form-label">Website</label>
-                            <input type="url" class="form-control" id="website" name="website" value="{{ company.website|default:'' }}">
+                            <input type="url" class="form-control form-control-sm" id="website" name="website" value="{{ company.website|default:'' }}">
                         </div>
                     </div>
 
@@ -106,7 +106,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="base_currency" class="form-label">Base Currency *</label>
-                            <select class="form-control" id="base_currency" name="base_currency" required>
+                            <select class="form-control form-control-sm" id="base_currency" name="base_currency" required>
                                 <option value="INR" {% if company.base_currency == 'INR' or not company %}selected{% endif %}>INR - Indian Rupee</option>
                                 <option value="USD" {% if company.base_currency == 'USD' %}selected{% endif %}>USD - US Dollar</option>
                                 <option value="EUR" {% if company.base_currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
@@ -115,7 +115,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="financial_year_start" class="form-label">Financial Year Start *</label>
-                            <input type="date" class="form-control" id="financial_year_start" name="financial_year_start" 
+                            <input type="date" class="form-control form-control-sm" id="financial_year_start" name="financial_year_start" 
                                    value="{{ company.financial_year_start|date:'Y-m-d'|default:'' }}" required>
                         </div>
                     </div>
@@ -124,7 +124,7 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'core:settings_dashboard' %}" class="btn btn-secondary">
+                                <a href="{% url 'core:settings_dashboard' %}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left me-1"></i>Back to Settings
                                 </a>
                                 <button type="submit" class="btn btn-primary-teal">

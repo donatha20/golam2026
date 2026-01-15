@@ -11,7 +11,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -99,7 +99,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -169,7 +169,7 @@
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         border: 2px solid #f59e0b;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
     }
@@ -196,15 +196,11 @@
 <div class="container-fluid">
     <!-- Info Section -->
     <div class="info-section">
-        <h2 class="info-title">
-            <i class="fas fa-balance-scale"></i>
-            Outstanding Loan Balances
-        </h2>
         <p class="info-message">
             Monitor all outstanding loan balances including principal, interest, penalties, and fees. Track overdue amounts and payment schedules.
         </p>
     </div>
-    
+<!--  
     <div class="d-flex justify-content-end mb-3">
         <div class="btn-group">
             <a href="{% url 'repayments:record_repayment' %}" class="btn btn-outline-primary btn-sm">
@@ -218,8 +214,8 @@
             </a>
         </div>
     </div>
-    
-    <!-- Statistics -->
+
+    <!-- Statistics 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value">{{ total_stats.count|default:0 }}</div>
@@ -238,7 +234,7 @@
             <div class="stat-label">Interest Outstanding</div>
         </div>
     </div>
-    
+-->  
     <!-- Data Table -->
     <div class="table-container">
         <div class="table-controls">

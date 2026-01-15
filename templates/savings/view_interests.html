@@ -9,7 +9,7 @@
     .interests-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
     }
@@ -65,7 +65,7 @@
         background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
         border: 1px solid #d1d5db;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
     }
 
@@ -106,7 +106,7 @@
         background: #f9fafb;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
 
@@ -216,7 +216,7 @@
         font-family: monospace;
         font-weight: 600;
         color: #059669;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
     }
 
     .interest-rate {
@@ -370,7 +370,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary">
+            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-calculator"></i> Calculate Interest
             </a>
         </div>
@@ -443,13 +443,13 @@
                 </div>
             </div>
             <div class="filter-actions">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-sm">
                     <i class="fas fa-search"></i> Apply Filters
                 </button>
-                <a href="{% url 'savings:view_interests' %}" class="btn btn-secondary">
+                <a href="{% url 'savings:view_interests' %}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-times"></i> Clear Filters
                 </a>
-                <button type="button" class="btn btn-secondary" onclick="exportInterests()">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="exportInterests()">
                     <i class="fas fa-download"></i> Export
                 </button>
             </div>
@@ -590,7 +590,7 @@
             </div>
             <h3>No Interest Calculations Found</h3>
             <p>No interest transactions match your current filters.</p>
-            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary">
+            <a href="{% url 'savings:record_transaction' 'interest' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-calculator"></i> Calculate First Interest
             </a>
         </div>

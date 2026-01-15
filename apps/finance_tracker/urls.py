@@ -11,11 +11,16 @@ urlpatterns = [
     # Income URLs
     path('income/add/', views.add_income, name='add_income'),
     path('income/', views.view_income, name='view_income'),
+    path('income/approvals/', views.income_approval_queue, name='income_approval_queue'),
+    path('income/<int:income_id>/approve/', views.approve_income, name='approve_income'),
+    path('income/<int:income_id>/reject/', views.reject_income, name='reject_income'),
 
     # Expenditure URLs
     path('expenditure/add/', views.add_expenditure, name='add_expenditure'),
     path('expenditures/', views.view_expenditures, name='view_expenditures'),
+    path('expenditure/approvals/', views.expenditure_approval_queue, name='expenditure_approval_queue'),
     path('expenditure/<int:expenditure_id>/approve/', views.approve_expenditure, name='approve_expenditure'),
+    path('expenditure/<int:expenditure_id>/reject/', views.reject_expenditure, name='reject_expenditure'),
 
     # Category Management URLs
     path('categories/income/', views.manage_income_categories, name='manage_income_categories'),

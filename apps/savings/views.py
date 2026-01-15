@@ -648,7 +648,7 @@ def record_transaction(request, transaction_type):
             transaction.save()
             account.save()
             
-            messages.success(request, f'{transaction_type.title()} of ₹{amount:,.2f} recorded successfully.')
+            messages.success(request, f'{transaction_type.title()} of Tsh {amount:,.2f} recorded successfully.')
             return redirect('savings:view_accounts')
             
         except SavingsAccount.DoesNotExist:
@@ -819,7 +819,7 @@ def record_deposited(request):
             account.last_transaction_date = timezone.now().date()
             account.save()
             
-            messages.success(request, f'Deposit of ₹{amount} recorded successfully. Reference: {transaction_obj.reference_number}')
+            messages.success(request, f'Deposit of Tsh {amount} recorded successfully. Reference: {transaction_obj.reference_number}')
             return redirect('savings:view_deposited')
             
         except Exception as e:
@@ -875,7 +875,7 @@ def record_withdrawn(request):
             # Check if account has sufficient balance including charges
             total_deduction = amount + total_charges
             if account.balance < total_deduction:
-                messages.error(request, f'Insufficient balance. Required: ₹{total_deduction} (Amount: ₹{amount} + Charges: ₹{total_charges}), Available: ₹{account.balance}')
+                messages.error(request, f'Insufficient balance. Required: Tsh {total_deduction} (Amount: Tsh {amount} + Charges: Tsh {total_charges}), Available: Tsh {account.balance}')
                 return redirect('savings:record_withdrawn')
             
             # Create withdrawal transaction
@@ -910,9 +910,9 @@ def record_withdrawn(request):
             account.last_transaction_date = timezone.now().date()
             account.save()
             
-            message = f'Withdrawal of ₹{amount} recorded successfully. Reference: {transaction_obj.reference_number}'
+            message = f'Withdrawal of Tsh {amount} recorded successfully. Reference: {transaction_obj.reference_number}'
             if total_charges > 0:
-                message += f' (Charges applied: ₹{total_charges})'
+                message += f' (Charges applied: Tsh {total_charges})'
             messages.success(request, message)
             return redirect('savings:view_withdrawn')
             
@@ -957,7 +957,7 @@ def record_charges(request):
                 return redirect('savings:record_charges')
             
             if account.balance < amount:
-                messages.error(request, f'Insufficient balance. Required: ₹{amount}, Available: ₹{account.balance}')
+                messages.error(request, f'Insufficient balance. Required: Tsh {amount}, Available: Tsh {account.balance}')
                 return redirect('savings:record_charges')
             
             # Create charge transaction
@@ -980,7 +980,7 @@ def record_charges(request):
             account.last_transaction_date = timezone.now().date()
             account.save()
             
-            messages.success(request, f'Charge of ₹{amount} recorded successfully. Reference: {transaction_obj.reference_number}')
+            messages.success(request, f'Charge of Tsh {amount} recorded successfully. Reference: {transaction_obj.reference_number}')
             return redirect('savings:view_charges')
             
         except Exception as e:
@@ -1062,7 +1062,7 @@ def record_earned_interest(request):
                     created_by=request.user
                 )
             
-            messages.success(request, f'Interest of ₹{amount} recorded successfully. Reference: {transaction_obj.reference_number}')
+            messages.success(request, f'Interest of Tsh {amount} recorded successfully. Reference: {transaction_obj.reference_number}')
             return redirect('savings:view_interests')
             
         except Exception as e:

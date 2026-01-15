@@ -20,14 +20,14 @@
     
     .form-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: #f9fafb;
     }
     
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #2b7a76;
         margin: 0 0 1.5rem 0;
@@ -115,13 +115,13 @@
     .recent-expenditures {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
     }
     
     .recent-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #2b7a76;
         margin: 0 0 1rem 0;
@@ -247,7 +247,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="expenditure_type" class="form-label required">Expenditure Type</label>
-                                <select id="expenditure_type" name="expenditure_type" class="form-select" required>
+                                <select id="expenditure_type" name="expenditure_type" class="form-select form-select-sm" required>
                                     <option value="">Select Type</option>
                                     {% for value, label in expenditure_types %}
                                     <option value="{{ value }}">{{ label }}</option>
@@ -256,7 +256,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="category" class="form-label">Category</label>
-                                <select id="category" name="category" class="form-select">
+                                <select id="category" name="category" class="form-select form-select-sm">
                                     <option value="">Select Category (Optional)</option>
                                     {% for category in categories %}
                                     <option value="{{ category.id }}">{{ category.name }}</option>
@@ -319,7 +319,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="status" class="form-label">Approval Status</label>
-                                <select id="status" name="status" class="form-select">
+                                <select id="status" name="status" class="form-select form-select-sm">
                                     {% for value, label in approval_statuses %}
                                     <option value="{{ value }}" {% if value == 'pending' %}selected{% endif %}>{{ label }}</option>
                                     {% endfor %}

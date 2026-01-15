@@ -19,7 +19,7 @@
     }
 
     .section-header {
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
     }
 
@@ -34,7 +34,7 @@
     }
 
     .section-content {
-        padding: 1.5rem;
+        padding: 1rem;
     }
 
     .stats-grid {
@@ -46,7 +46,7 @@
 
     .stat-card {
         text-align: center;
-        padding: 1.5rem;
+        padding: 1rem;
         background: #f8f9fa;
         border-radius: 8px;
         border-left: 4px solid #16a34a;
@@ -344,15 +344,15 @@
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button class="btn btn-primary" onclick="calculateInterest()">
+                <button class="btn btn-primary btn-sm" onclick="calculateInterest()">
                     <i class="fas fa-calculator"></i>
                     Calculate Interest
                 </button>
-                <button class="btn btn-success" onclick="postPendingInterest()">
+                <button class="btn btn-success btn-sm" onclick="postPendingInterest()">
                     <i class="fas fa-check"></i>
                     Post Pending Interest
                 </button>
-                <button class="btn btn-warning" onclick="generateReport()">
+                <button class="btn btn-warning btn-sm" onclick="generateReport()">
                     <i class="fas fa-file-pdf"></i>
                     Generate Report
                 </button>
@@ -377,13 +377,13 @@
                         <input type="date" 
                                name="calculation_date" 
                                id="calculation_date" 
-                               class="form-control" 
+                               class="form-control form-control-sm" 
                                value="{{ today|date:'Y-m-d' }}"
                                required>
                     </div>
                     <div class="form-group">
                         <label for="calculation_type" class="form-label">Calculation Type</label>
-                        <select name="calculation_type" id="calculation_type" class="form-select" required>
+                        <select name="calculation_type" id="calculation_type" class="form-select form-select-sm" required>
                             <option value="">Select Type</option>
                             <option value="monthly">Monthly Interest</option>
                             <option value="quarterly">Quarterly Interest</option>
@@ -393,7 +393,7 @@
                     </div>
                     <div class="form-group">
                         <label for="account_filter" class="form-label">Account Filter</label>
-                        <select name="account_filter" id="account_filter" class="form-select">
+                        <select name="account_filter" id="account_filter" class="form-select form-select-sm">
                             <option value="all">All Eligible Accounts</option>
                             <option value="active">Active Accounts Only</option>
                             <option value="minimum_balance">Above Minimum Balance</option>
@@ -401,7 +401,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             <i class="fas fa-play"></i>
                             Run Calculation
                         </button>
@@ -515,8 +515,8 @@
                     </div>
                 {% endfor %}
                 
-                <div style="margin-top: 1.5rem; text-align: right;">
-                    <button class="btn btn-success" onclick="postAllPending()">
+                <div style="margin-top: 1rem; text-align: right;">
+                    <button class="btn btn-success btn-sm" onclick="postAllPending()">
                         <i class="fas fa-check-double"></i>
                         Post All Pending
                     </button>

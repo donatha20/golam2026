@@ -65,7 +65,7 @@ class DisbursedLoansTable(tables.Table):
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
         return format_html(
-            '<span class="amount-cell">₹{:,.2f}</span>',
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
             value or 0
         )
 
@@ -73,10 +73,10 @@ class DisbursedLoansTable(tables.Table):
         """Render outstanding balance with formatting."""
         if value and value > 0:
             return format_html(
-                '<span class="amount-outstanding">₹{:,.2f}</span>',
+                '<span class="amount-outstanding">Tsh {:,.2f}</span>',
                 value
             )
-        return format_html('<span class="amount-paid">₹0.00</span>')
+        return format_html('<span class="amount-paid">Tsh 0.00</span>')
 
     def render_duration_months(self, value):
         """Render duration with months label."""
@@ -185,7 +185,7 @@ class RepaidLoansTable(tables.Table):
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
         return format_html(
-            '<span class="amount-cell">₹{:,.2f}</span>',
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
             value or 0
         )
 
@@ -269,7 +269,7 @@ class ExpectedRepaymentsTable(tables.Table):
             icon = "!"
             color = "#dc2626"
         else:
-            icon = "₹"
+            icon = "Tsh"
             color = "#2b7a76"
 
         return format_html(
@@ -296,7 +296,7 @@ class ExpectedRepaymentsTable(tables.Table):
     def render_amount_due(self, value):
         """Render amount due with currency formatting."""
         return format_html(
-            '<span class="amount-cell">₹{:,.2f}</span>',
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
             value or 0
         )
 
@@ -345,10 +345,10 @@ class ExpectedRepaymentsTable(tables.Table):
         balance = record.loan.outstanding_balance or 0
         if balance > 0:
             return format_html(
-                '<span class="amount-outstanding">₹{:,.2f}</span>',
+                '<span class="amount-outstanding">Tsh {:,.2f}</span>',
                 balance
             )
-        return format_html('<span class="amount-paid">₹0.00</span>')
+        return format_html('<span class="amount-paid">Tsh 0.00</span>')
 
     def render_group_info(self, record):
         """Render group information if applicable."""
@@ -377,3 +377,158 @@ class ExpectedRepaymentsTable(tables.Table):
                 '</div>',
                 record.id
             )
+
+
+class NonPerformingLoansTable(tables.Table):
+    """Table for displaying non-performing loans (NPLs) - loans with 90+ days overdue."""
+
+    # Avatar column for visual consistency
+    avatar = tables.Column(empty_values=(), orderable=False, verbose_name="")
+
+    # Borrower information
+    borrower = tables.Column(empty_values=(), verbose_name="Borrower")
+
+    # Loan details
+    loan_number = tables.Column(verbose_name="Loan #")
+    loan_type = tables.Column(empty_values=(), verbose_name="Product")
+    amount_approved = tables.Column(verbose_name="Principal")
+    outstanding_balance = tables.Column(verbose_name="Outstanding")
+
+    # NPL specific details
+    disbursement_date = tables.DateColumn(format="M d, Y", verbose_name="Disbursed")
+    maturity_date = tables.DateColumn(format="M d, Y", verbose_name="Maturity")
+    days_overdue = tables.Column(empty_values=(), verbose_name="Days Overdue")
+    npl_category = tables.Column(empty_values=(), verbose_name="NPL Category")
+
+    # Status
+    status = tables.Column(empty_values=(), verbose_name="Status")
+    actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
+
+    class Meta:
+        model = Loan
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("avatar", "borrower", "loan_number", "loan_type", "amount_approved",
+                  "outstanding_balance", "disbursement_date", "maturity_date",
+                  "days_overdue", "npl_category", "status", "actions")
+        attrs = {
+            "class": "table table-hover loan-table npl-table",
+            "id": "non-performing-loans-table"
+        }
+
+    def render_avatar(self, record):
+        """Render loan avatar with warning indicator."""
+        return format_html(
+            '<div class="table-avatar npl-avatar"><i class="fas fa-exclamation-triangle"></i></div>'
+        )
+
+    def render_borrower(self, record):
+        """Render borrower full name + ID."""
+        borrower = record.borrower
+        return format_html(
+            '<div class="borrower-name-cell">'
+            '<div class="borrower-full-name">{}</div>'
+            '<div class="borrower-id">{}</div>'
+            '<div class="borrower-phone">{}</div>'
+            '</div>',
+            borrower.get_full_name(),
+            borrower.borrower_id,
+            borrower.phone_number or "—"
+        )
+
+    def render_loan_type(self, record):
+        """Render loan type name."""
+        return record.loan_type.name if record.loan_type else "—"
+
+    def render_amount_approved(self, value):
+        """Render amount with currency formatting."""
+        return format_html(
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
+            value or 0
+        )
+
+    def render_outstanding_balance(self, value):
+        """Render outstanding balance with NPL styling."""
+        if value and value > 0:
+            return format_html(
+                '<span class="amount-outstanding npl-amount">Tsh {:,.2f}</span>',
+                value
+            )
+        return format_html('<span class="amount-paid">Tsh 0.00</span>')
+
+    def render_days_overdue(self, record):
+        """Render days overdue with severity indicator."""
+        days = record.days_overdue if hasattr(record, 'days_overdue') and record.days_overdue else 0
+        if days >= 365:
+            severity_class = "critical"
+        elif days >= 180:
+            severity_class = "severe"
+        elif days >= 90:
+            severity_class = "warning"
+        else:
+            severity_class = "normal"
+        
+        return format_html(
+            '<span class="days-overdue-badge {}">{} days</span>',
+            severity_class,
+            days
+        )
+
+    def render_npl_category(self, record):
+        """Render NPL category based on days overdue."""
+        days = record.days_overdue if hasattr(record, 'days_overdue') and record.days_overdue else 0
+        if days >= 365:
+            category = "Loss"
+            cat_class = "npl-loss"
+        elif days >= 270:
+            category = "Doubtful"
+            cat_class = "npl-doubtful"
+        elif days >= 180:
+            category = "Substandard"
+            cat_class = "npl-substandard"
+        elif days >= 90:
+            category = "Watch"
+            cat_class = "npl-watch"
+        else:
+            category = "Performing"
+            cat_class = "npl-performing"
+        
+        return format_html(
+            '<span class="npl-category-badge {}">{}</span>',
+            cat_class,
+            category
+        )
+
+    def render_status(self, record):
+        """Render loan status with badge."""
+        status_classes = {
+            'pending': 'status-pending',
+            'approved': 'status-approved',
+            'disbursed': 'status-active',
+            'active': 'status-active',
+            'completed': 'status-completed',
+            'defaulted': 'status-defaulted',
+            'written_off': 'status-written-off',
+        }
+
+        status_class = status_classes.get(record.status, 'status-inactive')
+        return format_html(
+            '<span class="status-badge {}">{}</span>',
+            status_class,
+            record.get_status_display()
+        )
+
+    def render_actions(self, record):
+        """Render actions column."""
+        return format_html(
+            '<div class="action-buttons">'
+            '<a href="/loans/{}/" class="btn-action btn-view" title="View Details">'
+            '<i class="fas fa-eye"></i></a>'
+            '<a href="/loans/repayments/{}/" class="btn-action btn-payment" title="View Repayments">'
+            '<i class="fas fa-money-bill-wave"></i></a>'
+            '<a href="/borrowers/{}/" class="btn-action btn-borrower" title="View Borrower">'
+            '<i class="fas fa-user"></i></a>'
+            '</div>',
+            record.id,
+            record.id,
+            record.borrower.id
+        )

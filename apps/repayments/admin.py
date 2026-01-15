@@ -87,7 +87,7 @@ class LoanRepaymentScheduleAdmin(admin.ModelAdmin):
     )
     
     def outstanding_amount(self, obj):
-        return f"₹{obj.outstanding_amount:,.2f}"
+        return f"Tsh {obj.outstanding_amount:,.2f}"
     outstanding_amount.short_description = "Outstanding Amount"
 
 

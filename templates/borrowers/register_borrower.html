@@ -27,14 +27,14 @@
     
     .form-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         background: #f9fafb;
     }
     
     .section-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #2b7a76;
         margin: 0 0 1.5rem 0;
@@ -203,7 +203,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .form-row {
@@ -259,7 +259,7 @@
                     </div>
                     <div class="form-group">
                         <label for="branch" class="form-label required">Branch</label>
-                        <select id="branch" name="branch" class="form-select" required>
+                        <select id="branch" name="branch" class="form-select form-select-sm" required>
                             <option value="">Select Branch</option>
                             {% for branch in branches %}
                             <option value="{{ branch.id }}" {% if branch == user.branch %}selected{% endif %}>
@@ -295,7 +295,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="gender" class="form-label required">Gender</label>
-                        <select id="gender" name="gender" class="form-select" required>
+                        <select id="gender" name="gender" class="form-select form-select-sm" required>
                             <option value="">Select Gender</option>
                             {% for value, label in gender_choices %}
                             <option value="{{ value }}">{{ label }}</option>
@@ -308,7 +308,7 @@
                     </div>
                     <div class="form-group">
                         <label for="marital_status" class="form-label required">Marital Status</label>
-                        <select id="marital_status" name="marital_status" class="form-select" required>
+                        <select id="marital_status" name="marital_status" class="form-select form-select-sm" required>
                             <option value="">Select Status</option>
                             {% for value, label in marital_choices %}
                             <option value="{{ value }}">{{ label }}</option>
@@ -338,7 +338,7 @@
                         <div class="form-help">Include country code (e.g., +255 for Tanzania)</div>
                     </div>
                     <div class="form-group">
-                        <label for="email" class="form-label">Email Address</label>
+                        <label for="email" class="form-label">Email</label>
                         <input type="email" id="email" name="email" class="form-input" 
                                placeholder="client@example.com">
                         <div class="form-help">Optional - for communication purposes</div>
@@ -355,7 +355,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="id_type" class="form-label required">ID Type</label>
-                        <select id="id_type" name="id_type" class="form-select" required>
+                        <select id="id_type" name="id_type" class="form-select form-select-sm" required>
                             <option value="">Select ID Type</option>
                             {% for value, label in id_type_choices %}
                             <option value="{{ value }}">{{ label }}</option>

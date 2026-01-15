@@ -1,0 +1,142 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Payroll Periods{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-calendar-alt"></i> Payroll Periods</h2>
+        <a href="{% url 'payroll:period_create' %}" class="btn btn-primary">
+            <i class="fas fa-calendar-plus"></i> Create New Period
+        </a>
+    </div>
+
+    <!-- Payroll Period List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Payroll Periods ({{ periods.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if periods %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Period Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Pay Date</th>
+                            <th>Status</th>
+                            <th>Employees</th>
+                            <th>Total Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for period in periods %}
+                        <tr>
+                            <td>
+                                <strong>{{ period.name }}</strong>
+                                {% if period.description %}
+                                <br><small class="text-muted">{{ period.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ period.start_date|date:"M d, Y" }}</td>
+                            <td>{{ period.end_date|date:"M d, Y" }}</td>
+                            <td>{{ period.pay_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if period.status == 'draft' %}
+                                    <span class="badge badge-secondary">Draft</span>
+                                {% elif period.status == 'processing' %}
+                                    <span class="badge badge-warning">Processing</span>
+                                {% elif period.status == 'completed' %}
+                                    <span class="badge badge-success">Completed</span>
+                                {% elif period.status == 'cancelled' %}
+                                    <span class="badge badge-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ period.payroll_records.count }}</td>
+                            <td>Tsh {{ period.total_amount|floatformat:2|default:"0.00" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'payroll:period_detail' period.pk %}" 
+                                       class="btn btn-sm btn-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if period.status == 'draft' %}
+                                    <a href="{% url 'payroll:period_update' period.pk %}" 
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-success" 
+                                            onclick="processPayroll('{{ period.pk }}')"
+                                            title="Process Payroll">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if period.status == 'completed' %}
+                                    <a href="{% url 'payroll:period_payslips' period.pk %}" 
+                                       class="btn btn-sm btn-primary" title="Generate Payslips">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                <h4>No Payroll Periods Found</h4>
+                <p class="text-muted">Create your first payroll period to start processing employee salaries.</p>
+                <a href="{% url 'payroll:period_create' %}" class="btn btn-primary">
+                    <i class="fas fa-calendar-plus"></i> Create First Period
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Process Payroll Modal -->
+<div class="modal fade" id="processModal" tabindex="-1" aria-labelledby="processModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="processModalLabel">Process Payroll</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to process this payroll period?</p>
+                <div class="alert alert-info">
+                    <strong>Note:</strong> This will calculate salaries for all active employees and generate payroll records. 
+                    This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="processForm" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-play"></i> Process Payroll
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function processPayroll(periodId) {
+    document.getElementById('processForm').action = "/payroll/periods/" + periodId + "/process/";
+    new bootstrap.Modal(document.getElementById('processModal')).show();
+}
+</script>
+{% endblock %}

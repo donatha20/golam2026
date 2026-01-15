@@ -9,7 +9,7 @@
     <!-- Summary Cards -->
     <div class="col-lg-6 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-success">{{ total_collections|floatformat:0 }}</h5>
                 <p class="card-text">Total Collections</p>
             </div>
@@ -17,7 +17,7 @@
     </div>
     <div class="col-lg-6 col-md-6 mb-4">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <h5 class="card-title text-info">{{ collection_count }}</h5>
                 <p class="card-text">Number of Payments</p>
             </div>
@@ -42,23 +42,23 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Date Range Filter -->
                 <div class="row mb-4">
                     <div class="col-md-12">
                         <form method="get" class="row g-3">
                             <div class="col-md-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary btn-sm">
                                         <i class="fas fa-search me-1"></i>Generate Report
                                     </button>
                                 </div>
@@ -77,10 +77,10 @@
                 <div class="row mb-4">
                     <div class="col-lg-6">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header py-compact">
                                 <h6 class="mb-0">Collections by Payment Method</h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <div class="table-responsive">
                                     <table class="table table-sm">
                                         <thead class="table-light">
@@ -112,10 +112,10 @@
                     <!-- Daily Collections Chart Area -->
                     <div class="col-lg-6">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header py-compact">
                                 <h6 class="mb-0">Daily Collection Trend</h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <canvas id="dailyCollectionsChart" width="400" height="200"></canvas>
                             </div>
                         </div>
@@ -126,12 +126,12 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header py-compact">
                                 <h6 class="mb-0">Daily Collections Detail</h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <div class="table-responsive">
-                                    <table class="table table-hover">
+                                    <table class="table table-hover table-sm">
                                         <thead class="table-light">
                                             <tr>
                                                 <th>Date</th>

@@ -1,0 +1,301 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ loan.loan_number }} - Loan Details{% endblock %}
+
+{% block page_title %}Loan Details - {{ loan.loan_number }}{% endblock %}
+
+{% block breadcrumb_items %}
+    <li class="breadcrumb-item"><a href="{% url 'loans:disbursed_loans' %}">Loans</a></li>
+    <li class="breadcrumb-item active">{{ loan.loan_number }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loan-status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+    
+    .info-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #2b7a76 0%, #34a39a 100%);
+        color: white;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .progress-custom {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+    }
+    
+    .progress-bar-custom {
+        background: linear-gradient(90deg, #2b7a76 0%, #34a39a 100%);
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Left Column - Loan Summary -->
+        <div class="col-lg-4">
+            <!-- Loan Overview Card -->
+            <div class="info-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2 text-primary"></i>
+                        Loan Overview
+                    </h5>
+                    <span class="badge loan-status-badge bg-{% if loan.status == 'active' %}success{% elif loan.status == 'pending' %}warning{% elif loan.status == 'completed' %}info{% elif loan.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                        {{ loan.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="row g-3">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Loan Number</small>
+                        <strong>{{ loan.loan_number }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Amount Requested</small>
+                        <strong>{{ loan.amount_requested|floatformat:0 }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Amount Approved</small>
+                        <strong>{{ loan.amount_approved|floatformat:0 }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Interest Rate</small>
+                        <strong>{{ loan.interest_rate }}%</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Duration</small>
+                        <strong>{{ loan.duration_months }} months</strong>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted d-block">Application Date</small>
+                        <strong>{{ loan.application_date }}</strong>
+                    </div>
+                    {% if loan.disbursement_date %}
+                    <div class="col-12">
+                        <small class="text-muted d-block">Disbursement Date</small>
+                        <strong>{{ loan.disbursement_date }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Borrower Information -->
+            <div class="info-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-user me-2 text-primary"></i>
+                    Borrower Information
+                </h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Name</small>
+                        <strong>{{ loan.borrower.get_full_name }}</strong>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted d-block">Phone</small>
+                        <strong>{{ loan.borrower.phone_number }}</strong>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted d-block">Address</small>
+                        <strong>{{ loan.borrower.get_full_address }}</strong>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'borrowers:borrower_detail' loan.borrower.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i>View Borrower
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="info-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-cogs me-2 text-primary"></i>
+                    Quick Actions
+                </h5>
+                <div class="d-grid gap-2">
+                    {% if loan.status == 'pending' %}
+                        <a href="{% url 'loans:loan_approval' loan.id %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-check me-1"></i>Review for Approval
+                        </a>
+                    {% endif %}
+                    {% if loan.status == 'active' %}
+                        <a href="{% url 'loans:loan_repayments' loan.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-money-bill me-1"></i>View Repayments
+                        </a>
+                    {% endif %}
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-print me-1"></i>Print Details
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Details and Statistics -->
+        <div class="col-lg-8">
+            <!-- Financial Summary -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ total_expected|floatformat:0 }}</div>
+                        <div class="stat-label">Total Expected</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ total_paid|floatformat:0 }}</div>
+                        <div class="stat-label">Total Paid</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ outstanding_balance|floatformat:0 }}</div>
+                        <div class="stat-label">Outstanding</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Progress -->
+            {% if total_expected > 0 %}
+            <div class="info-card">
+                <h5 class="mb-3">Payment Progress</h5>
+                {% widthratio total_paid total_expected 100 as progress_percent %}
+                <div class="progress-custom mb-2">
+                    <div class="progress-bar-custom" style="width: {{ progress_percent }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <small class="text-muted">{{ progress_percent }}% Complete</small>
+                    <small class="text-muted">{{ total_paid|floatformat:0 }} / {{ total_expected|floatformat:0 }}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Repayment Schedule -->
+            <div class="info-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Repayment Schedule</h5>
+                    <span class="badge bg-light text-dark">{{ schedule.count }} installments</span>
+                </div>
+                
+                {% if schedule %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Installment</th>
+                                    <th>Due Date</th>
+                                    <th>Amount Due</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in schedule %}
+                                <tr>
+                                    <td>{{ payment.installment_number }}</td>
+                                    <td>{{ payment.due_date }}</td>
+                                    <td>{{ payment.amount_due|floatformat:0 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if payment.is_paid %}success{% elif payment.due_date < today %}danger{% else %}warning{% endif %}">
+                                            {% if payment.is_paid %}Paid{% elif payment.due_date < today %}Overdue{% else %}Pending{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No repayment schedule available</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recent Payments -->
+            <div class="info-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Recent Payments</h5>
+                    <span class="badge bg-light text-dark">{{ repayments.count }} payments</span>
+                </div>
+                
+                {% if repayments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in repayments|slice:":5" %}
+                                <tr>
+                                    <td>{{ payment.payment_date }}</td>
+                                    <td>{{ payment.amount|floatformat:0 }}</td>
+                                    <td>{{ payment.get_payment_method_display|default:"Cash" }}</td>
+                                    <td>{{ payment.reference_number|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if repayments.count > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'loans:loan_repayments' loan.id %}" class="btn btn-sm btn-outline-primary">
+                                View All Payments
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No payments recorded yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any JavaScript functionality here
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loan detail page loaded');
+});
+</script>
+{% endblock %}

@@ -27,7 +27,7 @@
 <div class="row mb-4">
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="card-title text-primary-teal">{{ total_sms|default:0 }}</h5>
@@ -41,7 +41,7 @@
     
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="card-title text-success">{{ sent_today|default:0 }}</h5>
@@ -55,7 +55,7 @@
     
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="card-title text-info">{{ sent_this_week|default:0 }}</h5>
@@ -69,7 +69,7 @@
     
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card text-center">
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="card-title text-warning">{{ sent_this_month|default:0 }}</h5>
@@ -86,13 +86,13 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-bolt me-2 text-primary-teal"></i>
                     Quick Actions
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="row">
                     <div class="col-md-3 mb-2">
                         <a href="{% url 'sms:send_sms' %}" class="btn btn-primary-teal w-100">
@@ -124,13 +124,13 @@
     <!-- Status Breakdown -->
     <div class="col-lg-6 mb-4">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-chart-pie me-2 text-primary-teal"></i>
                     SMS Status Breakdown
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 {% if status_stats %}
                 <div class="table-responsive">
                     <table class="table table-sm">
@@ -176,13 +176,13 @@
     <!-- Template Usage -->
     <div class="col-lg-6 mb-4">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-file-alt me-2 text-primary-teal"></i>
                     Popular Templates
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 {% if template_stats %}
                 <div class="table-responsive">
                     <table class="table table-sm">
@@ -221,10 +221,10 @@
                 </h5>
                 <a href="{% url 'sms:logs' %}" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 {% if recent_sms %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
                                 <th>Phone Number</th>
@@ -286,7 +286,7 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="testPhoneNumber" class="form-label">Phone Number</label>
-                        <input type="text" class="form-control" id="testPhoneNumber" 
+                        <input type="text" class="form-control form-control-sm" id="testPhoneNumber" 
                                placeholder="+91 9876543210" required>
                     </div>
                     <div class="alert alert-info">
@@ -296,8 +296,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="sendTestSMS()">Send Test SMS</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="sendTestSMS()">Send Test SMS</button>
             </div>
         </div>
     </div>

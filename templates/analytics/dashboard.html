@@ -16,13 +16,13 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
     
     .kpi-card {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
         backdrop-filter: blur(10px);
     }
@@ -58,15 +58,15 @@
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
     
     .chart-header {
         display: flex;
         justify-content: between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .chart-title {
@@ -97,7 +97,7 @@
     .metric-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         text-align: center;
         border: 2px solid #e9ecef;
         transition: all 0.3s ease;
@@ -155,7 +155,7 @@
         background: white;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
     
@@ -307,7 +307,7 @@
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Date Range</label>
-                <select name="period" class="form-select">
+                <select name="period" class="form-select form-select-sm">
                     <option value="7d" {% if request.GET.period == '7d' %}selected{% endif %}>Last 7 Days</option>
                     <option value="30d" {% if request.GET.period == '30d' %}selected{% endif %}>Last 30 Days</option>
                     <option value="90d" {% if request.GET.period == '90d' %}selected{% endif %}>Last 90 Days</option>
@@ -317,15 +317,15 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">From Date</label>
-                <input type="date" name="from_date" class="form-control" value="{{ request.GET.from_date }}">
+                <input type="date" name="from_date" class="form-control form-control-sm" value="{{ request.GET.from_date }}">
             </div>
             <div class="col-md-2">
                 <label class="form-label">To Date</label>
-                <input type="date" name="to_date" class="form-control" value="{{ request.GET.to_date }}">
+                <input type="date" name="to_date" class="form-control form-control-sm" value="{{ request.GET.to_date }}">
             </div>
             <div class="col-md-2">
                 <label class="form-label">Branch</label>
-                <select name="branch" class="form-select">
+                <select name="branch" class="form-select form-select-sm">
                     <option value="">All Branches</option>
                     {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if request.GET.branch == branch.id|stringformat:"s" %}selected{% endif %}>
@@ -336,7 +336,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Product</label>
-                <select name="product" class="form-select">
+                <select name="product" class="form-select form-select-sm">
                     <option value="">All Products</option>
                     {% for product in loan_products %}
                     <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>

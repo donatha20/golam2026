@@ -20,7 +20,7 @@
     
     .page-subtitle {
         opacity: 0.9;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
     }
     
     .stats-grid {
@@ -33,7 +33,7 @@
     .stat-card {
         background: white;
         border-radius: 10px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         border-left: 4px solid #667eea;
     }
@@ -61,7 +61,7 @@
     
     .table-header {
         background: #f8fafc;
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
     }
     
@@ -73,7 +73,7 @@
     }
     
     .approval-item {
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
         transition: background-color 0.2s ease;
     }
@@ -100,7 +100,7 @@
     .approval-id {
         font-weight: 600;
         color: #1f2937;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         margin-bottom: 0.25rem;
     }
     
@@ -239,7 +239,7 @@
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="page-header">
-        <div class="container">
+        <div class="container-fluid px-compact">
             <h1 class="page-title">
                 <i class="fas fa-clipboard-check"></i>
                 Capital Approvals
@@ -322,11 +322,11 @@
                     {% endif %}
 
                     <div class="approval-actions">
-                        <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary">
+                        <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-check"></i>
                             Review & Approve
                         </a>
-                        <a href="{% url 'finance_tracker:capital_approval_detail' capital.id %}" class="btn btn-secondary">
+                        <a href="{% url 'finance_tracker:capital_approval_detail' capital.id %}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-eye"></i>
                             View Details
                         </a>

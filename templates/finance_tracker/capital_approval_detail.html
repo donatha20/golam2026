@@ -56,7 +56,7 @@
     }
     
     .detail-card {
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 8px;
         background: #f9fafb;
         border-left: 4px solid #667eea;
@@ -73,7 +73,7 @@
     .detail-value {
         font-weight: 600;
         color: #1f2937;
-        font-size: 1.1rem;
+        font-size: 0.95rem;
     }
     
     .btn {
@@ -130,7 +130,7 @@
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="page-header">
-        <div class="container">
+        <div class="container-fluid px-compact">
             <h1 class="page-title">
                 <i class="fas fa-info-circle"></i>
                 Capital Transaction Details
@@ -197,7 +197,7 @@
         {% if capital.description %}
         <div style="margin-bottom: 2rem;">
             <h3 style="margin-bottom: 1rem;">Description</h3>
-            <div style="background: #f9fafb; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #667eea;">
+            <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea;">
                 {{ capital.description }}
             </div>
         </div>
@@ -205,12 +205,12 @@
 
         <!-- Actions -->
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <a href="{% url 'finance_tracker:capital_approval_list' %}" class="btn btn-secondary">
+            <a href="{% url 'finance_tracker:capital_approval_list' %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i>
                 Back to Approvals
             </a>
             {% if capital.status == 'pending' %}
-            <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary" style="background-color: #667eea; color: white;">
+            <a href="{% url 'finance_tracker:approve_capital' capital.id %}" class="btn btn-primary btn-sm" style="background-color: #667eea; color: white;">
                 <i class="fas fa-clipboard-check"></i>
                 Review & Approve
             </a>

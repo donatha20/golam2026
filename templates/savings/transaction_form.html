@@ -17,7 +17,7 @@
         background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
         color: white;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
     
@@ -51,8 +51,8 @@
     .transaction-preview {
         background: #f8f9fa;
         border-radius: 8px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
     }
     
     .preview-grid {
@@ -170,7 +170,7 @@
             <p class="text-muted">Process {{ transaction_type }} for savings account</p>
         </div>
         <div>
-            <a href="{% url 'savings:account_detail' account.pk %}" class="btn btn-secondary">
+            <a href="{% url 'savings:account_detail' account.pk %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left me-2"></i>Back to Account
             </a>
         </div>
@@ -180,7 +180,7 @@
         <div class="col-lg-8">
             <!-- Transaction Form -->
             <div class="transaction-form-container">
-                <h4 class="mb-4">
+                <h4 class="mb-compact">
                     <i class="fas fa-{% if transaction_type == 'deposit' %}plus{% else %}minus{% endif %}-circle me-2 text-primary"></i>
                     {{ transaction_type|title }} Details
                 </h4>
@@ -236,10 +236,10 @@
                     {% endif %}
 
                     <div class="d-flex gap-3">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             <i class="fas fa-save me-2"></i>Process {{ transaction_type|title }}
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.history.back()">
                             <i class="fas fa-times me-2"></i>Cancel
                         </button>
                     </div>

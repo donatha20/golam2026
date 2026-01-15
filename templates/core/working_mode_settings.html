@@ -1,0 +1,249 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Working Mode Settings{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-clock text-primary"></i> Working Mode Settings
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .settings-section {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .working-day-checkbox {
+        margin: 5px 15px 5px 0;
+    }
+    .time-input {
+        max-width: 150px;
+    }
+    .form-group label {
+        font-weight: 600;
+        color: #495057;
+    }
+    .save-button {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    .save-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card settings-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i> Working Mode Configuration
+                    </h5>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Settings -->
+                        <div class="settings-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-info-circle"></i> Basic Settings
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="name">Working Mode Name</label>
+                                        <input type="text" class="form-control form-control-sm" id="name" name="name" 
+                                               value="{{ working_mode.name|default:'Default Working Mode' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="timezone">Timezone</label>
+                                        <select class="form-control form-control-sm" id="timezone" name="timezone">
+                                            {% for value, label in timezone_choices %}
+                                                <option value="{{ value }}" {% if working_mode.timezone == value %}selected{% endif %}>
+                                                    {{ label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Working Days -->
+                        <div class="settings-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-calendar-week"></i> Working Days
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="monday_enabled" name="monday_enabled" 
+                                                   {% if working_mode.monday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="monday_enabled">Monday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="tuesday_enabled" name="tuesday_enabled" 
+                                                   {% if working_mode.tuesday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="tuesday_enabled">Tuesday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="wednesday_enabled" name="wednesday_enabled" 
+                                                   {% if working_mode.wednesday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="wednesday_enabled">Wednesday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="thursday_enabled" name="thursday_enabled" 
+                                                   {% if working_mode.thursday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="thursday_enabled">Thursday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="friday_enabled" name="friday_enabled" 
+                                                   {% if working_mode.friday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="friday_enabled">Friday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="saturday_enabled" name="saturday_enabled" 
+                                                   {% if working_mode.saturday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="saturday_enabled">Saturday</label>
+                                        </div>
+                                        <div class="form-check-inline working-day-checkbox">
+                                            <input class="form-check-input" type="checkbox" id="sunday_enabled" name="sunday_enabled" 
+                                                   {% if working_mode.sunday_enabled %}checked{% endif %}>
+                                            <label class="form-check-label" for="sunday_enabled">Sunday</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Working Hours -->
+                        <div class="settings-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-clock"></i> Working Hours
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="start_time">Start Time</label>
+                                        <input type="time" class="form-control time-input" id="start_time" name="start_time" 
+                                               value="{{ working_mode.start_time|default:'08:00' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="end_time">End Time</label>
+                                        <input type="time" class="form-control time-input" id="end_time" name="end_time" 
+                                               value="{{ working_mode.end_time|default:'17:00' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="lunch_start">Lunch Start</label>
+                                        <input type="time" class="form-control time-input" id="lunch_start" name="lunch_start" 
+                                               value="{{ working_mode.lunch_start|default:'12:00' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="lunch_end">Lunch End</label>
+                                        <input type="time" class="form-control time-input" id="lunch_end" name="lunch_end" 
+                                               value="{{ working_mode.lunch_end|default:'13:00' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Settings -->
+                        <div class="settings-section">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-sliders-h"></i> Additional Settings
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="allow_backdating" name="allow_backdating" 
+                                                   {% if working_mode.allow_backdating %}checked{% endif %}>
+                                            <label class="form-check-label" for="allow_backdating">
+                                                Allow Backdating
+                                            </label>
+                                            <small class="form-text text-muted">
+                                                Allow staff to record transactions on previous dates
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="text-center">
+                                    <button type="submit" class="btn save-button">
+                                        <i class="fas fa-save"></i> Save Working Mode Settings
+                                    </button>
+                                    <a href="{% url 'core:view_working_mode' %}" class="btn btn-outline-secondary ml-3">
+                                        <i class="fas fa-eye"></i> View Current Settings
+                                    </a>
+                                    <a href="{% url 'core:settings_dashboard' %}" class="btn btn-outline-secondary ml-3">
+                                        <i class="fas fa-arrow-left"></i> Back to Settings
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const checkedDays = document.querySelectorAll('input[type="checkbox"][name$="_enabled"]:checked');
+        if (checkedDays.length === 0) {
+            alert('Please select at least one working day.');
+            e.preventDefault();
+            return false;
+        }
+        
+        const startTime = document.getElementById('start_time').value;
+        const endTime = document.getElementById('end_time').value;
+        
+        if (startTime && endTime && startTime >= endTime) {
+            alert('End time must be after start time.');
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

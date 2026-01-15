@@ -1,0 +1,298 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}View Working Mode{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-eye text-info"></i> Working Mode Details
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 1px solid #dee2e6;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .info-section {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .info-value {
+        font-size: 0.95rem;
+        color: #495057;
+        margin-bottom: 15px;
+    }
+    .working-day {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 5px;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    .working-day.enabled {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+    }
+    .working-day.disabled {
+        background-color: #e9ecef;
+        color: #6c757d;
+    }
+    .time-display {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+        font-size: 0.95rem;
+        color: #495057;
+        text-align: center;
+    }
+    .status-badge {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+    .status-active {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+    }
+    .status-inactive {
+        background: linear-gradient(45deg, #ffc107, #fd7e14);
+        color: white;
+    }
+    .action-button {
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        margin: 5px;
+        display: inline-block;
+    }
+    .action-button:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    .btn-edit {
+        background: linear-gradient(45deg, #007bff, #0056b3);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+    .btn-back {
+        background: linear-gradient(45deg, #6c757d, #495057);
+        color: white;
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card info-card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i> Working Mode Configuration Details
+                    </h5>
+                </div>
+                <div class="card-body p-compact">
+                    
+                    {% if working_mode %}
+                    
+                    <!-- Basic Information -->
+                    <div class="info-section">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-label">Working Mode Name</div>
+                                <div class="info-value">{{ working_mode.name }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-label">Timezone</div>
+                                <div class="info-value">{{ working_mode.get_timezone_display }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-label">Status</div>
+                                <div class="info-value">
+                                    <span class="status-badge {% if working_mode.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                        {% if working_mode.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-label">Last Updated</div>
+                                <div class="info-value">{{ working_mode.updated_at|date:"F d, Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Working Days -->
+                    <div class="info-section">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-calendar-week"></i> Working Days
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="working-day {% if working_mode.monday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Monday
+                                </div>
+                                <div class="working-day {% if working_mode.tuesday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Tuesday
+                                </div>
+                                <div class="working-day {% if working_mode.wednesday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Wednesday
+                                </div>
+                                <div class="working-day {% if working_mode.thursday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Thursday
+                                </div>
+                                <div class="working-day {% if working_mode.friday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Friday
+                                </div>
+                                <div class="working-day {% if working_mode.saturday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Saturday
+                                </div>
+                                <div class="working-day {% if working_mode.sunday_enabled %}enabled{% else %}disabled{% endif %}">
+                                    Sunday
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Working Hours -->
+                    <div class="info-section">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-clock"></i> Working Hours
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="info-label">Start Time</div>
+                                <div class="time-display">{{ working_mode.start_time|time:"H:i" }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-label">End Time</div>
+                                <div class="time-display">{{ working_mode.end_time|time:"H:i" }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-label">Lunch Start</div>
+                                <div class="time-display">{{ working_mode.lunch_start|time:"H:i" }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-label">Lunch End</div>
+                                <div class="time-display">{{ working_mode.lunch_end|time:"H:i" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="info-label">Total Working Hours Per Day</div>
+                                <div class="info-value">
+                                    <strong>{{ working_mode.total_working_hours }} hours</strong>
+                                    (including {{ working_mode.lunch_duration }} hour lunch break)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Settings -->
+                    <div class="info-section">
+                        <h6 class="text-muted mb-3">
+                            <i class="fas fa-sliders-h"></i> Additional Settings
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-label">Backdating</div>
+                                <div class="info-value">
+                                    <span class="status-badge {% if working_mode.allow_backdating %}status-active{% else %}status-inactive{% endif %}">
+                                        {% if working_mode.allow_backdating %}Allowed{% else %}Not Allowed{% endif %}
+                                    </span>
+                                </div>
+                                {% if working_mode.allow_backdating %}
+                                <small class="text-muted">Staff can record transactions on previous dates</small>
+                                {% else %}
+                                <small class="text-muted">Staff cannot record transactions on previous dates</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    
+                    <!-- No Working Mode Found -->
+                    <div class="info-section text-center">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">No Working Mode Configured</h5>
+                        <p class="text-muted">
+                            No working mode has been set up yet. Click the button below to configure your working mode settings.
+                        </p>
+                        <a href="{% url 'core:add_working_mode' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Configure Working Mode
+                        </a>
+                    </div>
+                    
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="text-center">
+                                {% if working_mode %}
+                                <a href="{% url 'core:edit_working_mode' working_mode.id %}" class="action-button btn-edit">
+                                    <i class="fas fa-edit"></i> Edit Working Mode
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'core:settings_dashboard' %}" class="action-button btn-back">
+                                    <i class="fas fa-arrow-left"></i> Back to Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript for enhanced functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate working day badges
+        const workingDays = document.querySelectorAll('.working-day.enabled');
+        workingDays.forEach((day, index) => {
+            setTimeout(() => {
+                day.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    day.style.transform = 'scale(1)';
+                }, 200);
+            }, index * 100);
+        });
+    });
+</script>
+{% endblock %}

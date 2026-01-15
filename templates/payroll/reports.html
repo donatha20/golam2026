@@ -1,0 +1,286 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Payroll Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-bar"></i> Payroll Reports</h2>
+    </div>
+
+    <!-- Report Types -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h5>Employee Summary</h5>
+                    <p class="text-muted">Summary of all employees and their current status</p>
+                    <button type="button" class="btn btn-primary" onclick="generateReport('employee_summary')">
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar fa-3x text-success mb-3"></i>
+                    <h5>Payroll Summary</h5>
+                    <p class="text-muted">Summary of payroll periods and total payments</p>
+                    <button type="button" class="btn btn-success" onclick="generateReport('payroll_summary')">
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill fa-3x text-info mb-3"></i>
+                    <h5>Tax Summary</h5>
+                    <p class="text-muted">PAYE, NSSF, and NHIF deduction summaries</p>
+                    <button type="button" class="btn btn-info" onclick="generateReport('tax_summary')">
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Report Filters</h5>
+        </div>
+        <div class="card-body">
+            <form id="reportFilters">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="department" class="form-label">Department</label>
+                        <select class="form-control" id="department" name="department">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="employee" class="form-label">Employee</label>
+                        <select class="form-control" id="employee" name="employee">
+                            <option value="">All Employees</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Reports</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Report Name</th>
+                            <th>Generated Date</th>
+                            <th>Period</th>
+                            <th>Records</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentReportsTable">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No recent reports</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Payroll Report</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="reportContent">
+                <!-- Report content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="downloadReport()">Download PDF</button>
+                <button type="button" class="btn btn-success" onclick="exportToExcel()">Export to Excel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Generating report...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentReportType = null;
+
+function generateReport(reportType) {
+    currentReportType = reportType;
+    
+    // Show loading modal
+    new bootstrap.Modal(document.getElementById('loadingModal')).show();
+    
+    // Get filter values
+    const filters = new FormData(document.getElementById('reportFilters'));
+    filters.append('report_type', reportType);
+    
+    // Generate report via AJAX
+    fetch('{% url "payroll:generate_report" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: filters
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Hide loading modal
+        bootstrap.Modal.getInstance(document.getElementById('loadingModal')).hide();
+        
+        if (data.success) {
+            // Show report content
+            document.getElementById('reportContent').innerHTML = data.html;
+            document.getElementById('reportModalLabel').textContent = data.title;
+            new bootstrap.Modal(document.getElementById('reportModal')).show();
+            
+            // Update recent reports table
+            updateRecentReports();
+        } else {
+            alert(data.message || 'Error generating report');
+        }
+    })
+    .catch(error => {
+        // Hide loading modal
+        bootstrap.Modal.getInstance(document.getElementById('loadingModal')).hide();
+        console.error('Error:', error);
+        alert('Error generating report. Please try again.');
+    });
+}
+
+function downloadReport() {
+    if (currentReportType) {
+        const filters = new FormData(document.getElementById('reportFilters'));
+        filters.append('report_type', currentReportType);
+        filters.append('format', 'pdf');
+        
+        // Create form and submit for download
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "payroll:download_report" %}';
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfToken);
+        
+        // Add filters
+        for (let [key, value] of filters.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+}
+
+function exportToExcel() {
+    if (currentReportType) {
+        const filters = new FormData(document.getElementById('reportFilters'));
+        filters.append('report_type', currentReportType);
+        filters.append('format', 'excel');
+        
+        // Create form and submit for download
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "payroll:download_report" %}';
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfToken);
+        
+        // Add filters
+        for (let [key, value] of filters.entries()) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+}
+
+function updateRecentReports() {
+    // This would fetch and update the recent reports table
+    // Implementation depends on your backend API
+}
+
+// Set default date range (current month)
+$(document).ready(function() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    $('#start_date').val(firstDay.toISOString().split('T')[0]);
+    $('#end_date').val(lastDay.toISOString().split('T')[0]);
+});
+</script>
+{% endblock %}

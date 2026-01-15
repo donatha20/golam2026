@@ -1,0 +1,455 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Collateral Reports - Golam Financial Services{% endblock %}
+{% block page_title %}Collateral Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .report-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .report-tab {
+        padding: 0.75rem 1.5rem;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .report-tab.active {
+        color: #2b7a76;
+        border-bottom-color: #2b7a76;
+    }
+    
+    .report-tab:hover {
+        color: #2b7a76;
+    }
+    
+    .report-section {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2b7a76;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+    
+    .report-table th {
+        background: #f9fafb;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .report-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .report-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .amount-cell {
+        text-align: right;
+        font-family: monospace;
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .status-under_verification {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .status-verified {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-held {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .status-released {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .reports-container {
+            margin: 1rem;
+        }
+        
+        .report-tabs {
+            flex-wrap: wrap;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .report-table {
+            font-size: 0.8rem;
+        }
+        
+        .report-table th,
+        .report-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'assets:collateral_list' %}" class="btn-action secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+        <button onclick="window.print()" class="btn-action">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+        <a href="#" class="btn-action secondary">
+            <i class="fas fa-download"></i> Export PDF
+        </a>
+    </div>
+
+    <!-- Report Tabs -->
+    <div class="report-tabs">
+        <a href="?report_type=summary" class="report-tab {% if report_type == 'summary' %}active{% endif %}">
+            <i class="fas fa-chart-bar"></i> Summary
+        </a>
+        <a href="?report_type=verification" class="report-tab {% if report_type == 'verification' %}active{% endif %}">
+            <i class="fas fa-check-circle"></i> Verification Status
+        </a>
+        <a href="?report_type=coverage" class="report-tab {% if report_type == 'coverage' %}active{% endif %}">
+            <i class="fas fa-shield-alt"></i> Loan Coverage
+        </a>
+    </div>
+
+    <!-- Report Content -->
+    <div class="report-section">
+        {% if report_type == 'summary' %}
+            <h2>Collateral Summary Report</h2>
+            
+            <!-- Summary Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ report_data.total_collaterals }}</div>
+                    <div class="stat-label">Total Collaterals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">₹{{ report_data.total_value|floatformat:0 }}</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            </div>
+
+            <!-- By Type -->
+            <h3>Collaterals by Type</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Count</th>
+                        <th>Total Value</th>
+                        <th>Average Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for type_data in report_data.by_type %}
+                    <tr>
+                        <td>{{ type_data.name }}</td>
+                        <td>{{ type_data.collateral_count }}</td>
+                        <td class="amount-cell">₹{{ type_data.total_value|floatformat:2|default:"0.00" }}</td>
+                        <td class="amount-cell">₹{{ type_data.avg_value|floatformat:2|default:"0.00" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>No data available</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- By Status -->
+            <h3>Collaterals by Status</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Count</th>
+                        <th>Total Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for status_data in report_data.by_status %}
+                    <tr>
+                        <td>{{ status_data.status }}</td>
+                        <td>{{ status_data.count }}</td>
+                        <td class="amount-cell">₹{{ status_data.value|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>No data available</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% elif report_type == 'verification' %}
+            <h2>Verification Status Report</h2>
+
+            <!-- Pending Verification -->
+            <h3>Pending Verification ({{ report_data.pending_verification.count }})</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Collateral ID</th>
+                        <th>Title</th>
+                        <th>Borrower</th>
+                        <th>Type</th>
+                        <th>Estimated Value</th>
+                        <th>Submitted Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for collateral in report_data.pending_verification %}
+                    <tr>
+                        <td>{{ collateral.collateral_id }}</td>
+                        <td>{{ collateral.title }}</td>
+                        <td>{{ collateral.borrower.get_full_name }}</td>
+                        <td>{{ collateral.collateral_type.name }}</td>
+                        <td class="amount-cell">₹{{ collateral.estimated_value|floatformat:2 }}</td>
+                        <td>{{ collateral.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>No collaterals pending verification</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Verified Collaterals -->
+            <h3>Recently Verified ({{ report_data.verified_collaterals.count }})</h3>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Collateral ID</th>
+                        <th>Title</th>
+                        <th>Borrower</th>
+                        <th>Type</th>
+                        <th>Estimated Value</th>
+                        <th>Verified Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for collateral in report_data.verified_collaterals %}
+                    <tr>
+                        <td>{{ collateral.collateral_id }}</td>
+                        <td>{{ collateral.title }}</td>
+                        <td>{{ collateral.borrower.get_full_name }}</td>
+                        <td>{{ collateral.collateral_type.name }}</td>
+                        <td class="amount-cell">₹{{ collateral.estimated_value|floatformat:2 }}</td>
+                        <td>{{ collateral.updated_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>No verified collaterals</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% elif report_type == 'coverage' %}
+            <h2>Loan Coverage Analysis</h2>
+
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Collateral</th>
+                        <th>Borrower</th>
+                        <th>Loan Amount</th>
+                        <th>Collateral Value</th>
+                        <th>LTV Ratio</th>
+                        <th>Coverage Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in report_data.coverage_analysis %}
+                    <tr>
+                        <td>{{ item.collateral.title }}</td>
+                        <td>{{ item.collateral.borrower.get_full_name }}</td>
+                        <td class="amount-cell">₹{{ item.loan_amount|floatformat:2 }}</td>
+                        <td class="amount-cell">₹{{ item.collateral.estimated_value|floatformat:2 }}</td>
+                        <td class="amount-cell">{{ item.ltv_ratio|floatformat:1 }}%</td>
+                        <td>
+                            {% if item.adequate_security %}
+                                <span class="status-badge status-verified">Adequate</span>
+                            {% else %}
+                                <span class="status-badge status-rejected">Insufficient</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>No loan coverage data available</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print functionality
+    function printReport() {
+        window.print();
+    }
+    
+    // Add any other JavaScript functionality here
+    console.log('Collateral reports page loaded');
+</script>
+{% endblock %}

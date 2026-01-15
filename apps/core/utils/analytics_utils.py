@@ -5,7 +5,9 @@ Advanced analytics utilities for business intelligence.
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import Sum, Count, Avg, Q
+from django.db.models.functions import Coalesce
 from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 
 
 class LoanAnalytics:
@@ -15,6 +17,7 @@ class LoanAnalytics:
     def calculate_portfolio_metrics(loans_queryset):
         """Calculate comprehensive portfolio metrics."""
         from apps.loans.models import Loan
+        from apps.core.models import LoanStatusChoices
         
         total_loans = loans_queryset.count()
         if total_loans == 0:
@@ -22,28 +25,36 @@ class LoanAnalytics:
         
         # Basic metrics
         metrics = loans_queryset.aggregate(
-            total_disbursed=Sum('principal_amount'),
+            total_disbursed=Sum(Coalesce('amount_approved', 'amount_requested')),
             total_outstanding=Sum('outstanding_balance'),
-            avg_loan_size=Avg('principal_amount'),
-            total_interest_earned=Sum('total_interest_paid'),
+            avg_loan_size=Avg(Coalesce('amount_approved', 'amount_requested')),
+            total_interest_earned=Sum('total_interest'),
         )
         
         # Status breakdown
         status_breakdown = {}
-        for status in ['active', 'completed', 'defaulted', 'written_off']:
-            count = loans_queryset.filter(status=status).count()
-            amount = loans_queryset.filter(status=status).aggregate(
-                total=Sum('principal_amount')
+        status_mappings = [
+            (LoanStatusChoices.ACTIVE, 'active'),
+            (LoanStatusChoices.COMPLETED, 'completed'),
+            (LoanStatusChoices.DEFAULTED, 'defaulted'),
+            (LoanStatusChoices.WRITTEN_OFF, 'written_off'),
+        ]
+        for status_value, label in status_mappings:
+            count = loans_queryset.filter(status=status_value).count()
+            amount = loans_queryset.filter(status=status_value).aggregate(
+                total=Sum(Coalesce('amount_approved', 'amount_requested'))
             )['total'] or Decimal('0.00')
             
-            status_breakdown[status] = {
+            status_breakdown[label] = {
                 'count': count,
                 'amount': amount,
                 'percentage': (count / total_loans) * 100 if total_loans > 0 else 0
             }
         
         # Risk metrics
-        overdue_loans = loans_queryset.filter(status='overdue')
+        overdue_loans = loans_queryset.filter(
+            id__in=Loan.objects.overdue().values('id')
+        )
         portfolio_at_risk = overdue_loans.aggregate(
             amount=Sum('outstanding_balance')
         )['amount'] or Decimal('0.00')
@@ -52,7 +63,7 @@ class LoanAnalytics:
         par_ratio = (portfolio_at_risk / total_outstanding * 100) if total_outstanding > 0 else 0
         
         # Performance metrics
-        completed_loans = loans_queryset.filter(status='completed')
+        completed_loans = loans_queryset.filter(status=LoanStatusChoices.COMPLETED)
         default_rate = (status_breakdown['defaulted']['count'] / total_loans * 100) if total_loans > 0 else 0
         completion_rate = (completed_loans.count() / total_loans * 100) if total_loans > 0 else 0
         
@@ -71,8 +82,6 @@ class LoanAnalytics:
     @staticmethod
     def calculate_trend_analysis(loans_queryset, period_months=12):
         """Calculate loan trends over specified period."""
-        from apps.loans.models import Loan
-        
         end_date = timezone.now().date()
         start_date = end_date - timedelta(days=period_months * 30)
         
@@ -93,8 +102,8 @@ class LoanAnalytics:
             
             month_metrics = month_loans.aggregate(
                 count=Count('id'),
-                amount=Sum('principal_amount'),
-                avg_size=Avg('principal_amount')
+                amount=Sum(Coalesce('amount_approved', 'amount_requested')),
+                avg_size=Avg(Coalesce('amount_approved', 'amount_requested'))
             )
             
             monthly_data.append({
@@ -128,30 +137,33 @@ class LoanAnalytics:
         aging_analysis = {}
         total_outstanding = Decimal('0.00')
         
-        for bucket_name, bucket_range in aging_buckets.items():
-            if bucket_name == 'current':
-                bucket_loans = loans_queryset.filter(days_overdue=0)
-            elif bucket_name == 'over_180_days':
-                bucket_loans = loans_queryset.filter(days_overdue__gte=bucket_range['min'])
-            else:
-                bucket_loans = loans_queryset.filter(
-                    days_overdue__gte=bucket_range['min'],
-                    days_overdue__lte=bucket_range['max']
-                )
-            
-            bucket_metrics = bucket_loans.aggregate(
-                count=Count('id'),
-                outstanding=Sum('outstanding_balance')
-            )
-            
-            bucket_outstanding = bucket_metrics['outstanding'] or Decimal('0.00')
-            total_outstanding += bucket_outstanding
-            
+        for bucket_name in aging_buckets:
             aging_analysis[bucket_name] = {
-                'count': bucket_metrics['count'] or 0,
-                'outstanding_amount': bucket_outstanding,
-                'percentage': 0,  # Will be calculated after total is known
+                'count': 0,
+                'outstanding_amount': Decimal('0.00'),
+                'percentage': 0,
             }
+
+        for loan in loans_queryset:
+            days = loan.days_overdue
+            if days == 0:
+                bucket_name = 'current'
+            elif 1 <= days <= 30:
+                bucket_name = '1-30_days'
+            elif 31 <= days <= 60:
+                bucket_name = '31-60_days'
+            elif 61 <= days <= 90:
+                bucket_name = '61-90_days'
+            elif 91 <= days <= 180:
+                bucket_name = '91-180_days'
+            else:
+                bucket_name = 'over_180_days'
+
+            aging_analysis[bucket_name]['count'] += 1
+            aging_analysis[bucket_name]['outstanding_amount'] += (
+                loan.outstanding_balance or Decimal('0.00')
+            )
+            total_outstanding += loan.outstanding_balance or Decimal('0.00')
         
         # Calculate percentages
         for bucket_name in aging_analysis:
@@ -362,15 +374,38 @@ class BorrowerAnalytics:
     @staticmethod
     def calculate_borrower_segmentation(borrowers_queryset):
         """Segment borrowers based on various criteria."""
-        from apps.borrowers.models import Borrower
+        from apps.core.models import LoanStatusChoices
+        today = timezone.now().date()
         
         # Age segmentation
         age_segments = {
-            '18-25': borrowers_queryset.filter(age__gte=18, age__lte=25).count(),
-            '26-35': borrowers_queryset.filter(age__gte=26, age__lte=35).count(),
-            '36-45': borrowers_queryset.filter(age__gte=36, age__lte=45).count(),
-            '46-55': borrowers_queryset.filter(age__gte=46, age__lte=55).count(),
-            '56+': borrowers_queryset.filter(age__gte=56).count(),
+            '18-25': borrowers_queryset.filter(
+                date_of_birth__range=(
+                    today - relativedelta(years=25),
+                    today - relativedelta(years=18),
+                )
+            ).count(),
+            '26-35': borrowers_queryset.filter(
+                date_of_birth__range=(
+                    today - relativedelta(years=35),
+                    today - relativedelta(years=26),
+                )
+            ).count(),
+            '36-45': borrowers_queryset.filter(
+                date_of_birth__range=(
+                    today - relativedelta(years=45),
+                    today - relativedelta(years=36),
+                )
+            ).count(),
+            '46-55': borrowers_queryset.filter(
+                date_of_birth__range=(
+                    today - relativedelta(years=55),
+                    today - relativedelta(years=46),
+                )
+            ).count(),
+            '56+': borrowers_queryset.filter(
+                date_of_birth__lte=today - relativedelta(years=56)
+            ).count(),
         }
         
         # Gender distribution
@@ -388,19 +423,17 @@ class BorrowerAnalytics:
         # Loan performance segmentation
         performance_segments = {
             'excellent': borrowers_queryset.filter(
-                total_loans_taken__gt=0,
-                current_loan_status='completed'
-            ).count(),
+                loans__status=LoanStatusChoices.COMPLETED
+            ).distinct().count(),
             'good': borrowers_queryset.filter(
-                total_loans_taken__gt=0,
-                current_loan_status='active'
-            ).count(),
+                loans__status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
+            ).distinct().count(),
             'poor': borrowers_queryset.filter(
-                current_loan_status='overdue'
-            ).count(),
+                loans__is_npl=True
+            ).distinct().count(),
             'defaulted': borrowers_queryset.filter(
-                current_loan_status='defaulted'
-            ).count(),
+                loans__status=LoanStatusChoices.DEFAULTED
+            ).distinct().count(),
         }
         
         return {
@@ -438,7 +471,7 @@ def prepare_data_for_export(queryset, fields):
 def format_currency(amount):
     """Format currency for display."""
     if isinstance(amount, Decimal):
-        return f"₹{amount:,.2f}"
+        return f"Tsh {amount:,.2f}"
     elif isinstance(amount, (int, float)):
-        return f"₹{amount:,.2f}"
+        return f"Tsh {amount:,.2f}"
     return str(amount)

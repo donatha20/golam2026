@@ -70,7 +70,7 @@ class Command(BaseCommand):
             if dry_run:
                 self.stdout.write(
                     f"Would send reminder to {borrower.get_full_name()} ({borrower.phone_number}) "
-                    f"for loan {installment.loan.loan_number}, amount ₹{installment.amount_due}"
+                    f"for loan {installment.loan.loan_number}, amount Tsh {installment.amount_due}"
                 )
                 sent_count += 1
             else:

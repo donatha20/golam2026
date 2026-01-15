@@ -9,7 +9,7 @@
     .charges-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
     }
@@ -65,7 +65,7 @@
         background: white;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
@@ -85,7 +85,7 @@
     }
 
     .charge-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin: 0;
@@ -226,7 +226,7 @@
         background: #f9fafb;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
 
@@ -272,12 +272,12 @@
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         border: 1px solid #bbf7d0;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
     }
 
     .summary-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #166534;
         margin-bottom: 1rem;
@@ -412,7 +412,7 @@
             </div>
         </div>
         <div class="header-actions">
-            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary">
+            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus"></i> Add New Charge
             </a>
         </div>
@@ -485,10 +485,10 @@
                 </div>
             </div>
             <div class="filter-actions">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary btn-sm">
                     <i class="fas fa-search"></i> Apply Filters
                 </button>
-                <a href="{% url 'savings:view_charges' %}" class="btn btn-secondary">
+                <a href="{% url 'savings:view_charges' %}" class="btn btn-secondary btn-sm">
                     <i class="fas fa-times"></i> Clear Filters
                 </a>
             </div>
@@ -578,7 +578,7 @@
             </div>
             <h3>No Charges Configured</h3>
             <p>No charges have been set up yet. Create your first charge configuration.</p>
-            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary">
+            <a href="{% url 'savings:set_charges' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus"></i> Add First Charge
             </a>
         </div>
@@ -596,8 +596,8 @@
             <p id="modalMessage">Are you sure you want to perform this action?</p>
         </div>
         <div class="modal-footer" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end;">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-danger" id="confirmButton" onclick="confirmAction()">Confirm</button>
+            <button class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-danger btn-sm" id="confirmButton" onclick="confirmAction()">Confirm</button>
         </div>
     </div>
 </div>

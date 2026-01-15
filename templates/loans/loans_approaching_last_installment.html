@@ -13,7 +13,7 @@
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         border: 2px solid #22c55e;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
     }
@@ -38,7 +38,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -126,7 +126,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         transition: all 0.3s ease;
@@ -169,14 +169,14 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
 
     .filters-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -248,7 +248,7 @@
     </p>
 </div>
 
-<!-- Stats Cards -->
+<!-- Stats Cards 
 <div class="stats-grid">
     <div class="stat-card success">
         <div class="stat-title">Final Installment Due</div>
@@ -271,8 +271,8 @@
         <div class="stat-change">Loan completion rate</div>
     </div>
 </div>
-
-<!-- Completion Timeline -->
+-->
+<!-- Completion Timeline 
 <div class="filters-section">
     <h3 class="filters-title">Completion Timeline</h3>
     <div class="filters-grid">
@@ -322,8 +322,8 @@
         </div>
     </div>
 </div>
-
-<!-- Filters Section -->
+-->
+<!-- Filters Section 
 <div class="filters-section">
     <h3 class="filters-title">Filter Completing Loans</h3>
     <form method="get" class="filters-form">
@@ -361,23 +361,23 @@
         </div>
     </form>
 </div>
-
-<!-- Action Buttons -->
-<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <a href="{% url 'loans:record_repayment' %}" class="btn btn-success">
+-->
+<!-- Action Buttons 
+<div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'loans:record_repayment' %}" class="btn btn-success btn-sm">
         <i class="fas fa-check-circle"></i> Complete Payment
     </a>
-    <a href="{% url 'loans:fully_paid_loans' %}" class="btn btn-primary">
+    <a href="{% url 'loans:fully_paid_loans' %}" class="btn btn-primary btn-sm">
         <i class="fas fa-trophy"></i> View Completed Loans
     </a>
-    <a href="{% url 'loans:add_loan' %}" class="btn btn-secondary">
+    <a href="{% url 'loans:add_loan' %}" class="btn btn-secondary btn-sm">
         <i class="fas fa-plus-circle"></i> Issue Renewal Loan
     </a>
     <a href="{% url 'loans:customer_portfolio' %}" class="btn btn-outline-primary">
         <i class="fas fa-user-chart"></i> Customer Portfolio
     </a>
 </div>
-
+-->
 <!-- Completing Loans Table -->
 <div class="table-container">
     {% if table.data %}
@@ -387,7 +387,7 @@
             <i class="fas fa-calendar-check" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: #22c55e;"></i>
             <h3>No Loans Approaching Completion</h3>
             <p>No loans are currently approaching their final installments.</p>
-            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary" style="margin-top: 1rem;">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
                 <i class="fas fa-list"></i> View Active Loans
             </a>
         </div>

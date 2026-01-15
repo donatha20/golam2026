@@ -18,25 +18,25 @@
                     Savings Transactions
                 </h5>
                 <div class="d-flex gap-2">
-                    <a href="{% url 'savings:process_transaction' %}" class="btn btn-success">
+                    <a href="{% url 'savings:process_transaction' %}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus me-1"></i>New Transaction
                     </a>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Filters -->
-                <div class="row mb-3">
+                <div class="row mb-compact">
                     <div class="col-md-3">
                         <label for="date_from" class="form-label">From Date</label>
-                        <input type="date" class="form-control" id="date_from" name="date_from">
+                        <input type="date" class="form-control form-control-sm" id="date_from" name="date_from">
                     </div>
                     <div class="col-md-3">
                         <label for="date_to" class="form-label">To Date</label>
-                        <input type="date" class="form-control" id="date_to" name="date_to">
+                        <input type="date" class="form-control form-control-sm" id="date_to" name="date_to">
                     </div>
                     <div class="col-md-3">
                         <label for="transaction_type" class="form-label">Type</label>
-                        <select class="form-control" id="transaction_type" name="transaction_type">
+                        <select class="form-control form-control-sm" id="transaction_type" name="transaction_type">
                             <option value="">All Types</option>
                             <option value="deposit">Deposit</option>
                             <option value="withdrawal">Withdrawal</option>
@@ -46,11 +46,11 @@
                     </div>
                     <div class="col-md-3">
                         <label for="search" class="form-label">Search</label>
-                        <input type="text" class="form-control" id="search" name="search" placeholder="Search by account, borrower...">
+                        <input type="text" class="form-control form-control-sm" id="search" name="search" placeholder="Search by account, borrower...">
                     </div>
                 </div>
                 
-                <div class="row mb-3">
+                <div class="row mb-compact">
                     <div class="col-md-12">
                         <button type="button" class="btn btn-outline-secondary" id="filter-btn">
                             <i class="fas fa-filter me-1"></i>Apply Filters
@@ -66,7 +66,7 @@
 
                 <!-- Transaction Table -->
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
                                 <th>Date</th>

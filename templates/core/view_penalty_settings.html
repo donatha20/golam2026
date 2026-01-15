@@ -1,0 +1,109 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Penalty Settings - Golam Financial Services{% endblock %}
+
+{% block page_title %}Penalty Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i> Penalty Configurations
+                    </h4>
+                    <a href="{% url 'core:add_penalty_setting' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add Penalty Setting
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    {% if penalty_settings %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Rate/Amount</th>
+                                        <th>Grace Period</th>
+                                        <th>Max Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for setting in penalty_settings %}
+                                    <tr>
+                                        <td>{{ setting.name }}</td>
+                                        <td>
+                                            {% if setting.penalty_type == 'late_payment' %}
+                                                <span class="badge badge-warning">Late Payment</span>
+                                            {% elif setting.penalty_type == 'default' %}
+                                                <span class="badge badge-danger">Default</span>
+                                            {% elif setting.penalty_type == 'early_settlement' %}
+                                                <span class="badge badge-info">Early Settlement</span>
+                                            {% elif setting.penalty_type == 'processing_fee' %}
+                                                <span class="badge badge-primary">Processing Fee</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">Other</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if setting.calculation_method == 'percentage' %}
+                                                {{ setting.rate }}%
+                                            {% else %}
+                                                Tsh {{ setting.fixed_amount }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if setting.grace_period_days %}
+                                                {{ setting.grace_period_days }} days
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if setting.max_penalty_amount %}
+                                                Tsh {{ setting.max_penalty_amount }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if setting.is_active %}
+                                                <span class="badge badge-success">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'core:edit_penalty_setting' setting.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'core:delete_penalty_setting' setting.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No penalty settings configured</h5>
+                            <p class="text-muted">Start by adding your first penalty configuration.</p>
+                            <a href="{% url 'core:add_penalty_setting' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add Penalty Setting
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

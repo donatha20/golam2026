@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.db.models import F, Q, Count, Sum
+from django.db.models import F, Q, Count, Sum, Avg, OuterRef, Subquery
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponse
@@ -22,11 +22,12 @@ from django.views.generic.list import ListView
 from .models import (
     Loan, GroupLoan, GroupLoanMember, LoanDisbursement, LoanType,
     RepaymentSchedule, Repayment, Penalty, MissedPayment, 
-    WrittenOffLoan, OldLoan, PenaltyStatusChoices, RepaymentStatusChoices
+    WrittenOffLoan, OldLoan, PenaltyStatusChoices, RepaymentStatusChoices,
+    NPLCategoryChoices, NPLStatusChoices
 )
-from apps.borrowers.models import Borrower, BorrowerGroup
+from apps.borrowers.models import Borrower, BorrowerGroup, BorrowerStatus
 from apps.accounts.models import CustomUser
-from apps.core.models import LoanStatusChoices, FrequencyChoices
+from apps.core.models import LoanStatusChoices, FrequencyChoices, StatusChoices
 
 # Forms
 from . import forms
@@ -36,14 +37,12 @@ from .forms import (
 )
 
 # Tables and Filters
-from .tables import RepaidLoansTable, ExpectedRepaymentsTable, DisbursedLoansTable
+from .tables import RepaidLoansTable, ExpectedRepaymentsTable, DisbursedLoansTable, NonPerformingLoansTable
 # from .filters import LoanFilter, LoanBaseFilter, RepaymentScheduleFilter  # Will be enabled after package installation
 
 # Export utilities
 from apps.core.utils.export_utils import export_to_pdf, export_to_excel
-from apps.core.utils.analytics_utils import (
-    LoanAnalytics, prepare_data_for_export, format_currency
-)
+from apps.core.utils.analytics_utils import format_currency
 
 # Forms
 from .forms import (
@@ -107,31 +106,126 @@ class RepaidLoansView(LoginRequiredMixin, SingleTableMixin, ListView):  # Added 
         return context
 
 
+class NonPerformingLoansView(LoginRequiredMixin, SingleTableMixin, ListView):
+    """View for listing non-performing loans (NPLs) - loans with missed payments or overdue."""
+    model = Loan
+    table_class = NonPerformingLoansTable
+    template_name = 'loans/non_performing_loans.html'
+    paginate_by = 25
+
+    def get_queryset(self):
+        """
+        Get non-performing loans: loans that are overdue (past maturity date) 
+        or have missed repayment schedules.
+        NPL classification: 90+ days overdue
+        """
+        # Use the manager method for non-performing loans
+        queryset = Loan.objects.non_performing().select_related(
+            'borrower', 'loan_type', 'disbursed_by', 'assigned_recovery_officer'
+        )
+        
+        # Apply search filter
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(loan_number__icontains=search) |
+                Q(borrower__first_name__icontains=search) |
+                Q(borrower__last_name__icontains=search) |
+                Q(borrower__borrower_id__icontains=search)
+            )
+        
+        # Apply NPL category filter using manager methods
+        npl_category = self.request.GET.get('npl_category')
+        if npl_category:
+            if npl_category == 'watch':
+                queryset = Loan.objects.watch_loans()
+            elif npl_category == 'substandard':
+                queryset = Loan.objects.substandard_loans()
+            elif npl_category == 'doubtful':
+                queryset = Loan.objects.doubtful_loans()
+            elif npl_category == 'loss':
+                queryset = Loan.objects.loss_loans()
+            
+            # Re-apply search filter if category was selected
+            if search:
+                queryset = queryset.filter(
+                    Q(loan_number__icontains=search) |
+                    Q(borrower__first_name__icontains=search) |
+                    Q(borrower__last_name__icontains=search) |
+                    Q(borrower__borrower_id__icontains=search)
+                )
+            
+            queryset = queryset.select_related(
+                'borrower', 'loan_type', 'disbursed_by', 'assigned_recovery_officer'
+            )
+        
+        # Apply NPL status filter
+        npl_status = self.request.GET.get('npl_status')
+        if npl_status:
+            queryset = queryset.filter(npl_status=npl_status)
+        
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Use manager methods for category counts
+        watch_count = Loan.objects.watch_loans().count()
+        substandard_count = Loan.objects.substandard_loans().count()
+        doubtful_count = Loan.objects.doubtful_loans().count()
+        loss_count = Loan.objects.loss_loans().count()
+        
+        # Calculate NPL statistics
+        npl_loans = Loan.objects.non_performing()
+        total_npl_count = npl_loans.count()
+        total_npl_amount = npl_loans.aggregate(Sum('outstanding_balance'))['outstanding_balance__sum'] or 0
+        total_provision = npl_loans.aggregate(Sum('npl_provision_amount'))['npl_provision_amount__sum'] or 0
+        
+        # Get all active/disbursed loans for portfolio calculation
+        all_loans = Loan.objects.filter(
+            status__in=[LoanStatusChoices.DISBURSED, LoanStatusChoices.ACTIVE]
+        )
+        total_portfolio = all_loans.aggregate(Sum('outstanding_balance'))['outstanding_balance__sum'] or 1
+        
+        # NPL Ratio
+        npl_ratio = (Decimal(str(total_npl_amount)) / Decimal(str(total_portfolio)) * 100) if total_portfolio > 0 else 0
+        
+        context.update({
+            'title': 'Non-Performing Loans',
+            'total_npl_count': total_npl_count,
+            'total_npl_amount': total_npl_amount,
+            'npl_ratio': round(npl_ratio, 2),
+            'total_portfolio': total_portfolio,
+            'total_provision': total_provision,
+            'watch_count': watch_count,
+            'substandard_count': substandard_count,
+            'doubtful_count': doubtful_count,
+            'loss_count': loss_count,
+            'npl_status_choices': NPLStatusChoices.choices,
+        })
+        return context
+
+
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 
 def _generate_repayment_schedule(loan):
     """Generate repayment schedule for a disbursed loan."""
-    if loan.repayment_frequency == FrequencyChoices.MONTHLY:
-        frequency_months = 1
-    elif loan.repayment_frequency == FrequencyChoices.WEEKLY:
-        frequency_months = 0.25
-    elif loan.repayment_frequency == FrequencyChoices.BIWEEKLY:
-        frequency_months = 0.5
-    else:
-        frequency_months = 1  # Default to monthly
-    
+    if hasattr(loan, "generate_repayment_schedule"):
+        loan.generate_repayment_schedule()
+        return
+
     installment_amount = loan.total_amount / loan.duration_months
     current_date = loan.disbursement_date
-    
+
     for i in range(loan.duration_months):
-        due_date = current_date + relativedelta(months=i+1)
+        due_date = current_date + relativedelta(months=i + 1)
         RepaymentSchedule.objects.create(
             loan=loan,
             due_date=due_date,
             amount_due=installment_amount,
-            installment_number=i+1,
+            installment_number=i + 1,
             is_group=hasattr(loan, 'group_loan')
         )
 
@@ -151,6 +245,34 @@ def loan_repayments(request, loan_id):
     loan = get_object_or_404(Loan, pk=loan_id)
     repayments = Repayment.objects.filter(schedule__loan=loan)
     return render(request, 'loans/loan_repayments.html', {'loan': loan, 'repayments': repayments})
+
+@login_required
+def loan_detail(request, loan_id):
+    """View to display detailed information about a specific loan."""
+    loan = get_object_or_404(Loan, id=loan_id)
+    
+    # Get repayment schedule
+    schedule = RepaymentSchedule.objects.filter(loan=loan).order_by('due_date')
+    
+    # Get actual repayments
+    repayments = Repayment.objects.filter(schedule__loan=loan).order_by('-payment_date')
+    
+    # Calculate loan statistics
+    total_expected = schedule.aggregate(total=Sum('amount_due'))['total'] or 0
+    total_paid = repayments.aggregate(total=Sum('amount_paid'))['total'] or 0
+    outstanding_balance = total_expected - total_paid
+    
+    context = {
+        'loan': loan,
+        'schedule': schedule,
+        'repayments': repayments,
+        'total_expected': total_expected,
+        'total_paid': total_paid,
+        'outstanding_balance': outstanding_balance,
+        'today': timezone.now().date(),
+    }
+    
+    return render(request, 'loans/loan_detail.html', context)
 
 @login_required
 def interest_summary(request):
@@ -185,7 +307,7 @@ def add_new_loan(request):
         'form': form,
         'title': 'Add New Individual Loan',
         'page_title': 'Register New Loan',
-        'borrowers': Borrower.objects.filter(status='active').order_by('first_name', 'last_name'),
+        'borrowers': Borrower.objects.filter(status=BorrowerStatus.ACTIVE).order_by('first_name', 'last_name'),
         'loan_types': LoanType.objects.filter(is_active=True).order_by('name'),
         'frequency_choices': FrequencyChoices.choices,
         'today': timezone.now().date(),
@@ -234,7 +356,7 @@ def add_group_loan(request):
         'form': loan_form,
         'title': 'Add New Group Loan',
         'page_title': 'Register New Group Loan',
-        'groups': BorrowerGroup.objects.filter(status='active').order_by('group_name'),
+        'groups': BorrowerGroup.objects.filter(status=StatusChoices.ACTIVE).order_by('group_name'),
         'loan_types': LoanType.objects.filter(is_active=True).order_by('name'),
         'frequency_choices': FrequencyChoices.choices,
         'today': timezone.now().date(),
@@ -245,29 +367,54 @@ def add_group_loan(request):
 
 @login_required
 def loan_approval(request, loan_id):
-    """Approve a pending loan."""
+    """Approve and automatically disburse a pending loan."""
     loan = get_object_or_404(Loan, pk=loan_id, status=LoanStatusChoices.PENDING)
     
     if request.method == 'POST':
         form = LoanApprovalForm(request.POST, instance=loan)
         if form.is_valid():
             loan = form.save(commit=False)
+            
+            # Step 1: Approve the loan
             loan.status = LoanStatusChoices.APPROVED
             loan.approved_by = request.user
             loan.approval_date = timezone.now().date()
+            
+            # Step 2: Automatically disburse the loan
+            loan.status = LoanStatusChoices.DISBURSED
+            loan.disbursed_by = request.user
+            loan.disbursement_date = timezone.now().date()
+            
             loan.save()
+            
+            # Step 3: Generate repayment schedule
+            _generate_repayment_schedule(loan)
+            
+            # Step 4: Create disbursement record (if needed)
+            try:
+                from .models import LoanDisbursement
+                LoanDisbursement.objects.create(
+                    loan=loan,
+                    disbursement_date=loan.disbursement_date,
+                    amount=loan.amount_approved or loan.amount_requested,
+                    disbursed_by=request.user,
+                    notes=f'Auto-disbursed after approval by {request.user.get_full_name()}'
+                )
+            except Exception as e:
+                # Continue even if disbursement record creation fails
+                print(f"Warning: Could not create disbursement record: {e}")
 
-            # Send SMS notification
+            # Send SMS notification for approval and disbursement
             try:
                 from apps.core.sms_service import sms_service
-                sms_result = sms_service.send_loan_approval(loan)
+                sms_result = sms_service.send_loan_disbursement(loan)
                 if sms_result.get('success'):
-                    messages.success(request, f'Loan {loan.loan_number} approved successfully! SMS notification sent.')
+                    messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully! SMS notification sent.')
                 else:
-                    messages.success(request, f'Loan {loan.loan_number} approved successfully!')
+                    messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully!')
                     messages.warning(request, f'SMS notification failed: {sms_result.get("error", "Unknown error")}')
             except Exception as e:
-                messages.success(request, f'Loan {loan.loan_number} approved successfully!')
+                messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully!')
                 messages.warning(request, f'SMS notification failed: {str(e)}')
 
             return redirect('loans:disbursed_loans')
@@ -277,8 +424,56 @@ def loan_approval(request, loan_id):
     return render(request, 'loans/loan_approval.html', {
         'form': form,
         'loan': loan,
-        'title': f'Approve Loan {loan.loan_number}'
+        'title': f'Approve & Disburse Loan {loan.loan_number}'
     })
+
+
+@login_required
+def loan_rejection(request, loan_id):
+    """Reject a pending loan."""
+    loan = get_object_or_404(Loan, pk=loan_id, status=LoanStatusChoices.PENDING)
+    
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        rejection_reason = data.get('rejection_reason', '').strip()
+        
+        if not rejection_reason:
+            return JsonResponse({'success': False, 'error': 'Rejection reason is required'})
+        
+        # Update loan status and save rejection reason
+        loan.status = LoanStatusChoices.REJECTED
+        loan.rejection_reason = rejection_reason
+        loan.rejected_by = request.user
+        loan.rejection_date = timezone.now().date()
+        loan.save()
+
+        # Send SMS notification
+        try:
+            from apps.core.sms_service import sms_service
+            sms_result = sms_service.send_loan_rejection(loan)
+            if sms_result.get('success'):
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Loan {loan.loan_number} rejected successfully! SMS notification sent.',
+                    'redirect_url': '/loans/pending/'
+                })
+            else:
+                return JsonResponse({
+                    'success': True, 
+                    'message': f'Loan {loan.loan_number} rejected successfully!',
+                    'warning': f'SMS notification failed: {sms_result.get("error", "Unknown error")}',
+                    'redirect_url': '/loans/pending/'
+                })
+        except Exception as e:
+            return JsonResponse({
+                'success': True, 
+                'message': f'Loan {loan.loan_number} rejected successfully!',
+                'warning': f'SMS notification failed: {str(e)}',
+                'redirect_url': '/loans/pending/'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @login_required
@@ -344,17 +539,25 @@ def record_repayment(request, schedule_id):
             repayment.received_by = request.user
             repayment.save()
             
-            # Update schedule status
-            schedule.status = RepaymentStatusChoices.PAID
-            schedule.save()
+            # Update schedule totals and status
+            schedule.amount_paid = (schedule.amount_paid or Decimal('0')) + repayment.amount_paid
+            schedule.save(update_fields=['amount_paid'])
+            schedule.update_status()
             
             # Update loan outstanding balance
             loan = schedule.loan
-            loan.outstanding_balance -= repayment.amount_paid
-            if loan.outstanding_balance <= 0:
-                loan.outstanding_balance = 0
+            total_paid = Repayment.objects.filter(
+                schedule__loan=loan
+            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+            loan.total_paid = total_paid
+            loan.outstanding_balance = loan.total_amount - total_paid
+            if loan.outstanding_balance <= 0 and loan.status in [
+                LoanStatusChoices.ACTIVE,
+                LoanStatusChoices.DISBURSED
+            ]:
+                loan.outstanding_balance = Decimal('0')
                 loan.status = LoanStatusChoices.COMPLETED
-            loan.save()
+            loan.save(update_fields=['total_paid', 'outstanding_balance', 'status'])
             
             messages.success(request, 'Repayment recorded successfully!')
             return redirect('loans:disbursed_loans')
@@ -386,17 +589,25 @@ def record_group_repayment(request, schedule_id):
                 status=RepaymentStatusChoices.PAID
             )
             
-            # Update schedule status
-            schedule.status = RepaymentStatusChoices.PAID
-            schedule.save()
+            # Update schedule totals and status
+            schedule.amount_paid = (schedule.amount_paid or Decimal('0')) + repayment.amount_paid
+            schedule.save(update_fields=['amount_paid'])
+            schedule.update_status()
             
             # Update loan outstanding balance
             loan = schedule.loan
-            loan.outstanding_balance -= repayment.amount_paid
-            if loan.outstanding_balance <= 0:
-                loan.outstanding_balance = 0
+            total_paid = Repayment.objects.filter(
+                schedule__loan=loan
+            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0')
+            loan.total_paid = total_paid
+            loan.outstanding_balance = loan.total_amount - total_paid
+            if loan.outstanding_balance <= 0 and loan.status in [
+                LoanStatusChoices.ACTIVE,
+                LoanStatusChoices.DISBURSED
+            ]:
+                loan.outstanding_balance = Decimal('0')
                 loan.status = LoanStatusChoices.COMPLETED
-            loan.save()
+            loan.save(update_fields=['total_paid', 'outstanding_balance', 'status'])
             
             messages.success(request, 'Group repayment recorded successfully!')
             return redirect('loans:disbursed_loans')
@@ -486,38 +697,108 @@ def missed_schedules(request):
 
 @login_required
 def loans_arrears(request):
-    """View loans in arrears (with missed or defaulted payments)."""
-    loans = Loan.objects.filter(
-        repayment_schedules__status__in=[
-            RepaymentStatusChoices.MISSED, 
-            RepaymentStatusChoices.DEFAULTED
-        ]
-    ).distinct().select_related('borrower')
-    
-    return render(request, 'loans/loans_arrears.html', {
-        'loans': loans,
-        'title': 'Loans in Arrears'
-    })
+    """
+    Loans in arrears = loans with an unpaid instalment that is
+    between 0 and 5 days overdue (grace period).
+    """
 
+    today = timezone.localdate()
+
+    overdue_statuses = [
+        RepaymentStatusChoices.PENDING,
+        RepaymentStatusChoices.MISSED,
+        RepaymentStatusChoices.DEFAULTED,
+    ]
+
+    # Oldest overdue instalment per loan
+    oldest_overdue_due_date_sq = RepaymentSchedule.objects.filter(
+        loan_id=OuterRef("pk"),
+        due_date__lt=today,
+        status__in=overdue_statuses,
+    ).order_by("due_date").values("due_date")[:1]
+
+    loans = (
+        Loan.objects.filter(
+            status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
+        )
+        .select_related("borrower")
+        .annotate(oldest_overdue_due_date=Subquery(oldest_overdue_due_date_sq))
+    )
+
+    arrears_loans = []
+
+    for loan in loans:
+        if loan.oldest_overdue_due_date:
+            days_overdue = (today - loan.oldest_overdue_due_date).days
+
+            # Arrears = 0 to 5 days late
+            if 0 <= days_overdue <= 5:
+                loan.days_overdue = days_overdue
+                arrears_loans.append(loan)
+
+    return render(request, "loans/loans_arrears.html", {
+        "loans": arrears_loans,
+        "title": "Loans in Arrears (0–5 Days Past Due)",
+        "as_of": today,
+    })
 
 @login_required
 def loans_ageing(request):
-    """View loan ageing analysis."""
-    today = timezone.now().date()
-    ageing_loans = Loan.objects.filter(
-        status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
-    ).select_related('borrower')
-    
-    # Calculate days overdue for each loan
-    for loan in ageing_loans:
-        if loan.maturity_date and loan.maturity_date < today:
-            loan.days_overdue = (today - loan.maturity_date).days
+    """
+    Loan ageing analysis based on the OLDEST overdue unpaid instalment.
+    This is the standard "days past due" approach used in lending.
+    """
+
+    today = timezone.localdate()
+
+    # Define what counts as "unpaid / problematic"
+    # Add/adjust statuses to match your system
+    overdue_statuses = [
+        RepaymentStatusChoices.PENDING,    # if you have it
+        RepaymentStatusChoices.MISSED,
+        RepaymentStatusChoices.DEFAULTED,
+        # RepaymentStatusChoices.PARTIAL,  # optional if you have partial payments
+    ]
+
+    # Subquery: oldest overdue repayment due_date per loan
+    oldest_overdue_due_date_sq = RepaymentSchedule.objects.filter(
+        loan_id=OuterRef("pk"),
+        due_date__lt=today,
+        status__in=overdue_statuses,
+    ).order_by("due_date").values("due_date")[:1]
+
+    loans = (
+        Loan.objects.filter(
+            status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
+        )
+        .select_related("borrower")
+        .annotate(oldest_overdue_due_date=Subquery(oldest_overdue_due_date_sq))
+        .order_by("-id")
+    )
+
+    # Compute days_overdue + bucket in Python (fast, no extra queries)
+    for loan in loans:
+        if loan.oldest_overdue_due_date:
+            loan.days_overdue = (today - loan.oldest_overdue_due_date).days
         else:
             loan.days_overdue = 0
-    
-    return render(request, 'loans/loans_ageing.html', {
-        'loans': ageing_loans,
-        'title': 'Loan Ageing Analysis'
+
+        d = loan.days_overdue
+        if d == 0:
+            loan.ageing_bucket = "Current"
+        elif 1 <= d <= 30:
+            loan.ageing_bucket = "1–30"
+        elif 31 <= d <= 60:
+            loan.ageing_bucket = "31–60"
+        elif 61 <= d <= 90:
+            loan.ageing_bucket = "61–90"
+        else:
+            loan.ageing_bucket = "90+"
+
+    return render(request, "loans/loans_ageing.html", {
+        "loans": loans,
+        "title": "Loan Ageing Analysis",
+        "as_of": today,
     })
 
 
@@ -544,7 +825,7 @@ def outstanding_loans(request):
     # Risk distribution (simplified calculation)
     current_loans = filtered_loans.filter(
         repayment_schedules__due_date__gte=date.today(),
-        repayment_schedules__status='pending'
+        repayment_schedules__status=RepaymentStatusChoices.PENDING
     ).distinct().count()
     
     overdue_1_30 = filtered_loans.filter(
@@ -552,7 +833,7 @@ def outstanding_loans(request):
             date.today() - timedelta(days=30),
             date.today() - timedelta(days=1)
         ],
-        repayment_schedules__status='pending'
+        repayment_schedules__status=RepaymentStatusChoices.PENDING
     ).distinct().count()
     
     overdue_31_90 = filtered_loans.filter(
@@ -560,12 +841,12 @@ def outstanding_loans(request):
             date.today() - timedelta(days=90),
             date.today() - timedelta(days=31)
         ],
-        repayment_schedules__status='pending'
+        repayment_schedules__status=RepaymentStatusChoices.PENDING
     ).distinct().count()
     
     overdue_90_plus = filtered_loans.filter(
         repayment_schedules__due_date__lt=date.today() - timedelta(days=90),
-        repayment_schedules__status='pending'
+        repayment_schedules__status=RepaymentStatusChoices.PENDING
     ).distinct().count()
     
     context = {
@@ -777,32 +1058,64 @@ def write_off_loan(request, loan_id):
 # PORTFOLIO AND ANALYTICS VIEWS
 # =============================================================================
 
+from django.db.models import OuterRef, Subquery, Sum
+from django.utils import timezone
+
+
 @login_required
 def portfolio_at_risk(request):
-    """View portfolio at risk analysis."""
-    loans = Loan.objects.filter(
-        repayment_schedules__status__in=[
-            RepaymentStatusChoices.MISSED,
-            RepaymentStatusChoices.DEFAULTED
-        ]
-    ).distinct().select_related('borrower')
-    
+    today = timezone.localdate()
+
+    overdue_statuses = [
+        RepaymentStatusChoices.PENDING,
+        RepaymentStatusChoices.MISSED,
+        RepaymentStatusChoices.DEFAULTED,
+    ]
+
+    # Oldest overdue instalment per loan
+    oldest_due_sq = RepaymentSchedule.objects.filter(
+        loan_id=OuterRef("pk"),
+        due_date__lt=today,
+        status__in=overdue_statuses,
+    ).order_by("due_date").values("due_date")[:1]
+
+    loans = (
+        Loan.objects.filter(
+            status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
+        )
+        .select_related("borrower")
+        .annotate(oldest_overdue_due_date=Subquery(oldest_due_sq))
+    )
+
+    par_loans = []
+    at_risk_amount = 0
+
+    for loan in loans:
+        if loan.oldest_overdue_due_date:
+            days = (today - loan.oldest_overdue_due_date).days
+
+            # PAR = 6 to 30 days overdue
+            if 6 <= days <= 30:
+                loan.days_overdue = days
+                par_loans.append(loan)
+                at_risk_amount += loan.outstanding_balance
+
     total_portfolio = Loan.objects.filter(
         status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]
-    ).aggregate(Sum('amount_approved'))['amount_approved__sum'] or 0
-    
-    at_risk_amount = loans.aggregate(
-        Sum('outstanding_balance')
-    )['outstanding_balance__sum'] or 0
-    
-    risk_percentage = (at_risk_amount / total_portfolio * 100) if total_portfolio > 0 else 0
-    
-    return render(request, 'loans/portfolio_at_risk.html', {
-        'loans': loans,
-        'total_portfolio': total_portfolio,
-        'at_risk_amount': at_risk_amount,
-        'risk_percentage': round(risk_percentage, 2),
-        'title': 'Portfolio at Risk'
+    ).aggregate(Sum("amount_approved"))["amount_approved__sum"] or 0
+
+    risk_percentage = (
+        (at_risk_amount / total_portfolio) * 100
+        if total_portfolio > 0 else 0
+    )
+
+    return render(request, "loans/portfolio_at_risk.html", {
+        "loans": par_loans,
+        "total_portfolio": total_portfolio,
+        "at_risk_amount": at_risk_amount,
+        "risk_percentage": round(risk_percentage, 2),
+        "title": "Portfolio at Risk (6–30 Days)",
+        "as_of": today,
     })
 
 
@@ -867,53 +1180,159 @@ def summary_by_age_and_gender(request):
 
 @login_required
 def loans_graphs_summary(request):
-    """Loan analytics dashboard with charts and graphs."""
+    """Enhanced loan analytics dashboard with beautiful charts and graphs."""
     from django.db.models import Sum, Count, Avg
     from django.utils import timezone
+    from django.db.models.functions import TruncMonth
 
     # Basic statistics
     total_loans = Loan.objects.count()
-    total_disbursed = Loan.objects.aggregate(Sum('amount_approved'))['amount_approved__sum'] or 0
-    active_loans = Loan.objects.filter(status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]).count()
+    total_disbursed = Loan.objects.exclude(status__in=[LoanStatusChoices.PENDING, LoanStatusChoices.REJECTED]).aggregate(Sum('amount_approved'))['amount_approved__sum'] or 0
+    active_loans = Loan.objects.filter(status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED, LoanStatusChoices.APPROVED]).count()
 
     # Calculate repayment rate
     completed_loans = Loan.objects.filter(status=LoanStatusChoices.COMPLETED).count()
     repayment_rate = (completed_loans / total_loans * 100) if total_loans > 0 else 0
 
-    # Monthly disbursement data
-    summary = Loan.objects.annotate(
+    # Enhanced monthly data - Get data for all months in 2025
+    current_year = timezone.now().year
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    # Monthly disbursement amounts - Include ALL loan statuses except pending/rejected
+    disbursement_summary = Loan.objects.filter(
+        disbursement_date__year=current_year
+    ).exclude(
+        status__in=[LoanStatusChoices.PENDING, LoanStatusChoices.REJECTED]
+    ).annotate(
         month=TruncMonth('disbursement_date')
     ).values('month').annotate(
-        total_loans=Count('id'),
+        total_amount=Sum('amount_approved'),
+        total_loans=Count('id')
+    ).order_by('month')
+
+    # Monthly repayment amounts
+    from apps.repayments.models import Payment
+    repayment_summary = Payment.objects.filter(
+        payment_date__year=current_year,
+        status='completed'
+    ).annotate(
+        month=TruncMonth('payment_date')
+    ).values('month').annotate(
+        total_amount=Sum('amount')
+    ).order_by('month')
+
+    # Monthly defaulted loan amounts
+    defaulted_summary = Loan.objects.filter(
+        status=LoanStatusChoices.DEFAULTED,
+        disbursement_date__year=current_year
+    ).annotate(
+        month=TruncMonth('disbursement_date')
+    ).values('month').annotate(
         total_amount=Sum('amount_approved')
     ).order_by('month')
 
-    # Convert to chart data format
-    disbursement_labels = []
-    disbursement_data = []
-    for item in summary:
-        if item['month']:
-            disbursement_labels.append(item['month'].strftime('%b %Y'))
-            disbursement_data.append(item['total_loans'])
+    # Prepare data arrays for all 12 months
+    disbursed_amounts = [0] * 12
+    repayment_amounts = [0] * 12
+    defaulted_amounts = [0] * 12
 
-    # Status distribution data
+    # Fill disbursement data
+    for item in disbursement_summary:
+        if item['month']:
+            month_index = item['month'].month - 1
+            disbursed_amounts[month_index] = float(item['total_amount'] or 0)
+
+    # Fill repayment data
+    for item in repayment_summary:
+        if item['month']:
+            month_index = item['month'].month - 1
+            repayment_amounts[month_index] = float(item['total_amount'] or 0)
+
+    # Fill defaulted loan data
+    for item in defaulted_summary:
+        if item['month']:
+            month_index = item['month'].month - 1
+            defaulted_amounts[month_index] = float(item['total_amount'] or 0)
+
+    # Status distribution data - Count ALL loan statuses
     status_data = {
-        'Active': Loan.objects.filter(status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]).count(),
+        'Approved': Loan.objects.filter(status=LoanStatusChoices.APPROVED).count(),
+        'Active': Loan.objects.filter(status=LoanStatusChoices.ACTIVE).count(),
+        'Disbursed': Loan.objects.filter(status=LoanStatusChoices.DISBURSED).count(),
         'Completed': Loan.objects.filter(status=LoanStatusChoices.COMPLETED).count(),
         'Defaulted': Loan.objects.filter(status=LoanStatusChoices.DEFAULTED).count(),
+        'Rejected': Loan.objects.filter(status=LoanStatusChoices.REJECTED).count(),
         'Pending': Loan.objects.filter(status=LoanStatusChoices.PENDING).count(),
     }
 
+    # Remove zero counts for cleaner display
+    status_data = {k: v for k, v in status_data.items() if v > 0}
+
+    # Portfolio at Risk calculation using RepaymentSchedule
+    from django.utils import timezone
+    from datetime import timedelta
+    from .models import RepaymentSchedule
+    
+    today = timezone.now().date()
+    
+    # Calculate days overdue for different buckets using RepaymentSchedule
+    # Only if RepaymentSchedule data exists
+    try:
+        risk_0_30 = RepaymentSchedule.objects.filter(
+            loan__status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED],
+            status=RepaymentStatusChoices.PENDING,
+            due_date__lt=today,
+            due_date__gte=today - timedelta(days=30)
+        ).values('loan').distinct().count()
+        
+        risk_31_60 = RepaymentSchedule.objects.filter(
+            loan__status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED],
+            status=RepaymentStatusChoices.PENDING,
+            due_date__lt=today - timedelta(days=30),
+            due_date__gte=today - timedelta(days=60)
+        ).values('loan').distinct().count()
+        
+        risk_61_90 = RepaymentSchedule.objects.filter(
+            loan__status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED],
+            status=RepaymentStatusChoices.PENDING,
+            due_date__lt=today - timedelta(days=60),
+            due_date__gte=today - timedelta(days=90)
+        ).values('loan').distinct().count()
+        
+        risk_90_plus = RepaymentSchedule.objects.filter(
+            loan__status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED],
+            status=RepaymentStatusChoices.PENDING,
+            due_date__lt=today - timedelta(days=90)
+        ).values('loan').distinct().count()
+    except:
+        # Fallback if no repayment schedule data
+        risk_0_30 = risk_31_60 = risk_61_90 = risk_90_plus = 0
+
+    # Convert to percentages
+    total_active = active_loans
+    risk_percentages = [
+        round((risk_0_30 / total_active * 100), 1) if total_active > 0 else 0,
+        round((risk_31_60 / total_active * 100), 1) if total_active > 0 else 0,
+        round((risk_61_90 / total_active * 100), 1) if total_active > 0 else 0,
+        round((risk_90_plus / total_active * 100), 1) if total_active > 0 else 0,
+    ]
+
+    # Debug: Print actual data
+    print(f"Debug - Disbursed amounts: {disbursed_amounts}")
+    print(f"Debug - Status data: {status_data}")
+    print(f"Debug - Total disbursed: {total_disbursed}")
+    print(f"Debug - Total loans: {total_loans}")
+    print(f"Debug - Active loans: {active_loans}")
+
     chart_data = {
-        'disbursement_labels': disbursement_labels[-6:],  # Last 6 months
-        'disbursement_data': disbursement_data[-6:],
+        'disbursement_labels': months,
+        'disbursed_amounts': disbursed_amounts,
+        'repayment_amounts': repayment_amounts,
+        'defaulted_amounts': defaulted_amounts,
         'status_labels': list(status_data.keys()),
         'status_data': list(status_data.values()),
-        'repayment_labels': disbursement_labels[-6:],
-        'expected_repayments': [100, 120, 110, 130, 125, 140],  # Sample data
-        'actual_repayments': [95, 115, 105, 125, 120, 135],     # Sample data
         'risk_labels': ['0-30 days', '31-60 days', '61-90 days', '90+ days'],
-        'risk_data': [5, 3, 2, 1]  # Sample data
+        'risk_data': risk_percentages
     }
 
     context = {
@@ -922,7 +1341,7 @@ def loans_graphs_summary(request):
         'active_loans': active_loans,
         'repayment_rate': round(repayment_rate, 1),
         'chart_data': chart_data,
-        'title': 'Loan Analytics Dashboard'
+        'title': 'Enhanced Loan Analytics Dashboard'
     }
 
     return render(request, 'loans/loans_graphs_summary.html', context)
@@ -1087,15 +1506,22 @@ def export_loans_pdf(request):
 
     # Prepare data for export
     headers = [
-        'Loan ID', 'Borrower', 'Loan Type', 'Principal Amount',
+        'Loan Number', 'Borrower', 'Loan Type', 'Approved Amount',
         'Outstanding Balance', 'Status', 'Disbursement Date', 'Maturity Date'
     ]
 
-    data = prepare_data_for_export(
-        filtered_loans,
-        ['loan_id', 'borrower.full_name', 'loan_type.name', 'principal_amount',
-         'outstanding_balance', 'status', 'disbursement_date', 'maturity_date']
-    )
+    data = []
+    for loan in filtered_loans:
+        data.append([
+            loan.loan_number,
+            loan.borrower.get_full_name(),
+            loan.loan_type.name if loan.loan_type else '',
+            loan.amount_approved or loan.amount_requested,
+            loan.outstanding_balance,
+            loan.get_status_display() if hasattr(loan, 'get_status_display') else loan.status,
+            loan.disbursement_date,
+            loan.maturity_date,
+        ])
 
     filename = f"loans_report_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     title = "Loans Report"
@@ -1115,17 +1541,26 @@ def export_loans_excel(request):
 
     # Prepare data for export
     headers = [
-        'Loan ID', 'Borrower', 'Loan Type', 'Principal Amount',
+        'Loan Number', 'Borrower', 'Loan Type', 'Approved Amount',
         'Outstanding Balance', 'Status', 'Disbursement Date', 'Maturity Date',
         'Interest Rate', 'Total Interest', 'Days Overdue'
     ]
 
-    data = prepare_data_for_export(
-        filtered_loans,
-        ['loan_id', 'borrower.full_name', 'loan_type.name', 'principal_amount',
-         'outstanding_balance', 'status', 'disbursement_date', 'maturity_date',
-         'interest_rate', 'total_interest', 'days_overdue']
-    )
+    data = []
+    for loan in filtered_loans:
+        data.append([
+            loan.loan_number,
+            loan.borrower.get_full_name(),
+            loan.loan_type.name if loan.loan_type else '',
+            loan.amount_approved or loan.amount_requested,
+            loan.outstanding_balance,
+            loan.get_status_display() if hasattr(loan, 'get_status_display') else loan.status,
+            loan.disbursement_date,
+            loan.maturity_date,
+            loan.interest_rate,
+            loan.total_interest,
+            loan.days_overdue,
+        ])
 
     filename = f"loans_report_{timezone.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     title = "Loans Report"
@@ -1139,16 +1574,55 @@ def export_portfolio_analysis_pdf(request):
     loans = Loan.objects.all()
 
     # Calculate portfolio metrics
-    portfolio_metrics = LoanAnalytics.calculate_portfolio_metrics(loans)
+    total_loans = loans.count()
+    basic_metrics = loans.aggregate(
+        total_disbursed=Sum('amount_approved'),
+        total_outstanding=Sum('outstanding_balance'),
+        avg_loan_size=Avg('amount_approved'),
+        total_interest_earned=Sum('total_interest'),
+    )
+
+    status_breakdown = {}
+    status_mappings = [
+        (LoanStatusChoices.ACTIVE, 'active'),
+        (LoanStatusChoices.COMPLETED, 'completed'),
+        (LoanStatusChoices.DEFAULTED, 'defaulted'),
+        (LoanStatusChoices.WRITTEN_OFF, 'written_off'),
+    ]
+    for status_value, label in status_mappings:
+        count = loans.filter(status=status_value).count()
+        amount = loans.filter(status=status_value).aggregate(
+            total=Sum('outstanding_balance')
+        )['total'] or Decimal('0')
+        status_breakdown[label] = {
+            'count': count,
+            'amount': amount,
+            'percentage': (count / total_loans) * 100 if total_loans > 0 else 0,
+        }
+
+    portfolio_at_risk = Loan.objects.overdue().aggregate(
+        amount=Sum('outstanding_balance')
+    )['amount'] or Decimal('0')
+    total_outstanding = basic_metrics.get('total_outstanding') or Decimal('0')
+    par_ratio = (portfolio_at_risk / total_outstanding * 100) if total_outstanding > 0 else 0
+    default_rate = (
+        (status_breakdown['defaulted']['count'] / total_loans) * 100
+        if total_loans > 0
+        else 0
+    )
+    completion_rate = (
+        (status_breakdown['completed']['count'] / total_loans) * 100
+        if total_loans > 0
+        else 0
+    )
 
     # Prepare data for export
     headers = ['Metric', 'Value']
     data = []
 
     # Basic metrics
-    basic_metrics = portfolio_metrics.get('basic_metrics', {})
     data.extend([
-        ['Total Loans', portfolio_metrics.get('total_loans', 0)],
+        ['Total Loans', total_loans],
         ['Total Disbursed', format_currency(basic_metrics.get('total_disbursed', 0))],
         ['Total Outstanding', format_currency(basic_metrics.get('total_outstanding', 0))],
         ['Average Loan Size', format_currency(basic_metrics.get('avg_loan_size', 0))],
@@ -1156,28 +1630,27 @@ def export_portfolio_analysis_pdf(request):
     ])
 
     # Risk metrics
-    risk_metrics = portfolio_metrics.get('risk_metrics', {})
     data.extend([
         ['', ''],  # Empty row
         ['RISK METRICS', ''],
-        ['Portfolio at Risk', format_currency(risk_metrics.get('portfolio_at_risk', 0))],
-        ['PAR Ratio (%)', f"{risk_metrics.get('par_ratio', 0):.2f}%"],
-        ['Default Rate (%)', f"{risk_metrics.get('default_rate', 0):.2f}%"],
-        ['Completion Rate (%)', f"{risk_metrics.get('completion_rate', 0):.2f}%"],
+        ['Portfolio at Risk', format_currency(portfolio_at_risk)],
+        ['PAR Ratio (%)', f"{par_ratio:.2f}%"],
+        ['Default Rate (%)', f"{default_rate:.2f}%"],
+        ['Completion Rate (%)', f"{completion_rate:.2f}%"],
     ])
 
     # Status breakdown
-    status_breakdown = portfolio_metrics.get('status_breakdown', {})
     data.extend([
         ['', ''],  # Empty row
         ['STATUS BREAKDOWN', ''],
     ])
 
     for status, metrics in status_breakdown.items():
+        label = status.replace('_', ' ').title()
         data.extend([
-            [f"{status.title()} - Count", metrics.get('count', 0)],
-            [f"{status.title()} - Amount", format_currency(metrics.get('amount', 0))],
-            [f"{status.title()} - Percentage", f"{metrics.get('percentage', 0):.2f}%"],
+            [f"{label} - Count", metrics.get('count', 0)],
+            [f"{label} - Amount", format_currency(metrics.get('amount', 0))],
+            [f"{label} - Percentage", f"{metrics.get('percentage', 0):.2f}%"],
         ])
 
     filename = f"portfolio_analysis_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
@@ -1189,18 +1662,30 @@ def export_portfolio_analysis_pdf(request):
 @login_required
 def export_overdue_loans_pdf(request):
     """Export overdue loans to PDF."""
-    overdue_loans = Loan.objects.filter(status='overdue').select_related('borrower', 'loan_type')
+    overdue_loans = Loan.objects.overdue().select_related('borrower', 'loan_type')
 
     headers = [
-        'Loan ID', 'Borrower', 'Phone', 'Principal Amount',
-        'Outstanding Balance', 'Days Overdue', 'Penalty Amount', 'Last Payment Date'
+        'Loan Number', 'Borrower', 'Phone', 'Approved Amount',
+        'Outstanding Balance', 'Days Overdue', 'Penalty Total', 'Last Payment Date'
     ]
 
-    data = prepare_data_for_export(
-        overdue_loans,
-        ['loan_id', 'borrower.full_name', 'borrower.phone_number', 'principal_amount',
-         'outstanding_balance', 'days_overdue', 'penalty_amount', 'last_payment_date']
-    )
+    data = []
+    for loan in overdue_loans:
+        last_payment_date = Repayment.objects.filter(
+            schedule__loan=loan
+        ).order_by('-payment_date').values_list('payment_date', flat=True).first()
+        penalty_total = loan.penalties.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        data.append([
+            loan.loan_number,
+            loan.borrower.get_full_name(),
+            loan.borrower.phone_number,
+            loan.amount_approved or loan.amount_requested,
+            loan.outstanding_balance,
+            loan.days_overdue,
+            penalty_total,
+            last_payment_date,
+        ])
 
     filename = f"overdue_loans_{timezone.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     title = "Overdue Loans Report"
@@ -1211,21 +1696,44 @@ def export_overdue_loans_pdf(request):
 @login_required
 def export_overdue_loans_excel(request):
     """Export overdue loans to Excel."""
-    overdue_loans = Loan.objects.filter(status='overdue').select_related('borrower', 'loan_type')
+    overdue_loans = Loan.objects.overdue().select_related('borrower', 'loan_type')
 
     headers = [
-        'Loan ID', 'Borrower', 'Phone', 'Email', 'Principal Amount',
-        'Outstanding Balance', 'Days Overdue', 'Penalty Amount', 'Last Payment Date',
+        'Loan Number', 'Borrower', 'Phone', 'Email', 'Approved Amount',
+        'Outstanding Balance', 'Days Overdue', 'Penalty Total', 'Last Payment Date',
         'Next Payment Due', 'Loan Officer', 'District', 'Region'
     ]
 
-    data = prepare_data_for_export(
-        overdue_loans,
-        ['loan_id', 'borrower.full_name', 'borrower.phone_number', 'borrower.email',
-         'principal_amount', 'outstanding_balance', 'days_overdue', 'penalty_amount',
-         'last_payment_date', 'next_payment_due', 'loan_officer',
-         'borrower.district', 'borrower.region']
-    )
+    data = []
+    for loan in overdue_loans:
+        last_payment_date = Repayment.objects.filter(
+            schedule__loan=loan
+        ).order_by('-payment_date').values_list('payment_date', flat=True).first()
+        next_payment_due = loan.repayment_schedules.filter(
+            status__in=[
+                RepaymentStatusChoices.PENDING,
+                RepaymentStatusChoices.DUE,
+                RepaymentStatusChoices.PARTIAL,
+                RepaymentStatusChoices.MISSED,
+            ]
+        ).order_by('due_date').values_list('due_date', flat=True).first()
+        penalty_total = loan.penalties.aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+        data.append([
+            loan.loan_number,
+            loan.borrower.get_full_name(),
+            loan.borrower.phone_number,
+            loan.borrower.email,
+            loan.amount_approved or loan.amount_requested,
+            loan.outstanding_balance,
+            loan.days_overdue,
+            penalty_total,
+            last_payment_date,
+            next_payment_due,
+            loan.loan_officer,
+            loan.borrower.district,
+            loan.borrower.region,
+        ])
 
     filename = f"overdue_loans_{timezone.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     title = "Overdue Loans Report"
@@ -1370,7 +1878,7 @@ def export_customer_portfolio(request):
 
     for borrower in borrowers:
         loans = borrower.loans.all()
-        active_loans = loans.filter(status='active')
+        active_loans = loans.filter(status=LoanStatusChoices.ACTIVE)
         total_amount = loans.aggregate(Sum('amount_approved'))['amount_approved__sum'] or 0
         outstanding = loans.aggregate(Sum('outstanding_balance'))['outstanding_balance__sum'] or 0
 
@@ -1411,3 +1919,174 @@ def borrowers_api(request):
     
     borrowers_list = list(borrowers)
     return JsonResponse(borrowers_list, safe=False)
+
+
+@login_required
+def borrower_search_api(request):
+    """API endpoint to search borrowers with active loans."""
+    query = request.GET.get('q', '').strip()
+    has_loans = request.GET.get('has_loans', 'true').lower() == 'true'
+    
+    try:
+        from apps.borrowers.models import BorrowerStatus
+        from apps.core.models import LoanStatusChoices
+        
+        borrowers = Borrower.objects.filter(status=BorrowerStatus.ACTIVE)
+        
+        if has_loans:
+            # Filter borrowers who have loans that can receive repayments
+            # Since approved loans are auto-disbursed, we only need disbursed and active
+            active_loan_statuses = [
+                LoanStatusChoices.DISBURSED,   # Standard disbursed loans
+                LoanStatusChoices.ACTIVE,      # Active loans
+            ]
+            borrowers = borrowers.filter(
+                loans__status__in=active_loan_statuses
+            ).distinct()
+        
+        if query:
+            borrowers = borrowers.filter(
+                Q(first_name__icontains=query) | 
+                Q(last_name__icontains=query) |
+                Q(borrower_id__icontains=query) |
+                Q(phone_number__icontains=query)
+            )
+        
+        borrowers_data = []
+        for borrower in borrowers.select_related('branch')[:20]:  # Limit to 20 results
+            borrowers_data.append({
+                'id': borrower.id,
+                'full_name': borrower.get_full_name(),
+                'identifier': borrower.borrower_id,
+                'member_id': borrower.borrower_id,
+                'phone': borrower.phone_number,
+                'branch': borrower.branch.name if borrower.branch else 'N/A'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'borrowers': borrowers_data,
+            'count': len(borrowers_data),
+            'has_loans_filter': has_loans
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in borrower_search_api: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'error_type': 'server_error'
+        })
+
+
+@login_required
+def borrowers_with_loans_api(request):
+    """API endpoint to fetch all borrowers with active loans."""
+    try:
+        from apps.borrowers.models import BorrowerStatus
+        from apps.core.models import LoanStatusChoices
+        
+        # Include all loan statuses that can receive repayments
+        # Since approved loans are auto-disbursed, we only need disbursed and active
+        active_loan_statuses = [
+            LoanStatusChoices.DISBURSED,   # Standard disbursed loans
+            LoanStatusChoices.ACTIVE,      # Active loans
+        ]
+        
+        borrowers = Borrower.objects.filter(
+            status=BorrowerStatus.ACTIVE,
+            loans__status__in=active_loan_statuses
+        ).distinct().select_related('branch')[:50]  # Limit to 50 results
+        
+        borrowers_data = []
+        for borrower in borrowers:
+            borrowers_data.append({
+                'id': borrower.id,
+                'full_name': borrower.get_full_name(),
+                'identifier': borrower.borrower_id,
+                'member_id': borrower.borrower_id,
+                'phone': borrower.phone_number,
+                'branch': borrower.branch.name if borrower.branch else 'N/A'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'borrowers': borrowers_data,
+            'count': len(borrowers_data)
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in borrowers_with_loans_api: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'error_type': 'server_error'
+        })
+
+
+@login_required
+def borrower_loans_api(request, borrower_id):
+    """API endpoint to fetch active loans for a specific borrower."""
+    try:
+        from apps.borrowers.models import BorrowerStatus
+        from apps.core.models import LoanStatusChoices
+        
+        borrower = get_object_or_404(Borrower, id=borrower_id, status=BorrowerStatus.ACTIVE)
+        
+        # Include all loan statuses that can receive repayments
+        # Since approved loans are auto-disbursed, we only need disbursed and active
+        active_loan_statuses = [
+            LoanStatusChoices.DISBURSED,   # Standard disbursed loans
+            LoanStatusChoices.ACTIVE,      # Active loans
+        ]
+        
+        loans = Loan.objects.filter(
+            borrower=borrower,
+            status__in=active_loan_statuses
+        ).select_related('loan_type').order_by('-disbursement_date')
+        
+        loans_data = []
+        for loan in loans:
+            # Calculate penalty balance from related penalties
+            from .models import Penalty
+            penalty_balance = Penalty.objects.filter(
+                loan=loan,
+                status=PenaltyStatusChoices.APPLIED
+            ).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0')
+            
+            # Handle different loan statuses for display
+            status_display = loan.get_status_display() if hasattr(loan, 'get_status_display') else loan.status
+            
+            loans_data.append({
+                'id': loan.id,
+                'disbursement_date': loan.disbursement_date.isoformat() if loan.disbursement_date else loan.application_date.isoformat(),
+                'amount': float(loan.amount_approved or loan.amount_requested or 0),
+                'interest_amount': float(loan.total_interest or 0),
+                'penalty_balance': float(penalty_balance),
+                'outstanding_balance': float(loan.outstanding_balance or loan.total_amount or 0),
+                'loan_type': loan.loan_type.name if loan.loan_type else 'N/A',
+                'status': loan.status,
+                'status_display': status_display
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'loans': loans_data,
+            'count': len(loans_data)
+        })
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in borrower_loans_api: {e}")
+        print(traceback.format_exc())
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'error_type': 'server_error'
+        })

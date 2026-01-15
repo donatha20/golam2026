@@ -1,0 +1,528 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ collateral.title }} - Collateral Details{% endblock %}
+{% block page_title %}{{ collateral.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collateral-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .detail-header {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2rem;
+        align-items: start;
+    }
+    
+    .collateral-info h1 {
+        color: #2b7a76;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+    }
+    
+    .collateral-id {
+        font-family: monospace;
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .status-section {
+        text-align: right;
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: capitalize;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+    
+    .status-under_verification {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .status-verified {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-held {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .status-released {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .detail-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .detail-value {
+        font-weight: 500;
+        color: #374151;
+        text-align: right;
+    }
+    
+    .amount-value {
+        font-family: monospace;
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .borrower-link {
+        color: #2b7a76;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .borrower-link:hover {
+        text-decoration: underline;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .btn-action.danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-action.danger:hover {
+        background: #dc2626;
+    }
+    
+    .documents-section, .valuations-section, .loans-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .document-item, .valuation-item, .loan-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .document-item:last-child, 
+    .valuation-item:last-child, 
+    .loan-item:last-child {
+        border-bottom: none;
+    }
+    
+    .document-name, .loan-number {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .document-size, .valuation-date, .loan-date {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .collateral-detail-container {
+            margin: 1rem;
+        }
+        
+        .detail-header {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .status-section {
+            text-align: left;
+        }
+        
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .detail-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+        
+        .detail-value {
+            text-align: left;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="collateral-detail-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'assets:collateral_list' %}" class="btn-action secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+        <a href="#" class="btn-action">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="#" class="btn-action secondary">
+            <i class="fas fa-download"></i> Download
+        </a>
+        <a href="#" class="btn-action danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="detail-header">
+        <div class="collateral-info">
+            <h1>{{ collateral.title }}</h1>
+            <div class="collateral-id">ID: {{ collateral.collateral_id }}</div>
+            <p>{{ collateral.description|default:"No description available" }}</p>
+        </div>
+        <div class="status-section">
+            <div class="status-badge status-{{ collateral.status }}">
+                {{ collateral.get_status_display }}
+            </div>
+            <div style="font-size: 0.9rem; color: #6b7280;">
+                Created: {{ collateral.created_at|date:"M d, Y" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="detail-grid">
+        <!-- Basic Information -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-info-circle"></i>
+                Basic Information
+            </h3>
+            <div class="detail-item">
+                <span class="detail-label">Borrower</span>
+                <span class="detail-value">
+                    <a href="#" class="borrower-link">{{ collateral.borrower.get_full_name }}</a>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Type</span>
+                <span class="detail-value">{{ collateral.collateral_type.name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Brand/Model</span>
+                <span class="detail-value">{{ collateral.brand_model|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Serial Number</span>
+                <span class="detail-value">{{ collateral.serial_number|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Year of Manufacture</span>
+                <span class="detail-value">{{ collateral.year_of_manufacture|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Condition</span>
+                <span class="detail-value">{{ collateral.get_condition_display }}</span>
+            </div>
+        </div>
+
+        <!-- Valuation Information -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-dollar-sign"></i>
+                Valuation
+            </h3>
+            <div class="detail-item">
+                <span class="detail-label">Estimated Value</span>
+                <span class="detail-value amount-value">₹{{ collateral.estimated_value|floatformat:2 }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Market Value</span>
+                <span class="detail-value amount-value">₹{{ collateral.market_value|floatformat:2|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Forced Sale Value</span>
+                <span class="detail-value amount-value">₹{{ collateral.forced_sale_value|floatformat:2|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Valuation Method</span>
+                <span class="detail-value">{{ collateral.get_valuation_method_display }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Valuated By</span>
+                <span class="detail-value">{{ collateral.valuated_by|default:"-" }}</span>
+            </div>
+        </div>
+
+        <!-- Location & Ownership -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Location & Ownership
+            </h3>
+            <div class="detail-item">
+                <span class="detail-label">Location</span>
+                <span class="detail-value">{{ collateral.location|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Ownership Status</span>
+                <span class="detail-value">{{ collateral.get_ownership_status_display }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Owner Name</span>
+                <span class="detail-value">{{ collateral.owner_name|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Owner Relationship</span>
+                <span class="detail-value">{{ collateral.owner_relationship|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Legal Title Holder</span>
+                <span class="detail-value">{{ collateral.legal_title_holder|default:"-" }}</span>
+            </div>
+        </div>
+
+        <!-- Insurance Information -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-shield-alt"></i>
+                Insurance
+            </h3>
+            <div class="detail-item">
+                <span class="detail-label">Insured</span>
+                <span class="detail-value">{{ collateral.is_insured|yesno:"Yes,No" }}</span>
+            </div>
+            {% if collateral.is_insured %}
+            <div class="detail-item">
+                <span class="detail-label">Insurance Company</span>
+                <span class="detail-value">{{ collateral.insurance_company|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Policy Number</span>
+                <span class="detail-value">{{ collateral.insurance_policy_number|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Insurance Value</span>
+                <span class="detail-value amount-value">₹{{ collateral.insurance_value|floatformat:2|default:"-" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Expiry Date</span>
+                <span class="detail-value">{{ collateral.insurance_expiry|date:"M d, Y"|default:"-" }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    <div class="documents-section">
+        <h3 class="section-title">
+            <i class="fas fa-file-alt"></i>
+            Documents
+        </h3>
+        {% if documents %}
+            {% for document in documents %}
+            <div class="document-item">
+                <div>
+                    <div class="document-name">{{ document.document_name }}</div>
+                    <div class="document-size">{{ document.document_type }} • {{ document.uploaded_date|date:"M d, Y" }}</div>
+                </div>
+                <div>
+                    <a href="{{ document.document_file.url }}" class="btn-action secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" target="_blank">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-alt"></i>
+                <p>No documents available</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Valuation History -->
+    <div class="valuations-section">
+        <h3 class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Valuation History
+        </h3>
+        {% if valuations %}
+            {% for valuation in valuations %}
+            <div class="valuation-item">
+                <div>
+                    <div class="amount-value">₹{{ valuation.appraised_value|floatformat:2 }}</div>
+                    <div class="valuation-date">{{ valuation.valuation_date|date:"M d, Y" }} • {{ valuation.appraiser_name }}</div>
+                </div>
+                <div>
+                    <span class="detail-value">{{ valuation.valuation_method }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-line"></i>
+                <p>No valuation history available</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Related Loans -->
+    <div class="loans-section">
+        <h3 class="section-title">
+            <i class="fas fa-money-bill-wave"></i>
+            Related Loans
+        </h3>
+        {% if related_loans %}
+            {% for loan in related_loans %}
+            <div class="loan-item">
+                <div>
+                    <div class="loan-number">{{ loan.loan_number }}</div>
+                    <div class="loan-date">{{ loan.created_at|date:"M d, Y" }} • ₹{{ loan.amount_approved|floatformat:2 }}</div>
+                </div>
+                <div>
+                    <span class="status-badge status-{{ loan.status }}">{{ loan.get_status_display }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-money-bill-wave"></i>
+                <p>No related loans found</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript functionality here
+    console.log('Collateral detail page loaded');
+</script>
+{% endblock %}

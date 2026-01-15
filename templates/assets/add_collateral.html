@@ -1,0 +1,503 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Add Collateral - Golam Financial Services{% endblock %}
+{% block page_title %}Add New Collateral{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collateral-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #8a2be2;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-row.single {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: #dc2626;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #8a2be2;
+        box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .form-help {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .form-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: #8a2be2;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-container {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        border: none;
+    }
+
+    .btn-primary {
+        background: #8a2be2;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #7b1fa2;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+        .collateral-form-container {
+            margin: 1rem;
+            padding: 1rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-container {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="collateral-form-container">
+    <form method="post" id="collateralForm">
+        {% csrf_token %}
+        
+        <!-- Basic Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Basic Information
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Borrower</label>
+                    <select name="borrower" class="form-select form-select-sm" required>
+                        <option value="">Select borrower</option>
+                        {% for borrower in borrowers %}
+                            <option value="{{ borrower.id }}">{{ borrower.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Loan (Optional)</label>
+                    <select name="loan" class="form-select form-select-sm">
+                        <option value="">Select loan</option>
+                        {% for loan in loans %}
+                            <option value="{{ loan.id }}">{{ loan.loan_number }} - TSh {{ loan.amount_approved|floatformat:0 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Collateral Type</label>
+                    <select name="collateral_type" class="form-select form-select-sm" required>
+                        <option value="">Select collateral type</option>
+                        {% for type in collateral_types %}
+                            <option value="{{ type.id }}">{{ type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Title</label>
+                    <input type="text" name="title" class="form-input" placeholder="Enter collateral title" required>
+                </div>
+            </div>
+            
+            <div class="form-row single">
+                <div class="form-group">
+                    <label class="form-label required">Description</label>
+                    <textarea name="description" class="form-textarea" placeholder="Enter detailed description..." required></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Physical Details -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-cogs"></i>
+                Physical Details
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Brand/Model</label>
+                    <input type="text" name="brand_model" class="form-input" placeholder="Enter brand/model">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" name="serial_number" class="form-input" placeholder="Enter serial number">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Year of Manufacture</label>
+                    <input type="number" name="year_of_manufacture" class="form-input" min="1900" max="{{ current_year }}" placeholder="Enter year">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Condition</label>
+                    <select name="condition" class="form-select form-select-sm">
+                        <option value="excellent">Excellent</option>
+                        <option value="good" selected>Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Status</label>
+                    <select name="status" class="form-select form-select-sm" required>
+                        <option value="submitted" selected>Submitted</option>
+                        <option value="under_verification">Under Verification</option>
+                        <option value="verified">Verified</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="held">Held as Security</option>
+                        <option value="released">Released</option>
+                        <option value="liquidated">Liquidated</option>
+                        <option value="damaged">Damaged</option>
+                        <option value="lost">Lost</option>
+                    </select>
+                </div>
+                <div class="form-group"></div>
+            </div>
+        </div>
+
+        <!-- Valuation Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-dollar-sign"></i>
+                Valuation Information
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Estimated Value (TSh)</label>
+                    <input type="number" name="estimated_value" class="form-input" step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Market Value (TSh)</label>
+                    <input type="number" name="market_value" class="form-input" step="0.01" min="0.00" placeholder="0.00">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Forced Sale Value (TSh)</label>
+                    <input type="number" name="forced_sale_value" class="form-input" step="0.01" min="0.00" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Valuation Method</label>
+                    <select name="valuation_method" class="form-select form-select-sm">
+                        <option value="self_declared" selected>Self Declared</option>
+                        <option value="market_comparison">Market Comparison</option>
+                        <option value="professional_appraisal">Professional Appraisal</option>
+                        <option value="cost_approach">Cost Approach</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Valuated By</label>
+                    <input type="text" name="valuated_by" class="form-input" placeholder="Enter valuator name">
+                </div>
+                <div class="form-group"></div>
+            </div>
+        </div>
+
+        <!-- Location and Ownership -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-map-marker-alt"></i>
+                Location and Ownership
+            </div>
+            
+            <div class="form-row single">
+                <div class="form-group">
+                    <label class="form-label required">Location</label>
+                    <textarea name="location" class="form-textarea" placeholder="Enter collateral location..." required></textarea>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Ownership Status</label>
+                    <select name="ownership_status" class="form-select form-select-sm">
+                        <option value="owned" selected>Owned by Borrower</option>
+                        <option value="joint_owned">Joint Ownership</option>
+                        <option value="third_party">Third Party Owned</option>
+                        <option value="leased">Leased</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Owner Name</label>
+                    <input type="text" name="owner_name" class="form-input" placeholder="Enter owner name if different from borrower">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Owner Relationship</label>
+                    <input type="text" name="owner_relationship" class="form-input" placeholder="Enter relationship to borrower">
+                </div>
+                <div class="form-group"></div>
+            </div>
+        </div>
+
+        <!-- Legal Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-balance-scale"></i>
+                Legal Information
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Registration Number</label>
+                    <input type="text" name="registration_number" class="form-input" placeholder="Enter registration number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Registration Authority</label>
+                    <input type="text" name="registration_authority" class="form-input" placeholder="Enter registration authority">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Legal Title Holder</label>
+                    <input type="text" name="legal_title_holder" class="form-input" placeholder="Enter legal title holder">
+                </div>
+                <div class="form-group"></div>
+            </div>
+            
+            <div class="form-row single">
+                <div class="form-group">
+                    <label class="form-label">Encumbrance Details</label>
+                    <textarea name="encumbrance_details" class="form-textarea" placeholder="Enter details of existing loans, mortgages, or liens..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insurance Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-shield-alt"></i>
+                Insurance Information
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="is_insured" class="form-checkbox" id="is_insured">
+                        <label for="is_insured" class="form-label">Is Insured</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Insurance Company</label>
+                    <input type="text" name="insurance_company" class="form-input" placeholder="Enter insurance company">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Insurance Policy Number</label>
+                    <input type="text" name="insurance_policy_number" class="form-input" placeholder="Enter policy number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Insurance Value (TSh)</label>
+                    <input type="number" name="insurance_value" class="form-input" step="0.01" min="0.00" placeholder="0.00">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Insurance Expiry</label>
+                    <input type="date" name="insurance_expiry" class="form-input">
+                </div>
+                <div class="form-group"></div>
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-plus-circle"></i>
+                Additional Information
+            </div>
+            
+            <div class="form-row single">
+                <div class="form-group">
+                    <label class="form-label">Special Conditions</label>
+                    <textarea name="special_conditions" class="form-textarea" placeholder="Enter any special conditions..."></textarea>
+                </div>
+            </div>
+            
+            <div class="form-row single">
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-textarea" placeholder="Enter additional notes..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="btn-container">
+            <a href="{% url 'assets:collateral_list' %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-save"></i>
+                Save Collateral
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.getElementById('collateralForm').addEventListener('submit', function(e) {
+        const estimatedValue = parseFloat(document.querySelector('input[name="estimated_value"]').value);
+        const marketValue = parseFloat(document.querySelector('input[name="market_value"]').value);
+        const forcedSaleValue = parseFloat(document.querySelector('input[name="forced_sale_value"]').value);
+        
+        if (marketValue && estimatedValue && marketValue > estimatedValue * 1.5) {
+            e.preventDefault();
+            alert('Market value seems unusually high compared to estimated value.');
+            return false;
+        }
+        
+        if (forcedSaleValue && estimatedValue && forcedSaleValue > estimatedValue) {
+            e.preventDefault();
+            alert('Forced sale value cannot exceed estimated value.');
+            return false;
+        }
+    });
+    
+    // Set current year for manufacture year validation
+    const currentYear = new Date().getFullYear();
+    document.querySelector('input[name="year_of_manufacture"]').max = currentYear;
+</script>
+{% endblock %}

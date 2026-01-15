@@ -14,6 +14,7 @@ from .forms import (
     CapitalInjectionForm, CapitalWithdrawalForm
 )
 from .tables import IncomeTable, ExpenditureTable, IncomeCategoryTable, ExpenditureCategoryTable
+from .approval_tables import IncomeApprovalTable, ExpenditureApprovalTable
 from .filters import IncomeFilter, ExpenditureFilter, CategoryFilter
 from .services import get_account_balances, AccountingService
 from apps.accounts.models import UserActivity
@@ -34,7 +35,7 @@ def add_income(request):
                 user=request.user,
                 action='CREATE',
                 object_id=income.id,
-                description=f'Added income: {income.get_source_display()} - ₹{income.amount:,.2f}',
+                description=f'Added income: {income.get_source_display()} - Tsh {income.amount:,.2f}',
                 content_type='Income',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
@@ -79,9 +80,9 @@ def add_income(request):
 
 @login_required
 def view_income(request):
-    """View all income records with filtering and search."""
-    # Get all income records
-    income_queryset = Income.objects.select_related('category', 'recorded_by').order_by('-income_date', '-created_at')
+    """View all approved income records with filtering and search."""
+    # Get only approved income records
+    income_queryset = Income.objects.filter(status='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-income_date', '-created_at')
 
     # Apply filters using django-filter
     income_filter = IncomeFilter(request.GET, queryset=income_queryset)
@@ -141,7 +142,7 @@ def add_expenditure(request):
                 user=request.user,
                 action='CREATE',
                 object_id=expenditure.id,
-                description=f'Added expenditure: {expenditure.get_expenditure_type_display()} - ₹{expenditure.amount:,.2f}',
+                description=f'Added expenditure: {expenditure.get_expenditure_type_display()} - Tsh {expenditure.amount:,.2f}',
                 content_type='Expenditure',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
@@ -187,9 +188,9 @@ def add_expenditure(request):
 
 @login_required
 def view_expenditures(request):
-    """View all expenditure records with filtering and search."""
-    # Get all expenditure records
-    expenditure_queryset = Expenditure.objects.select_related('category', 'recorded_by').order_by('-expenditure_date', '-created_at')
+    """View all approved expenditure records with filtering and search."""
+    # Get only approved expenditure records
+    expenditure_queryset = Expenditure.objects.filter(status='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-expenditure_date', '-created_at')
 
     # Apply filters using django-filter
     expenditure_filter = ExpenditureFilter(request.GET, queryset=expenditure_queryset)
@@ -230,7 +231,7 @@ def view_expenditures(request):
 
     context = {
         'table': table,
-        'filter_form': filter_form,
+        'filter': expenditure_filter,
         'stats': stats,
         'category_stats': category_stats,
         'status_stats': status_stats,
@@ -239,6 +240,170 @@ def view_expenditures(request):
     }
 
     return render(request, 'finance_tracker/view_expenditures.html', context)
+
+
+@login_required
+def income_approval_queue(request):
+    """View pending income records for approval."""
+    # Get pending income records
+    pending_income = Income.objects.filter(status='pending').select_related('category', 'recorded_by').order_by('-created_at')
+
+    # Create data table
+    table = IncomeApprovalTable(pending_income)
+    RequestConfig(request, paginate={"per_page": 25}).configure(table)
+
+    # Statistics
+    stats = {
+        'pending_count': pending_income.count(),
+        'pending_amount': pending_income.aggregate(total=Sum('amount'))['total'] or 0,
+    }
+
+    context = {
+        'table': table,
+        'stats': stats,
+        'title': 'Income Approval Queue',
+        'page_title': 'Pending Income Approvals',
+    }
+
+    return render(request, 'finance_tracker/income_approval_queue.html', context)
+
+
+@login_required
+def expenditure_approval_queue(request):
+    """View pending expenditure records for approval."""
+    # Get pending expenditure records
+    pending_expenditures = Expenditure.objects.filter(status='pending').select_related('category', 'recorded_by').order_by('-created_at')
+
+    # Create data table
+    table = ExpenditureApprovalTable(pending_expenditures)
+    RequestConfig(request, paginate={"per_page": 25}).configure(table)
+
+    # Statistics
+    stats = {
+        'pending_count': pending_expenditures.count(),
+        'pending_amount': pending_expenditures.aggregate(total=Sum('amount'))['total'] or 0,
+    }
+
+    context = {
+        'table': table,
+        'stats': stats,
+        'title': 'Expenditure Approval Queue',
+        'page_title': 'Pending Expenditure Approvals',
+    }
+
+    return render(request, 'finance_tracker/expenditure_approval_queue.html', context)
+
+
+@login_required
+def approve_income(request, income_id):
+    """Approve an income record."""
+    income = get_object_or_404(Income, id=income_id, status='pending')
+    
+    if request.method == 'POST':
+        income.status = 'approved'
+        income.approved_by = request.user
+        income.approval_date = timezone.now()
+        income.save()
+        
+        # Log activity
+        UserActivity.objects.create(
+            user=request.user,
+            action='APPROVE',
+            object_id=income.id,
+            description=f'Approved income: {income.get_income_type_display()} - Tsh {income.amount:,.2f}',
+            content_type='Income',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+        
+        messages.success(request, f'Income record {income.income_id} approved successfully!')
+        return redirect('finance_tracker:income_approval_queue')
+    
+    return render(request, 'finance_tracker/approve_income.html', {'income': income})
+
+
+@login_required
+def reject_income(request, income_id):
+    """Reject an income record."""
+    income = get_object_or_404(Income, id=income_id, status='pending')
+    
+    if request.method == 'POST':
+        rejection_reason = request.POST.get('rejection_reason', '')
+        income.status = 'rejected'
+        income.approved_by = request.user
+        income.approval_date = timezone.now()
+        income.rejection_reason = rejection_reason
+        income.save()
+        
+        # Log activity
+        UserActivity.objects.create(
+            user=request.user,
+            action='REJECT',
+            object_id=income.id,
+            description=f'Rejected income: {income.get_income_type_display()} - Tsh {income.amount:,.2f}',
+            content_type='Income',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+        
+        messages.warning(request, f'Income record {income.income_id} rejected.')
+        return redirect('finance_tracker:income_approval_queue')
+    
+    return render(request, 'finance_tracker/reject_income.html', {'income': income})
+
+
+@login_required
+def approve_expenditure(request, expenditure_id):
+    """Approve an expenditure record."""
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
+    
+    if request.method == 'POST':
+        expenditure.status = 'approved'
+        expenditure.approved_by = request.user
+        expenditure.approval_date = timezone.now()
+        expenditure.save()
+        
+        # Log activity
+        UserActivity.objects.create(
+            user=request.user,
+            action='APPROVE',
+            object_id=expenditure.id,
+            description=f'Approved expenditure: {expenditure.get_expenditure_type_display()} - Tsh {expenditure.amount:,.2f}',
+            content_type='Expenditure',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+        
+        messages.success(request, f'Expenditure record {expenditure.expenditure_id} approved successfully!')
+        return redirect('finance_tracker:expenditure_approval_queue')
+    
+    return render(request, 'finance_tracker/approve_expenditure.html', {'expenditure': expenditure})
+
+
+@login_required
+def reject_expenditure(request, expenditure_id):
+    """Reject an expenditure record."""
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
+    
+    if request.method == 'POST':
+        rejection_reason = request.POST.get('rejection_reason', '')
+        expenditure.status = 'rejected'
+        expenditure.approved_by = request.user
+        expenditure.approval_date = timezone.now()
+        expenditure.rejection_reason = rejection_reason
+        expenditure.save()
+        
+        # Log activity
+        UserActivity.objects.create(
+            user=request.user,
+            action='REJECT',
+            object_id=expenditure.id,
+            description=f'Rejected expenditure: {expenditure.get_expenditure_type_display()} - Tsh {expenditure.amount:,.2f}',
+            content_type='Expenditure',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+        
+        messages.warning(request, f'Expenditure record {expenditure.expenditure_id} rejected.')
+        return redirect('finance_tracker:expenditure_approval_queue')
+    
+    return render(request, 'finance_tracker/reject_expenditure.html', {'expenditure': expenditure})
 
 
 @login_required
@@ -564,7 +729,7 @@ def add_capital(request):
                 user=request.user,
                 action='CREATE',
                 object_id=capital.id,
-                description=f'Added capital injection: {capital.get_capital_type_display()} - ₹{capital.amount:,.2f}',
+                description=f'Added capital injection: {capital.get_capital_type_display()} - Tsh {capital.amount:,.2f}',
                 content_type='Capital',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
@@ -634,7 +799,7 @@ def withdraw_capital(request):
                 user=request.user,
                 action='CREATE',
                 object_id=capital.id,
-                description=f'Added capital withdrawal: {capital.get_capital_type_display()} - ₹{capital.amount:,.2f}',
+                description=f'Added capital withdrawal: {capital.get_capital_type_display()} - Tsh {capital.amount:,.2f}',
                 content_type='Capital',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
@@ -722,7 +887,7 @@ def approve_capital(request, capital_id):
                 user=request.user,
                 action='APPROVE',
                 object_id=capital.id,
-                description=f'Approved capital {capital.get_transaction_type_display().lower()}: {capital.get_capital_type_display()} - ₹{capital.amount:,.2f}',
+                description=f'Approved capital {capital.get_transaction_type_display().lower()}: {capital.get_capital_type_display()} - Tsh {capital.amount:,.2f}',
                 content_type='Capital',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
@@ -740,7 +905,7 @@ def approve_capital(request, capital_id):
                 user=request.user,
                 action='REJECT',
                 object_id=capital.id,
-                description=f'Rejected capital {capital.get_transaction_type_display().lower()}: {capital.get_capital_type_display()} - ₹{capital.amount:,.2f}. Reason: {comments}',
+                description=f'Rejected capital {capital.get_transaction_type_display().lower()}: {capital.get_capital_type_display()} - Tsh {capital.amount:,.2f}. Reason: {comments}',
                 content_type='Capital',
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )

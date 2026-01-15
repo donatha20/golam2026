@@ -55,7 +55,9 @@ class Income(models.Model):
     ]
     
     STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
         ('RECEIVED', 'Received'),
         ('CANCELLED', 'Cancelled'),
     ]
@@ -74,6 +76,11 @@ class Income(models.Model):
     reference_number = models.CharField(max_length=100, blank=True, null=True)
     received_from = models.CharField(max_length=200, blank=True, null=True)
     payment_method = models.CharField(max_length=50, blank=True, null=True)
+
+    # Approval fields
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_income')
+    approval_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
 
     # Audit fields
     created_at = models.DateTimeField(auto_now_add=True)

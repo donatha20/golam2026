@@ -1,0 +1,343 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Payroll Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .quick-action-card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .recent-items {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-calculator"></i> Payroll Dashboard
+        </h1>
+        <div>
+            <a href="{% url 'payroll:employee_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Employee
+            </a>
+            <a href="{% url 'payroll:period_create' %}" class="btn btn-success">
+                <i class="fas fa-calendar-plus"></i> New Payroll Period
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="stat-number">{{ total_employees }}</p>
+                        <p class="stat-label">Active Employees</p>
+                    </div>
+                    <div class="ml-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="stat-number">{{ total_departments }}</p>
+                        <p class="stat-label">Departments</p>
+                    </div>
+                    <div class="ml-3">
+                        <i class="fas fa-building fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="stat-number">{{ pending_payroll_periods }}</p>
+                        <p class="stat-label">Pending Payrolls</p>
+                    </div>
+                    <div class="ml-3">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <p class="stat-number">{{ pending_advances }}</p>
+                        <p class="stat-label">Pending Advances</p>
+                    </div>
+                    <div class="ml-3">
+                        <i class="fas fa-hand-holding-usd fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card quick-action-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-plus fa-2x text-primary mb-2"></i>
+                                    <h6>Add Employee</h6>
+                                    <a href="{% url 'payroll:employee_create' %}" class="btn btn-sm btn-primary">
+                                        Create
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card quick-action-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-alt fa-2x text-success mb-2"></i>
+                                    <h6>Generate Payroll</h6>
+                                    <a href="{% url 'payroll:period_list' %}" class="btn btn-sm btn-success">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card quick-action-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-invoice fa-2x text-info mb-2"></i>
+                                    <h6>View Payslips</h6>
+                                    <a href="{% url 'payroll:payslip_list' %}" class="btn btn-sm btn-info">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <div class="card quick-action-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-bar fa-2x text-warning mb-2"></i>
+                                    <h6>Reports</h6>
+                                    <a href="{% url 'payroll:reports' %}" class="btn btn-sm btn-warning">
+                                        Generate
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <!-- Recent Employees -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-users"></i> Recent Employees
+                    </h6>
+                </div>
+                <div class="card-body recent-items">
+                    {% for employee in recent_employees %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3">
+                            {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ employee.get_full_name }}</h6>
+                            <small class="text-muted">{{ employee.department.name }}</small>
+                        </div>
+                        <small class="text-muted">{{ employee.created_at|date:"M d" }}</small>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent employees</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'payroll:employee_list' %}" class="btn btn-sm btn-outline-primary">
+                        View All Employees
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payroll Periods -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-calendar"></i> Recent Payroll Periods
+                    </h6>
+                </div>
+                <div class="card-body recent-items">
+                    {% for period in recent_payroll_periods %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ period.name }}</h6>
+                            <small class="text-muted">
+                                {{ period.start_date }} - {{ period.end_date }}
+                            </small>
+                        </div>
+                        <span class="badge badge-{% if period.status == 'completed' %}success{% elif period.status == 'processing' %}warning{% else %}secondary{% endif %}">
+                            {{ period.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent payroll periods</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'payroll:period_list' %}" class="btn btn-sm btn-outline-success">
+                        View All Periods
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Advances -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-hand-holding-usd"></i> Recent Advances
+                    </h6>
+                </div>
+                <div class="card-body recent-items">
+                    {% for advance in recent_advances %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">{{ advance.employee.get_full_name }}</h6>
+                            <small class="text-muted">
+                                Tsh {{ advance.amount|floatformat:2 }}
+                            </small>
+                        </div>
+                        <span class="badge badge-{% if advance.status == 'approved' %}success{% elif advance.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                            {{ advance.get_status_display }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No recent advances</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'payroll:advance_list' %}" class="btn btn-sm btn-outline-info">
+                        View All Advances
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Actions -->
+    {% if pending_overtime or pending_advances %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Pending Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if pending_overtime > 0 %}
+                        <div class="col-md-6">
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-clock"></i> Overtime Approvals</h6>
+                                <p class="mb-2">{{ pending_overtime }} overtime record(s) pending approval</p>
+                                <a href="{% url 'payroll:overtime_list' %}?status=submitted" class="btn btn-sm btn-warning">
+                                    Review Overtime
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if pending_advances > 0 %}
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-hand-holding-usd"></i> Advance Requests</h6>
+                                <p class="mb-2">{{ pending_advances }} salary advance(s) pending approval</p>
+                                <a href="{% url 'payroll:advance_list' %}?status=pending" class="btn btn-sm btn-info">
+                                    Review Advances
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add any dashboard-specific JavaScript here
+    
+    // Refresh statistics periodically
+    setInterval(function() {
+        // Could add AJAX call to refresh statistics
+    }, 30000); // Every 30 seconds
+});
+</script>
+{% endblock %}

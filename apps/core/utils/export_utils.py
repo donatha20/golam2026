@@ -106,7 +106,7 @@ class PDFExporter:
             formatted_row = []
             for cell in row:
                 if isinstance(cell, Decimal):
-                    formatted_row.append(f"₹{cell:,.2f}")
+                    formatted_row.append(f"Tsh {cell:,.2f}")
                 elif isinstance(cell, datetime):
                     formatted_row.append(cell.strftime('%Y-%m-%d'))
                 else:

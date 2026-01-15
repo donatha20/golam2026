@@ -1,0 +1,166 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Approve Income - Finance Tracker{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-check-circle text-success"></i> Approve Income Record
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .approval-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #28a745;
+        border-radius: 15px;
+    }
+    .income-details {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .amount-highlight {
+        color: #28a745;
+        font-weight: 700;
+        font-size: 1.5em;
+    }
+    .detail-row {
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 0;
+    }
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    .approval-actions {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card approval-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle"></i> Approve Income Record
+                    </h5>
+                </div>
+                <div class="card-body p-compact">
+                    <!-- Income Details -->
+                    <div class="income-details">
+                        <h6 class="text-muted mb-3">Income Details</h6>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Income ID:</strong></div>
+                                <div class="col-sm-8">{{ income.income_id }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Type:</strong></div>
+                                <div class="col-sm-8">{{ income.get_income_type_display }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Category:</strong></div>
+                                <div class="col-sm-8">{{ income.category|default:"N/A" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Amount:</strong></div>
+                                <div class="col-sm-8 amount-highlight">Tsh {{ income.amount|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Date:</strong></div>
+                                <div class="col-sm-8">{{ income.income_date|date:"F d, Y" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Description:</strong></div>
+                                <div class="col-sm-8">{{ income.description|truncatechars:100 }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Source:</strong></div>
+                                <div class="col-sm-8">{{ income.source_name|default:"N/A" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Recorded By:</strong></div>
+                                <div class="col-sm-8">{{ income.recorded_by.get_full_name|default:income.recorded_by.username }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Created:</strong></div>
+                                <div class="col-sm-8">{{ income.created_at|date:"F d, Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Approval Actions -->
+                    <div class="approval-actions">
+                        <h6 class="text-muted mb-3">Approval Action</h6>
+                        <form method="post" id="approvalForm">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-check"></i> Approve This Income
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{% url 'finance_tracker:reject_income' income.id %}" class="btn btn-danger btn-lg w-100">
+                                        <i class="fas fa-times"></i> Reject Instead
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <a href="{% url 'finance_tracker:income_approval_queue' %}" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-arrow-left"></i> Back to Approval Queue
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('approvalForm').addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to approve this income record?')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

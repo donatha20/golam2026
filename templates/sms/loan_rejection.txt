@@ -1,0 +1,12 @@
+Dear {{ borrower_name }},
+
+We regret to inform you that your loan application ({{ loan_number }}) has been rejected.
+
+Reason: {{ rejection_reason }}
+
+We appreciate your interest in our services. Please feel free to reapply in the future or contact us for guidance on improving your application.
+
+{{ contact_info }}
+
+Thank you,
+{{ organization_name }}

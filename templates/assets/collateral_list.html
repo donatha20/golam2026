@@ -1,0 +1,399 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Collaterals - Golam Financial Services{% endblock %}
+{% block page_title %}Collaterals{% endblock %}
+
+{% block extra_css %}
+<style>
+    .collaterals-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .filters-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-input, .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        height: fit-content;
+    }
+    
+    .collaterals-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    .table th {
+        background: #f9fafb;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    
+    .table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .collateral-id {
+        font-family: monospace;
+        font-weight: 600;
+        color: #2b7a76;
+    }
+    
+    .collateral-title {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .collateral-type {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .borrower-name {
+        font-weight: 500;
+        color: #2b7a76;
+    }
+    
+    .amount-cell {
+        text-align: right;
+        font-family: monospace;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+    
+    .status-under_verification {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .status-verified {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+    
+    .status-held {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+    
+    .status-released {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+    
+    .status-rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: #1f5d5a;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-action.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-action.secondary:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #374151;
+    }
+    
+    .pagination a:hover {
+        background: #f3f4f6;
+    }
+    
+    .pagination .current {
+        background: #2b7a76;
+        color: white;
+        border-color: #2b7a76;
+    }
+    
+    @media (max-width: 768px) {
+        .collaterals-container {
+            margin: 1rem;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .table {
+            font-size: 0.8rem;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.5rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="collaterals-container">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'assets:dashboard' %}" class="btn-action secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{% url 'assets:add_collateral' %}" class="btn-action">
+            <i class="fas fa-plus"></i> Add Collateral
+        </a>
+        <a href="{% url 'assets:collateral_reports' %}" class="btn-action secondary">
+            <i class="fas fa-chart-bar"></i> Reports
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <form method="get" class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Search</label>
+                <input type="text" name="search" value="{{ search_query }}" 
+                       placeholder="Search collaterals..." class="filter-input">
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Type</label>
+                <select name="type" class="filter-select">
+                    <option value="">All Types</option>
+                    {% for type in collateral_types %}
+                        <option value="{{ type.id }}" {% if type_id == type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select name="status" class="filter-select">
+                    <option value="">All Statuses</option>
+                    {% for status_value, status_label in collateral_statuses %}
+                        <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Borrower</label>
+                <select name="borrower" class="filter-select">
+                    <option value="">All Borrowers</option>
+                    {% for borrower in borrowers %}
+                        <option value="{{ borrower.id }}" {% if borrower_id == borrower.id|stringformat:"s" %}selected{% endif %}>
+                            {{ borrower.get_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Collaterals Table -->
+    <div class="collaterals-table">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Collateral ID</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Borrower</th>
+                    <th>Estimated Value</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for collateral in collaterals %}
+                <tr>
+                    <td class="collateral-id">{{ collateral.collateral_id }}</td>
+                    <td class="collateral-title">
+                        <a href="{% url 'assets:collateral_detail' collateral.id %}" style="text-decoration: none; color: inherit;">
+                            {{ collateral.title }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="collateral-type">{{ collateral.collateral_type.name }}</span>
+                    </td>
+                    <td class="borrower-name">{{ collateral.borrower.get_full_name }}</td>
+                    <td class="amount-cell">₹{{ collateral.estimated_value|floatformat:2 }}</td>
+                    <td>
+                        <span class="status-badge status-{{ collateral.status }}">
+                            {{ collateral.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ collateral.location|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'assets:collateral_detail' collateral.id %}" class="btn-action secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 2rem; color: #6b7280;">
+                        <i class="fas fa-shield-alt" style="font-size: 2rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                        <p>No collaterals found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if collaterals.has_other_pages %}
+    <div class="pagination">
+        {% if collaterals.has_previous %}
+            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if type_id %}&type={{ type_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if borrower_id %}&borrower={{ borrower_id }}{% endif %}">&laquo; First</a>
+            <a href="?page={{ collaterals.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_id %}&type={{ type_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if borrower_id %}&borrower={{ borrower_id }}{% endif %}">Previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ collaterals.number }} of {{ collaterals.paginator.num_pages }}
+        </span>
+        
+        {% if collaterals.has_next %}
+            <a href="?page={{ collaterals.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_id %}&type={{ type_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if borrower_id %}&borrower={{ borrower_id }}{% endif %}">Next</a>
+            <a href="?page={{ collaterals.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_id %}&type={{ type_id }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if borrower_id %}&borrower={{ borrower_id }}{% endif %}">Last &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form on filter change
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

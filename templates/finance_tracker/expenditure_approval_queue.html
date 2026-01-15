@@ -1,0 +1,175 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}{{ page_title }} - Finance Tracker{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-check-circle text-warning"></i> {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/django_tables2_bootstrap5.css' %}">
+    <style>
+        .stats-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #dc3545;
+        }
+        .pending-badge {
+            background: linear-gradient(45deg, #dc3545, #ff6b7a);
+            color: white;
+            font-weight: 600;
+        }
+        .amount-highlight {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .action-buttons .btn {
+            margin: 0 2px;
+            min-width: 80px;
+        }
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card stats-card h-100">
+                <div class="card-body p-compact">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">Pending Approvals</h6>
+                            <h3 class="mb-0 text-primary">{{ stats.pending_count }}</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card stats-card h-100">
+                <div class="card-body p-compact">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title text-muted">Total Pending Amount</h6>
+                            <h3 class="mb-0 amount-highlight">Tsh {{ stats.pending_amount|floatformat:2 }}</h3>
+                        </div>
+                        <div class="text-danger">
+                            <i class="fas fa-rupee-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenditure Approval Queue Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card table-container">
+                <div class="card-header bg-gradient-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> Pending Expenditure Approvals
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if table.data %}
+                        <div class="table-responsive">
+                            {% render_table table 'django_tables2/bootstrap5.html' %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                            <h5 class="text-muted">No Pending Approvals</h5>
+                            <p class="text-muted">All expenditure records have been processed.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    {% if table.data %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-compact">
+                    <h6 class="card-title">Quick Actions</h6>
+                    <div class="action-buttons">
+                        <button class="btn btn-success btn-sm" onclick="approveSelected()">
+                            <i class="fas fa-check"></i> Approve Selected
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectSelected()">
+                            <i class="fas fa-times"></i> Reject Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="text-center">
+                <a href="{% url 'finance_tracker:view_expenditures' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-eye"></i> View Approved Expenditures
+                </a>
+                <a href="{% url 'finance_tracker:add_expenditure' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-plus"></i> Add New Expenditure
+                </a>
+                <a href="{% url 'finance_tracker:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-dashboard"></i> Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function approveSelected() {
+        const selected = document.querySelectorAll('input[type="checkbox"]:checked');
+        if (selected.length === 0) {
+            alert('Please select records to approve.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to approve ${selected.length} record(s)?`)) {
+            // Implement bulk approval logic
+            console.log('Bulk approve functionality to be implemented');
+        }
+    }
+
+    function rejectSelected() {
+        const selected = document.querySelectorAll('input[type="checkbox"]:checked');
+        if (selected.length === 0) {
+            alert('Please select records to reject.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to reject ${selected.length} record(s)?`)) {
+            // Implement bulk rejection logic
+            console.log('Bulk reject functionality to be implemented');
+        }
+    }
+
+    // Auto-refresh every 30 seconds
+    setTimeout(() => {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

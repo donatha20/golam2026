@@ -1,0 +1,65 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block page_title %}Positions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-briefcase"></i> Position Management</h2>
+        <a href="{% url 'payroll:position_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Position
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Positions ({{ positions.count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if positions %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Title</th>
+                            <th>Department</th>
+                            <th>Description</th>
+                            <th>Employees</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for position in positions %}
+                        <tr>
+                            <td><strong>{{ position.title }}</strong></td>
+                            <td>{{ position.department.name|default:"-" }}</td>
+                            <td>{{ position.description|default:"-" }}</td>
+                            <td>{{ position.employee_set.count }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'payroll:position_update' position.pk %}" 
+                                       class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                <h4>No Positions Found</h4>
+                <p class="text-muted">Create positions to define employee roles.</p>
+                <a href="{% url 'payroll:position_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add First Position
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

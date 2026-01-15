@@ -8,13 +8,13 @@
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-user-plus me-2 text-primary-teal"></i>
                     Add New Shareholder
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <form method="post">
                     {% csrf_token %}
                     
@@ -100,7 +100,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label">Total Investment</label>
-                                <input type="text" class="form-control" id="total_investment" readonly>
+                                <input type="text" class="form-control form-control-sm" id="total_investment" readonly>
                                 <div class="form-text">Calculated automatically</div>
                             </div>
                         </div>
@@ -128,10 +128,10 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
-                                <a href="{% url 'finance_tracker:shareholder_list' %}" class="btn btn-secondary">
+                                <a href="{% url 'finance_tracker:shareholder_list' %}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left me-1"></i>Cancel
                                 </a>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     <i class="fas fa-save me-1"></i>Add Shareholder
                                 </button>
                             </div>

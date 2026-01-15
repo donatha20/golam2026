@@ -22,18 +22,18 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Date Range Filter -->
                 <div class="row mb-4">
                     <div class="col-md-12">
                         <form method="get" class="row g-3">
                             <div class="col-md-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">&nbsp;</label>
@@ -57,7 +57,7 @@
                 <div class="row">
                     <div class="col-lg-8 mx-auto">
                         <!-- REVENUE SECTION -->
-                        <div class="mb-4">
+                        <div class="mb-compact">
                             <h5 class="text-primary-teal border-bottom pb-2">REVENUE</h5>
                             <table class="table table-sm">
                                 {% for income in income_data %}
@@ -78,7 +78,7 @@
                         </div>
 
                         <!-- EXPENSES SECTION -->
-                        <div class="mb-4">
+                        <div class="mb-compact">
                             <h5 class="text-danger border-bottom pb-2">EXPENSES</h5>
                             <table class="table table-sm">
                                 {% for expense in expenditure_data %}
@@ -99,7 +99,7 @@
                         </div>
 
                         <!-- NET INCOME SECTION -->
-                        <div class="mb-4">
+                        <div class="mb-compact">
                             <table class="table table-bordered">
                                 <tr class="{% if net_income >= 0 %}table-success{% else %}table-danger{% endif %}">
                                     <td><strong>NET INCOME</strong></td>
@@ -121,7 +121,7 @@
                 <div class="row mt-4">
                     <div class="col-md-3">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-success">{{ total_income|floatformat:0 }}</h5>
                                 <p class="card-text">Total Revenue</p>
                             </div>
@@ -129,7 +129,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-danger">{{ total_expenses|floatformat:0 }}</h5>
                                 <p class="card-text">Total Expenses</p>
                             </div>
@@ -137,7 +137,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
                                     {{ net_income|floatformat:0 }}
                                 </h5>
@@ -147,7 +147,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-info">
                                     {% if total_income > 0 %}
                                         {% widthratio net_income total_income 100 %}%

@@ -3,6 +3,7 @@ Django tables for finance tracker app.
 """
 import django_tables2 as tables
 from django.utils.html import format_html
+from django.urls import reverse
 from .models import Income, Expenditure
 
 
@@ -56,7 +57,7 @@ class IncomeTable(tables.Table):
     def render_amount(self, value):
         """Render amount with currency formatting."""
         return format_html(
-            '<span class="amount-cell income-amount">₹{:,.2f}</span>',
+            '<span class="amount-cell income-amount">Tsh {:,.2f}</span>',
             value or 0
         )
 
@@ -147,7 +148,7 @@ class ExpenditureTable(tables.Table):
     def render_amount(self, value):
         """Render amount with currency formatting."""
         return format_html(
-            '<span class="amount-cell expenditure-amount">₹{:,.2f}</span>',
+            '<span class="amount-cell expenditure-amount">Tsh {:,.2f}</span>',
             value or 0
         )
 
@@ -251,7 +252,7 @@ class IncomeCategoryTable(tables.Table):
         )['total'] or 0
         
         return format_html(
-            '<span class="amount-cell">₹{:,.2f}</span>',
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
             total
         )
 
@@ -313,7 +314,7 @@ class ExpenditureCategoryTable(tables.Table):
         )['total'] or 0
         
         return format_html(
-            '<span class="amount-cell">₹{:,.2f}</span>',
+            '<span class="amount-cell">Tsh {:,.2f}</span>',
             total
         )
 

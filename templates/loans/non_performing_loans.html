@@ -1,0 +1,857 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Non-Performing Loans - Golam Financial Services{% endblock %}
+{% block page_title %}Non-Performing Loans (NPL){% endblock %}
+
+{% block extra_css %}
+<style>
+    /* NPL Specific Colors */
+    :root {
+        --npl-primary: #dc2626;
+        --npl-warning: #f59e0b;
+        --npl-watch: #3b82f6;
+        --npl-substandard: #f59e0b;
+        --npl-doubtful: #ea580c;
+        --npl-loss: #dc2626;
+    }
+
+    /* Page Container */
+    .page-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #dc2626;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 2px solid #dc2626;
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    }
+
+    .alert-banner i {
+        color: #dc2626;
+        font-size: 1.5rem;
+    }
+
+    .alert-text {
+        color: #991b1b;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .alert-details {
+        color: #7f1d1d;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 20px rgba(220, 38, 38, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        width: 6px;
+    }
+
+    .stat-card.warning::before {
+        background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    .stat-card.info::before {
+        background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-title {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .stat-icon.warning {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .stat-icon.info {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .stat-change {
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-negative { color: #dc2626; }
+    .stat-warning { color: #d97706; }
+    .stat-positive { color: #16a34a; }
+
+    /* NPL Category Cards */
+    .npl-categories {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .npl-category-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .npl-category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .npl-category-card.watch {
+        border-left: 4px solid #3b82f6;
+    }
+
+    .npl-category-card.substandard {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .npl-category-card.doubtful {
+        border-left: 4px solid #ea580c;
+    }
+
+    .npl-category-card.loss {
+        border-left: 4px solid #dc2626;
+    }
+
+    .category-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .category-desc {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-input, .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .filter-input:focus, .filter-select:focus {
+        outline: none;
+        border-color: #2b7a76;
+        box-shadow: 0 0 0 3px rgba(43, 122, 118, 0.1);
+    }
+
+    /* Table Container */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .table-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f9fafb;
+    }
+
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* NPL Table Styles */
+    .npl-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .npl-table thead th {
+        background: #f9fafb;
+        color: #374151;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid #dc2626;
+        text-align: left;
+    }
+
+    .npl-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .npl-table tbody tr:hover {
+        background-color: #fef2f2;
+    }
+
+    /* NPL Avatar */
+    .npl-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: 1rem;
+    }
+
+    /* NPL Amount Styling */
+    .npl-amount {
+        color: #dc2626 !important;
+        font-weight: 600;
+    }
+
+    /* Days Overdue Badge */
+    .days-overdue-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .days-overdue-badge.normal {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+
+    .days-overdue-badge.warning {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .days-overdue-badge.severe {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .days-overdue-badge.critical {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    /* NPL Category Badge */
+    .npl-category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .npl-performing {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+
+    .npl-watch {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .npl-substandard {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .npl-doubtful {
+        background: #ffedd5;
+        color: #ea580c;
+    }
+
+    .npl-loss {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-defaulted { background: #fef2f2; color: #991b1b; }
+    .status-written-off { background: #f3f4f6; color: #374151; }
+
+    /* Borrower Cell */
+    .borrower-name-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .borrower-full-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .borrower-id {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .borrower-phone {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    /* Amount Cell */
+    .amount-cell {
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .amount-outstanding {
+        font-weight: 600;
+        color: #dc2626;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e5e7eb;
+        background: white;
+        color: #6b7280;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        border-color: #2b7a76;
+        color: #2b7a76;
+        background: #f0fdfa;
+    }
+
+    .btn-action.btn-payment:hover {
+        border-color: #16a34a;
+        color: #16a34a;
+        background: #f0fdf4;
+    }
+
+    .btn-action.btn-borrower:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-danger {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #b91c1c;
+        transform: translateY(-1px);
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-outline:hover {
+        background: #f9fafb;
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1f5d5a;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #10b981;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .stats-grid, .npl-categories {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid, .npl-categories {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .alert-banner {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <!-- Alert Banner -->
+    <div class="alert-banner">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <div class="alert-text">
+                Non-Performing Loans Alert: {{ total_npl_count }} loans require attention
+            </div>
+            <div class="alert-details">
+                NPL Ratio: {{ npl_ratio }}% | Total NPL Amount: TZS {{ total_npl_amount|floatformat:0|default:0 }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Total NPL Count</span>
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_npl_count|default:0 }}</div>
+            <div class="stat-change stat-negative">
+                <i class="fas fa-chart-line"></i>
+                Non-performing loans
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <span class="stat-title">Total NPL Amount</span>
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+            </div>
+            <div class="stat-value">TZS {{ total_npl_amount|floatformat:0|default:0 }}</div>
+            <div class="stat-change stat-negative">
+                <i class="fas fa-exclamation-triangle"></i>
+                Outstanding balance
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-header">
+                <span class="stat-title">NPL Ratio</span>
+                <div class="stat-icon warning">
+                    <i class="fas fa-percentage"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ npl_ratio|default:0 }}%</div>
+            <div class="stat-change stat-warning">
+                <i class="fas fa-chart-pie"></i>
+                Of total portfolio
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-header">
+                <span class="stat-title">Total Portfolio</span>
+                <div class="stat-icon info">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+            <div class="stat-value">TZS {{ total_portfolio|floatformat:0|default:0 }}</div>
+            <div class="stat-change">
+                <i class="fas fa-info-circle"></i>
+                Active loans balance
+            </div>
+        </div>
+    </div>
+
+    <!-- NPL Category Cards 
+    <div class="npl-categories">
+        <a href="?npl_category=watch" class="npl-category-card watch">
+            <div class="category-title">
+                <i class="fas fa-eye"></i> Watch
+            </div>
+            <div class="category-count">{{ watch_count|default:0 }}</div>
+            <div class="category-desc">90-180 days overdue</div>
+        </a>
+
+        <a href="?npl_category=substandard" class="npl-category-card substandard">
+            <div class="category-title">
+                <i class="fas fa-exclamation"></i> Substandard
+            </div>
+            <div class="category-count">{{ substandard_count|default:0 }}</div>
+            <div class="category-desc">180-270 days overdue</div>
+        </a>
+
+        <a href="?npl_category=doubtful" class="npl-category-card doubtful">
+            <div class="category-title">
+                <i class="fas fa-question-circle"></i> Doubtful
+            </div>
+            <div class="category-count">{{ doubtful_count|default:0 }}</div>
+            <div class="category-desc">270-365 days overdue</div>
+        </a>
+
+        <a href="?npl_category=loss" class="npl-category-card loss">
+            <div class="category-title">
+                <i class="fas fa-times-circle"></i> Loss
+            </div>
+            <div class="category-count">{{ loss_count|default:0 }}</div>
+            <div class="category-desc">365+ days overdue</div>
+        </a>
+    </div>
+
+    <!-- Filters Section 
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Search Loans</label>
+                    <input type="text" name="search" value="{{ request.GET.search }}" 
+                           placeholder="Loan number or borrower name..." class="filter-input" id="loanSearch">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">NPL Category</label>
+                    <select name="npl_category" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="watch" {% if request.GET.npl_category == 'watch' %}selected{% endif %}>Watch (90-180 days)</option>
+                        <option value="substandard" {% if request.GET.npl_category == 'substandard' %}selected{% endif %}>Substandard (180-270 days)</option>
+                        <option value="doubtful" {% if request.GET.npl_category == 'doubtful' %}selected{% endif %}>Doubtful (270-365 days)</option>
+                        <option value="loss" {% if request.GET.npl_category == 'loss' %}selected{% endif %}>Loss (365+ days)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                    <a href="{% url 'loans:non_performing_loans' %}" class="btn btn-outline" style="margin-left: 0.5rem;">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+-->
+    <!-- NPL Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2 class="table-title">
+                <i class="fas fa-list"></i>
+                Non-Performing Loans ({{ object_list.count }})
+            </h2>
+            <div class="table-actions">
+                <button onclick="exportTable()" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <a href="{% url 'loans:portfolio_at_risk' %}" class="btn btn-warning">
+                    <i class="fas fa-chart-pie"></i> Portfolio at Risk
+                </a>
+                <a href="{% url 'loans:defaulted_loans' %}" class="btn btn-danger">
+                    <i class="fas fa-ban"></i> Defaulted Loans
+                </a>
+            </div>
+        </div>
+
+        {% if object_list %}
+            <div style="overflow-x: auto;">
+                {% render_table table %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>No Non-Performing Loans</h3>
+                <p>Great news! There are currently no loans classified as non-performing.</p>
+                <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> View All Loans
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live search filter
+    //document.getElementById('loanSearch').addEventListener('input', function () {
+      //  const filter = this.value.toLowerCase();
+        //const rows = document.querySelectorAll('#non-performing-loans-table tbody tr');
+
+        //rows.forEach(row => {
+          //  const rowText = row.textContent.toLowerCase();
+            //row.style.display = rowText.includes(filter) ? '' : 'none';
+        //});
+    //});
+
+    // Export functionality
+    function exportTable() {
+        const table = document.getElementById('non-performing-loans-table');
+        if (!table) {
+            alert('No data to export');
+            return;
+        }
+        
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csv = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => {
+                let text = cell.textContent.trim().replace(/"/g, '""');
+                return `"${text}"`;
+            }).join(',');
+        }).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'non_performing_loans_{{ "now"|date:"Y-m-d" }}.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Category card hover effect
+    document.querySelectorAll('.npl-category-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.borderLeftWidth = '6px';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.borderLeftWidth = '4px';
+        });
+    });
+</script>
+{% endblock %}

@@ -11,7 +11,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -104,7 +104,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -212,6 +212,8 @@
 {% endblock %}
 
 {% block content %}
+<!--
+
 <div class="container-fluid">
     <div class="d-flex justify-content-end mb-3">
         <div class="btn-group">
@@ -226,8 +228,8 @@
             </a>
         </div>
     </div>
-    
-    <!-- Statistics -->
+-->
+    <!-- Statistics 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value">{{ loans|length|default:0 }}</div>
@@ -246,7 +248,7 @@
             <div class="stat-label">Completion Rate</div>
         </div>
     </div>
-    
+-->
     <!-- Data Table -->
     <div class="table-container">
         <div class="table-controls">

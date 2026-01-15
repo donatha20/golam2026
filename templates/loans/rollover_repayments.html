@@ -12,7 +12,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -90,7 +90,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -160,7 +160,7 @@
         background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
         border: 2px solid #fbbf24;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
     }
@@ -195,7 +195,7 @@
             These are repayments that have been rolled over to extend the loan term. Monitor these carefully as they may indicate borrower financial stress.
         </p>
     </div>
-
+<!-->
     <div class="d-flex justify-content-end mb-3">
         <div class="btn-group">
             <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary btn-sm">
@@ -210,7 +210,7 @@
         </div>
     </div>
 
-    <!-- Statistics -->
+    <!-- Statistics 
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value">{{ total_rollovers|default:0 }}</div>
@@ -229,7 +229,7 @@
             <div class="stat-label">Avg Extension Days</div>
         </div>
     </div>
-
+-->
     <!-- Data Table -->
     <div class="table-container">
         <div class="table-controls">

@@ -22,18 +22,18 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <!-- Date Range Filter -->
                 <div class="row mb-4">
                     <div class="col-md-12">
                         <form method="get" class="row g-3">
                             <div class="col-md-4">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                                <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">&nbsp;</label>
@@ -125,7 +125,7 @@
                 <div class="row mt-4">
                     <div class="col-md-4">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-primary-teal">{{ trial_balance_data|length }}</h5>
                                 <p class="card-text">Accounts with Balances</p>
                             </div>
@@ -133,7 +133,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-success">{{ total_debits|floatformat:0 }}</h5>
                                 <p class="card-text">Total Debits</p>
                             </div>
@@ -141,7 +141,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="card text-center">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <h5 class="card-title text-info">{{ total_credits|floatformat:0 }}</h5>
                                 <p class="card-text">Total Credits</p>
                             </div>

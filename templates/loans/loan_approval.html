@@ -1,8 +1,8 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Approve Loan - Golam Financial Services{% endblock %}
-{% block page_title %}Loan Approval{% endblock %}
+{% block title %}Approve & Disburse Loan - Golam Financial Services{% endblock %}
+{% block page_title %}Loan Approval & Disbursement{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -36,7 +36,7 @@
         font-size: 1.25rem;
         font-weight: 600;
         color: #2b7a76;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 2px solid #2b7a76;
         display: flex;
@@ -48,7 +48,7 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .info-item {
@@ -75,14 +75,14 @@
     
     .borrower-section {
         margin-bottom: 2rem;
-        padding: 1.5rem;
+        padding: 1rem;
         background: #f0fdfa;
         border-radius: 8px;
         border: 1px solid #5eead4;
     }
     
     .borrower-name {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #134e4a;
         margin-bottom: 0.5rem;
@@ -111,7 +111,7 @@
     }
     
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .form-label {
@@ -250,8 +250,8 @@
         background: #f0f9ff;
         border: 1px solid #bae6fd;
         border-radius: 8px;
-        padding: 1.5rem;
-        margin-top: 1.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
     }
     
     .calculation-row {
@@ -334,7 +334,7 @@
             </div>
             <div class="info-item">
                 <div class="info-label">Requested Amount</div>
-                <div class="info-value amount-highlight">₹{{ loan.amount_requested|floatformat:2 }}</div>
+                <div class="info-value amount-highlight">Tsh {{ loan.amount_requested|floatformat:2 }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Duration</div>
@@ -368,19 +368,19 @@
             <h4 style="margin-bottom: 1rem; color: #1e40af;">Loan Calculation Summary</h4>
             <div class="calculation-row">
                 <span>Principal Amount:</span>
-                <span>₹{{ loan.amount_requested|floatformat:2 }}</span>
+                <span>Tsh {{ loan.amount_requested|floatformat:2 }}</span>
             </div>
             <div class="calculation-row">
                 <span>Processing Fee:</span>
-                <span>₹{{ loan.processing_fee|floatformat:2 }}</span>
+                <span>Tsh {{ loan.processing_fee|floatformat:2 }}</span>
             </div>
             <div class="calculation-row">
                 <span>Total Interest ({{ loan.interest_rate }}%):</span>
-                <span>₹{{ loan.total_interest|floatformat:2 }}</span>
+                <span>Tsh {{ loan.total_interest|floatformat:2 }}</span>
             </div>
             <div class="calculation-row total">
                 <span>Total Repayment Amount:</span>
-                <span>₹{{ loan.total_amount|floatformat:2 }}</span>
+                <span>Tsh {{ loan.total_amount|floatformat:2 }}</span>
             </div>
         </div>
     </div>
@@ -388,8 +388,8 @@
     <!-- Approval Form Card -->
     <div class="approval-form-card">
         <h2 class="card-title">
-            <i class="fas fa-check-circle"></i>
-            Loan Approval
+            <i class="fas fa-hand-holding-usd"></i>
+            Loan Approval & Disbursement
         </h2>
         
         <form method="post" id="approvalForm">
@@ -397,8 +397,8 @@
             
             <div class="form-section">
                 <h3 class="section-title">
-                    <i class="fas fa-dollar-sign"></i>
-                    Approval Details
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Approval & Disbursement Details
                 </h3>
                 
                 <div class="form-group">
@@ -429,7 +429,7 @@
                     <i class="fas fa-times-circle"></i> Reject
                 </button>
                 <button type="submit" class="btn-approve">
-                    <i class="fas fa-check-circle"></i> Approve Loan
+                    <i class="fas fa-hand-holding-usd"></i> Approve & Disburse Loan
                 </button>
             </div>
         </form>
@@ -439,31 +439,254 @@
 
 {% block extra_js %}
 <script>
-    // Form validation
+    // Form validation for approval
     document.getElementById('approvalForm').addEventListener('submit', function(e) {
         const approvedAmount = document.getElementById('{{ form.amount_approved.id_for_label }}').value;
         
         if (!approvedAmount || parseFloat(approvedAmount) <= 0) {
             e.preventDefault();
-            alert('Please enter a valid approved amount');
+            showAlert('Please enter a valid approved amount', 'error');
             return;
         }
         
-        if (!confirm('Are you sure you want to approve this loan?')) {
-            e.preventDefault();
-            return;
-        }
+        showConfirmDialog(
+            'Confirm Loan Approval',
+            'Are you sure you want to approve this loan?',
+            function() {
+                // Proceed with form submission
+                document.getElementById('approvalForm').submit();
+            }
+        );
+        e.preventDefault();
     });
     
-    // Reject loan function
+    // Reject loan function with custom dialog
     function rejectLoan() {
-        const reason = prompt('Please provide a reason for rejection:');
-        if (reason && reason.trim()) {
-            if (confirm('Are you sure you want to reject this loan?')) {
-                // TODO: Implement loan rejection
-                alert('Loan rejection functionality will be implemented');
+        showRejectDialog();
+    }
+    
+    // Custom Alert Dialog
+    function showAlert(message, type = 'info') {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.custom-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `custom-alert alert-${type}`;
+        alertDiv.innerHTML = `
+            <div class="alert-content">
+                <div class="alert-icon">
+                    <i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+                </div>
+                <div class="alert-message">${message}</div>
+                <button class="alert-close" onclick="this.parentElement.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                alertDiv.remove();
             }
+        }, 5000);
+    }
+    
+    // Custom Confirmation Dialog
+    function showConfirmDialog(title, message, onConfirm, onCancel = null) {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button class="modal-close" onclick="closeModal(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" onclick="closeModal(this)">Cancel</button>
+                    <button class="btn-modal-confirm" onclick="confirmAction(this)">Confirm</button>
+                </div>
+            </div>
+        `;
+        
+        modal.querySelector('.btn-modal-confirm').addEventListener('click', function() {
+            closeModal(this);
+            if (onConfirm) onConfirm();
+        });
+        
+        modal.querySelector('.btn-modal-cancel').addEventListener('click', function() {
+            closeModal(this);
+            if (onCancel) onCancel();
+        });
+        
+        modal.querySelector('.modal-backdrop').addEventListener('click', function() {
+            closeModal(this);
+            if (onCancel) onCancel();
+        });
+        
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('show'));
+    }
+    
+    // Custom Rejection Dialog
+    function showRejectDialog() {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal rejection-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header rejection-header">
+                    <h3><i class="fas fa-times-circle"></i> Reject Loan Application</h3>
+                    <button class="modal-close" onclick="closeModal(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="rejection-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        You are about to reject this loan application. This action cannot be undone.
+                    </p>
+                    <div class="form-group">
+                        <label for="rejectionReason" class="form-label required">Reason for Rejection:</label>
+                        <textarea 
+                            id="rejectionReason" 
+                            class="form-textarea" 
+                            placeholder="Please provide a detailed reason for rejecting this loan application..."
+                            rows="4"
+                            required
+                        ></textarea>
+                        <div class="form-help">This reason will be sent to the borrower via SMS.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" onclick="closeModal(this)">Cancel</button>
+                    <button class="btn-modal-reject" onclick="processRejection(this)" disabled>
+                        <i class="fas fa-times-circle"></i> Reject Loan
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        const textarea = modal.querySelector('#rejectionReason');
+        const rejectBtn = modal.querySelector('.btn-modal-reject');
+        
+        // Enable/disable reject button based on textarea content
+        textarea.addEventListener('input', function() {
+            rejectBtn.disabled = this.value.trim().length < 10;
+        });
+        
+        // Prevent backdrop clicks from closing modal during input
+        modal.querySelector('.modal-backdrop').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (textarea.value.trim().length === 0) {
+                closeModal(modal.querySelector('.modal-close'));
+            }
+        });
+        
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+            setTimeout(() => textarea.focus(), 100);
+        });
+    }
+    
+    // Process rejection
+    function processRejection(button) {
+        const modal = button.closest('.custom-modal');
+        const rejectionReason = modal.querySelector('#rejectionReason').value.trim();
+        
+        if (rejectionReason.length < 10) {
+            showAlert('Rejection reason must be at least 10 characters long', 'error');
+            return;
         }
+        
+        // Show final confirmation
+        showConfirmDialog(
+            'Final Confirmation',
+            'Are you absolutely sure you want to reject this loan? This action cannot be undone.',
+            function() {
+                // Close rejection modal
+                closeModal(modal.querySelector('.modal-close'));
+                
+                // Show loading state
+                showLoadingDialog('Rejecting loan application...');
+                
+                // Send rejection request
+                fetch(`{% url 'loans:loan_rejection' loan.id %}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        rejection_reason: rejectionReason
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    closeLoadingDialog();
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        if (data.warning) {
+                            setTimeout(() => showAlert(data.warning, 'warning'), 1000);
+                        }
+                        // Redirect after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url || '{% url "loans:pending_loans" %}';
+                        }, 2000);
+                    } else {
+                        showAlert(data.error || 'Failed to reject loan', 'error');
+                    }
+                })
+                .catch(error => {
+                    closeLoadingDialog();
+                    showAlert('An error occurred while rejecting the loan', 'error');
+                    console.error('Error:', error);
+                });
+            }
+        );
+    }
+    
+    // Loading Dialog
+    function showLoadingDialog(message) {
+        const loading = document.createElement('div');
+        loading.className = 'loading-modal';
+        loading.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="loading-content">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>${message}</p>
+            </div>
+        `;
+        document.body.appendChild(loading);
+        requestAnimationFrame(() => loading.classList.add('show'));
+    }
+    
+    function closeLoadingDialog() {
+        const loading = document.querySelector('.loading-modal');
+        if (loading) {
+            loading.remove();
+        }
+    }
+    
+    // Close modal function
+    function closeModal(element) {
+        const modal = element.closest('.custom-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     }
     
     // Auto-calculate when approved amount changes
@@ -478,7 +701,353 @@
         
         console.log('Approved Amount:', approvedAmount);
         console.log('Calculated Total:', totalAmount);
-        // You can update display elements here if needed
     });
 </script>
+
+<style>
+/* Custom Modal Styles */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 1;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    z-index: 10;
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-modal.show .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #374151;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rejection-header {
+    background: #fef2f2;
+    border-bottom-color: #fecaca;
+}
+
+.rejection-header h3 {
+    color: #dc2626;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #374151;
+}
+
+.modal-body {
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.modal-icon {
+    text-align: center;
+    font-size: 3rem;
+    color: #2b7a76;
+    margin-bottom: 1rem;
+}
+
+.modal-body p {
+    text-align: center;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.rejection-warning {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: #dc2626 !important;
+    text-align: left !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.btn-modal-cancel, .btn-modal-confirm, .btn-modal-reject {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-modal-cancel:hover {
+    background: #e5e7eb;
+}
+
+.btn-modal-confirm {
+    background: #2b7a76;
+    color: white;
+}
+
+.btn-modal-confirm:hover {
+    background: #1f5d5a;
+}
+
+.btn-modal-reject {
+    background: #dc2626;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-modal-reject:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+.btn-modal-reject:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Custom Alert Styles */
+.custom-alert {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 10001;
+    min-width: 300px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideInRight 0.3s ease;
+}
+
+.custom-alert.alert-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.custom-alert.alert-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.custom-alert.alert-warning {
+    background: #fffbeb;
+    border: 1px solid #fed7aa;
+    color: #d97706;
+}
+
+.custom-alert.alert-info {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    color: #0369a1;
+}
+
+.alert-content {
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.alert-icon {
+    font-size: 1rem;
+}
+
+.alert-message {
+    flex: 1;
+    font-weight: 500;
+}
+
+.alert-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0.25rem;
+    border-radius: 4px;
+}
+
+.alert-close:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Loading Modal */
+.loading-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.loading-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem 3rem;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 2;
+}
+
+.loading-spinner {
+    font-size: 2rem;
+    color: #2b7a76;
+    margin-bottom: 1rem;
+}
+
+.loading-content p {
+    margin: 0;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .modal-content {
+        min-width: 95%;
+        width: 95%;
+        margin: 10px;
+        max-height: 95vh;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+    }
+    
+    .btn-modal-cancel, 
+    .btn-modal-confirm, 
+    .btn-modal-reject {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .custom-alert {
+        right: 1rem;
+        left: 1rem;
+        min-width: auto;
+    }
+}
+</style>
 {% endblock %}

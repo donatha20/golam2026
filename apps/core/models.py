@@ -364,3 +364,242 @@ class PenaltyConfiguration(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PublicHoliday(models.Model):
+    """Model for managing public holidays."""
+    name = models.CharField(max_length=200)
+    date = models.DateField()
+    description = models.TextField(blank=True, null=True)
+    is_recurring = models.BooleanField(default=False, help_text="If true, this holiday occurs every year")
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
+        unique_together = ['name', 'date']
+        verbose_name = 'Public Holiday'
+        verbose_name_plural = 'Public Holidays'
+
+    def __str__(self):
+        return f"{self.name} - {self.date}"
+
+
+class WorkingMode(models.Model):
+    """Model for managing working mode settings."""
+    TIMEZONE_CHOICES = [
+        ('UTC', 'UTC'),
+        ('Africa/Dar_es_Salaam', 'East Africa Time (Tanzania)'),
+        ('Asia/Kolkata', 'India Standard Time'),
+        ('Europe/London', 'Greenwich Mean Time'),
+        ('America/New_York', 'Eastern Time'),
+    ]
+
+    name = models.CharField(max_length=200, default="Default Working Mode")
+    
+    # Working Days
+    monday_enabled = models.BooleanField(default=True)
+    tuesday_enabled = models.BooleanField(default=True)
+    wednesday_enabled = models.BooleanField(default=True)
+    thursday_enabled = models.BooleanField(default=True)
+    friday_enabled = models.BooleanField(default=True)
+    saturday_enabled = models.BooleanField(default=False)
+    sunday_enabled = models.BooleanField(default=False)
+    
+    # Working Hours
+    start_time = models.TimeField(default='08:00:00')
+    end_time = models.TimeField(default='17:00:00')
+    lunch_start = models.TimeField(default='12:00:00')
+    lunch_end = models.TimeField(default='13:00:00')
+    
+    # Settings
+    timezone = models.CharField(max_length=50, choices=TIMEZONE_CHOICES, default='Africa/Dar_es_Salaam')
+    allow_backdating = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_active', 'name']
+        verbose_name = 'Working Mode'
+        verbose_name_plural = 'Working Modes'
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def get_active_mode(cls):
+        """Get the active working mode."""
+        return cls.objects.filter(is_active=True).first()
+
+
+class LoanSector(models.Model):
+    """Model for managing loan sectors/industries."""
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Risk Settings
+    risk_level = models.CharField(max_length=20, choices=[
+        ('low', 'Low Risk'),
+        ('medium', 'Medium Risk'),
+        ('high', 'High Risk'),
+    ], default='medium')
+    
+    # Requirements
+    min_loan_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    max_loan_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Loan Sector'
+        verbose_name_plural = 'Loan Sectors'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class IncomeSource(models.Model):
+    """Model for managing income sources."""
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Categorization
+    source_type = models.CharField(max_length=50, choices=[
+        ('operational', 'Operational Income'),
+        ('investment', 'Investment Income'),
+        ('other', 'Other Income'),
+    ], default='operational')
+    
+    # Settings
+    is_active = models.BooleanField(default=True)
+    requires_documentation = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Income Source'
+        verbose_name_plural = 'Income Sources'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class ExpenseCategory(models.Model):
+    """Model for managing expense categories."""
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Categorization
+    category_type = models.CharField(max_length=50, choices=[
+        ('operational', 'Operational Expense'),
+        ('administrative', 'Administrative Expense'),
+        ('financial', 'Financial Expense'),
+        ('other', 'Other Expense'),
+    ], default='operational')
+    
+    # Budget Settings
+    monthly_budget_limit = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    requires_approval = models.BooleanField(default=False)
+    
+    # Settings
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Expense Category'
+        verbose_name_plural = 'Expense Categories'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class AssetCategory(models.Model):
+    """Model for managing fixed asset categories."""
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True)
+    description = models.TextField(blank=True, null=True)
+    
+    # Depreciation Settings
+    depreciation_method = models.CharField(max_length=50, choices=[
+        ('straight_line', 'Straight Line'),
+        ('declining_balance', 'Declining Balance'),
+        ('sum_of_years', 'Sum of Years Digits'),
+        ('units_of_production', 'Units of Production'),
+    ], default='straight_line')
+    
+    depreciation_rate = models.DecimalField(max_digits=5, decimal_places=2, default=10.0)
+    useful_life_years = models.PositiveIntegerField(default=5)
+    
+    # Settings
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Asset Category'
+        verbose_name_plural = 'Asset Categories'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class BankAccount(models.Model):
+    """Model for managing bank accounts and cash."""
+    ACCOUNT_TYPES = [
+        ('checking', 'Checking Account'),
+        ('savings', 'Savings Account'),
+        ('cash', 'Cash Account'),
+        ('credit', 'Credit Account'),
+        ('loan', 'Loan Account'),
+    ]
+
+    name = models.CharField(max_length=200)
+    account_number = models.CharField(max_length=50, unique=True)
+    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
+    
+    # Bank Details
+    bank_name = models.CharField(max_length=200, blank=True, null=True)
+    bank_branch = models.CharField(max_length=200, blank=True, null=True)
+    swift_code = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Balance Information
+    opening_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    current_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Settings
+    is_active = models.BooleanField(default=True)
+    is_default = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_default', 'name']
+        verbose_name = 'Bank Account'
+        verbose_name_plural = 'Bank Accounts'
+
+    def __str__(self):
+        return f"{self.name} ({self.account_number})"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default account
+        if self.is_default:
+            BankAccount.objects.filter(is_default=True).update(is_default=False)
+        super().save(*args, **kwargs)

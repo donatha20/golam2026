@@ -1,0 +1,93 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Loan Sectors - Golam Financial Services{% endblock %}
+
+{% block page_title %}Loan Sectors{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-industry"></i> Loan Sectors
+                    </h4>
+                    <a href="{% url 'core:add_loan_sector' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Add Sector
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    {% if sectors %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Code</th>
+                                        <th>Risk Level</th>
+                                        <th>Loan Amount Range</th>
+                                        <th>Status</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sector in sectors %}
+                                    <tr>
+                                        <td>{{ sector.name }}</td>
+                                        <td>{{ sector.code }}</td>
+                                        <td>
+                                            {% if sector.risk_level == 'low' %}
+                                                <span class="badge badge-success">Low Risk</span>
+                                            {% elif sector.risk_level == 'medium' %}
+                                                <span class="badge badge-warning">Medium Risk</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">High Risk</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sector.min_loan_amount and sector.max_loan_amount %}
+                                                Tsh {{ sector.min_loan_amount }} - Tsh {{ sector.max_loan_amount }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sector.is_active %}
+                                                <span class="badge badge-success">Active</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ sector.description|default:"—" }}</td>
+                                        <td>
+                                            <a href="{% url 'core:edit_loan_sector' sector.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'core:delete_loan_sector' sector.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No loan sectors configured</h5>
+                            <p class="text-muted">Start by adding your first loan sector.</p>
+                            <a href="{% url 'core:add_loan_sector' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add Sector
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

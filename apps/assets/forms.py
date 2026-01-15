@@ -142,9 +142,9 @@ class AssetForm(forms.ModelForm):
         self.fields['category'].label = 'Category'
         self.fields['description'].label = 'Description'
         self.fields['purchase_date'].label = 'Purchase Date'
-        self.fields['purchase_value'].label = 'Purchase Value (₹)'
-        self.fields['current_value'].label = 'Current Value (₹)'
-        self.fields['salvage_value'].label = 'Salvage Value (₹)'
+        self.fields['purchase_value'].label = 'Purchase Value (Tsh)'
+        self.fields['current_value'].label = 'Current Value (Tsh)'
+        self.fields['salvage_value'].label = 'Salvage Value (Tsh)'
         self.fields['depreciation_method'].label = 'Depreciation Method'
         self.fields['custom_depreciation_rate'].label = 'Custom Depreciation Rate (%)'
         self.fields['serial_number'].label = 'Serial Number'
@@ -350,9 +350,9 @@ class CollateralForm(forms.ModelForm):
         self.fields['serial_number'].label = 'Serial Number'
         self.fields['year_of_manufacture'].label = 'Year of Manufacture'
         self.fields['condition'].label = 'Condition'
-        self.fields['estimated_value'].label = 'Estimated Value (₹)'
-        self.fields['market_value'].label = 'Market Value (₹)'
-        self.fields['forced_sale_value'].label = 'Forced Sale Value (₹)'
+        self.fields['estimated_value'].label = 'Estimated Value (Tsh)'
+        self.fields['market_value'].label = 'Market Value (Tsh)'
+        self.fields['forced_sale_value'].label = 'Forced Sale Value (Tsh)'
         self.fields['valuation_method'].label = 'Valuation Method'
         self.fields['valuated_by'].label = 'Valuated By'
         self.fields['location'].label = 'Location'
@@ -366,7 +366,7 @@ class CollateralForm(forms.ModelForm):
         self.fields['is_insured'].label = 'Is Insured'
         self.fields['insurance_company'].label = 'Insurance Company'
         self.fields['insurance_policy_number'].label = 'Insurance Policy Number'
-        self.fields['insurance_value'].label = 'Insurance Value (₹)'
+        self.fields['insurance_value'].label = 'Insurance Value (Tsh)'
         self.fields['insurance_expiry'].label = 'Insurance Expiry'
         self.fields['special_conditions'].label = 'Special Conditions'
         self.fields['notes'].label = 'Notes'
@@ -378,7 +378,7 @@ class CollateralForm(forms.ModelForm):
             self.fields['valuation_method'].initial = 'self_declared'
         
         # Filter querysets
-        self.fields['borrower'].queryset = Borrower.objects.filter(is_active=True).order_by('first_name', 'last_name')
+        self.fields['borrower'].queryset = Borrower.objects.filter(status='active').order_by('first_name', 'last_name')
         self.fields['loan'].queryset = Loan.objects.filter(status__in=['approved', 'disbursed']).order_by('-created_at')
         self.fields['collateral_type'].queryset = CollateralType.objects.filter(is_active=True)
         self.fields['loan'].required = False

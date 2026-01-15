@@ -1,0 +1,173 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Reject Expenditure - Finance Tracker{% endblock %}
+
+{% block page_title %}
+    <i class="fas fa-times-circle text-danger"></i> Reject Expenditure Record
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rejection-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dc3545;
+        border-radius: 15px;
+    }
+    .expenditure-details {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .amount-highlight {
+        color: #dc3545;
+        font-weight: 700;
+        font-size: 1.5em;
+    }
+    .detail-row {
+        border-bottom: 1px solid #e9ecef;
+        padding: 10px 0;
+    }
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    .rejection-actions {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 16px;
+    }
+    .rejection-form textarea {
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card rejection-card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-times-circle"></i> Reject Expenditure Record
+                    </h5>
+                </div>
+                <div class="card-body p-compact">
+                    <!-- Expenditure Details -->
+                    <div class="expenditure-details">
+                        <h6 class="text-muted mb-3">Expenditure Details</h6>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Expenditure ID:</strong></div>
+                                <div class="col-sm-8">{{ expenditure.expenditure_id }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Type:</strong></div>
+                                <div class="col-sm-8">{{ expenditure.get_expenditure_type_display }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Amount:</strong></div>
+                                <div class="col-sm-8 amount-highlight">Tsh {{ expenditure.amount|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Description:</strong></div>
+                                <div class="col-sm-8">{{ expenditure.description|truncatechars:100 }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Vendor:</strong></div>
+                                <div class="col-sm-8">{{ expenditure.vendor_name|default:"N/A" }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Recorded By:</strong></div>
+                                <div class="col-sm-8">{{ expenditure.recorded_by.get_full_name|default:expenditure.recorded_by.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rejection Actions -->
+                    <div class="rejection-actions">
+                        <h6 class="text-muted mb-3">Rejection Reason</h6>
+                        <form method="post" id="rejectionForm" class="rejection-form">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="rejection_reason" class="form-label">
+                                    <strong>Reason for Rejection <span class="text-danger">*</span></strong>
+                                </label>
+                                <textarea 
+                                    name="rejection_reason" 
+                                    id="rejection_reason" 
+                                    class="form-control form-control-sm" 
+                                    rows="4" 
+                                    placeholder="Please provide a detailed reason for rejecting this expenditure record..."
+                                    required
+                                ></textarea>
+                                <div class="form-text">
+                                    This reason will be recorded and may be visible to the person who created the record.
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-danger btn-lg w-100">
+                                        <i class="fas fa-times"></i> Reject This Expenditure
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{% url 'finance_tracker:approve_expenditure' expenditure.id %}" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-check"></i> Approve Instead
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <a href="{% url 'finance_tracker:expenditure_approval_queue' %}" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-arrow-left"></i> Back to Approval Queue
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('rejectionForm').addEventListener('submit', function(e) {
+        const reason = document.getElementById('rejection_reason').value.trim();
+        if (reason.length < 10) {
+            alert('Please provide a more detailed rejection reason (at least 10 characters).');
+            e.preventDefault();
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to reject this expenditure record?')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

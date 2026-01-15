@@ -62,7 +62,7 @@ class IncomeForm(forms.ModelForm):
         # Set field labels
         self.fields['source'].label = 'Income Source'
         self.fields['category'].label = 'Income Category'
-        self.fields['amount'].label = 'Amount (₹)'
+        self.fields['amount'].label = 'Amount (Tsh)'
         self.fields['description'].label = 'Description'
         self.fields['income_date'].label = 'Income Date'
         self.fields['reference_number'].label = 'Reference Number'
@@ -162,7 +162,7 @@ class ExpenditureForm(forms.ModelForm):
         # Set field labels
         self.fields['expenditure_type'].label = 'Expenditure Type'
         self.fields['category'].label = 'Expenditure Category'
-        self.fields['amount'].label = 'Amount (₹)'
+        self.fields['amount'].label = 'Amount (Tsh)'
         self.fields['description'].label = 'Description'
         self.fields['expenditure_date'].label = 'Expenditure Date'
         self.fields['vendor_name'].label = 'Vendor/Supplier Name'

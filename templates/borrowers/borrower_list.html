@@ -12,13 +12,23 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
         overflow-x: auto;
         max-height: 70vh;
         overflow-y: auto;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Fix container spacing */
+    .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+        max-width: 100%;
     }
 
     .borrower-table {
@@ -187,7 +197,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         text-align: center;
@@ -323,7 +333,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid px-0">
     <div class="d-flex justify-content-end mb-3">
         <div class="btn-group">
             <a href="{% url 'borrowers:register_borrower' %}" class="btn btn-outline-primary btn-sm">

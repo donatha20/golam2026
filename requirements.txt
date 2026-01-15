@@ -1,53 +1,57 @@
 Django==5.2.3
-# psycopg2-binary==2.9.10
-# psycopg[binary]>=3.2.0
-python-decouple==3.8
-django-crispy-forms==2.4
-django-tables2==2.7.5
-django-filter==23.3
-reportlab==4.4.1
-openpyxl==3.1.5
-requests==2.32.4
-#Pillow==11.2.1
-chardet==5.2.0
-et-xmlfile==2.0.0
-python-dateutil==2.8.2
+asgiref==3.11.0
+sqlparse==0.5.5
+tzdata==2025.3
 
-# Additional packages for production
+# Database
+psycopg2-binary==2.9.11
+
+# Static files & deployment
 gunicorn==21.2.0
 whitenoise==6.6.0
+
+# Forms & UI
+django-crispy-forms==2.4
+crispy-bootstrap5==2025.6
+django-widget-tweaks==1.5.1
+
+# Tables, filters, utilities
+django-tables2==2.7.5
+django-filter==25.2
+
+# Security & auth
+django-guardian==3.2.0
+django-phonenumber-field==8.4.0
+phonenumbers==9.0.21
+
+# CORS
 django-cors-headers==4.3.1
+
+# Files, reports & exports
+Pillow==12.1.0
+openpyxl==3.1.5
+reportlab==4.4.1
+chardet==5.2.0
+python-dateutil==2.8.2
+
+# HTTP & APIs
+requests==2.32.4
+
+# Background jobs
 celery==5.3.4
 redis==5.0.1
+django-rq==3.2.2
+rq==2.6.1
 
-# SMS Services
-twilio>=8.5.0
+# SMS
+twilio==9.9.1
 
-# Forms and UI Enhancement
-crispy-bootstrap5>=0.7
-django-widget-tweaks>=1.4.0
-
-# Authentication and Security
-django-guardian>=2.4.0
-django-phonenumber-field>=7.1.0
-phonenumbers>=8.13.0
+# Monitoring & health
+django-health-check==3.20.8
+sentry-sdk==2.49.0
 
 # Utilities
-pytz>=2023.3
-arrow>=1.2.0
-numpy>=1.24.0
-
-# Development packages
-django-debug-toolbar==4.2.0
-django-extensions==3.2.3
-factory-boy==3.3.0
-pytest-django==4.7.0
-coverage==7.3.2
-
-# Monitoring and Health Checks
-django-health-check>=3.17.0
-sentry-sdk>=1.29.0
-
-# Background Tasks
-django-rq>=2.8.0
-rq>=1.15.0
+python-decouple==3.8
+pytz==2025.2
+arrow==1.4.0
+numpy==2.4.1

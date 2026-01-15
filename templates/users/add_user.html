@@ -26,7 +26,7 @@
     }
     
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     
     .form-label {
@@ -184,7 +184,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
         
         .form-row {
@@ -243,7 +243,7 @@
             <!-- Role Selection -->
             <div class="form-group">
                 <label for="role" class="form-label required">User Role</label>
-                <select id="role" name="role" class="form-select" required>
+                <select id="role" name="role" class="form-select form-select-sm" required>
                     {% for value, label in roles %}
                     <option value="{{ value }}" {% if value == 'loan_officer' %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}

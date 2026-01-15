@@ -18,13 +18,13 @@
         {% endif %}
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-paper-plane me-2 text-primary-teal"></i>
                     Send Individual SMS
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <form method="post">
                     {% csrf_token %}
                     
@@ -105,7 +105,7 @@
                     <div class="mb-3">
                         <label class="form-label">Preview</label>
                         <div class="card bg-light">
-                            <div class="card-body">
+                            <div class="card-body p-compact">
                                 <div class="d-flex align-items-start">
                                     <div class="me-3">
                                         <i class="fas fa-mobile-alt fa-2x text-muted"></i>
@@ -124,7 +124,7 @@
                     
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'sms:dashboard' %}" class="btn btn-secondary">
+                        <a href="{% url 'sms:dashboard' %}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
                         <div>
@@ -142,13 +142,13 @@
         
         <!-- Help Card -->
         <div class="card mt-4">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h6 class="mb-0">
                     <i class="fas fa-info-circle me-2 text-info"></i>
                     SMS Guidelines
                 </h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <ul class="mb-0">
                     <li><strong>Phone Format:</strong> Enter with or without country code (e.g., 9876543210 or +91 9876543210)</li>
                     <li><strong>Message Length:</strong> Keep messages under 160 characters for single SMS</li>

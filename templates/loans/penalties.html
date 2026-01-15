@@ -12,7 +12,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -129,7 +129,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         transition: all 0.3s ease;
@@ -187,14 +187,14 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
     }
 
     .filters-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #374151;
         margin-bottom: 1rem;
@@ -302,7 +302,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stats Cards -->
+<!-- Stats Cards 
 <div class="stats-grid">
     <div class="stat-card penalty">
         <div class="stat-title">Total Penalties</div>
@@ -326,7 +326,7 @@
     </div>
 </div>
 
-<!-- Penalty Breakdown -->
+<!-- Penalty Breakdown 
 <div class="filters-section">
     <h3 class="filters-title">Penalty Status Breakdown</h3>
     <div class="filters-grid">
@@ -357,7 +357,7 @@
     </div>
 </div>
 
-<!-- Filters Section -->
+<!-- Filters Section 
 <div class="filters-section">
     <h3 class="filters-title">Filter Penalties</h3>
     <form method="get" class="filters-form">
@@ -396,19 +396,19 @@
     </form>
 </div>
 
-<!-- Action Buttons -->
-<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary">
+<!-- Action Buttons 
+<div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary btn-sm">
         <i class="fas fa-plus-circle"></i> Add Penalty
     </a>
-    <a href="{% url 'loans:clear_penalties' %}" class="btn btn-success">
+    <a href="{% url 'loans:clear_penalties' %}" class="btn btn-success btn-sm">
         <i class="fas fa-check-circle"></i> Clear Penalties
     </a>
-    <a href="{% url 'loans:loans_arrears' %}" class="btn btn-danger">
+    <a href="{% url 'loans:loans_arrears' %}" class="btn btn-danger btn-sm">
         <i class="fas fa-exclamation-triangle"></i> View Arrears
     </a>
 </div>
-
+-->
 <!-- Penalties Table -->
 <div class="table-container">
     {% if table.data %}
@@ -418,7 +418,7 @@
             <i class="fas fa-gavel" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
             <h3>No Penalties Found</h3>
             <p>No penalties match your criteria. This could be good news!</p>
-            <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary" style="margin-top: 1rem;">
+            <a href="{% url 'loans:add_penalty' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
                 <i class="fas fa-plus-circle"></i> Add New Penalty
             </a>
         </div>

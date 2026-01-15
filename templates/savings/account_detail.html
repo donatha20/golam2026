@@ -29,7 +29,7 @@
     .info-card {
         background: #f8f9fa;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         border-left: 4px solid #1e7570;
     }
 
@@ -145,7 +145,7 @@
     }
 
     .section-header {
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
     }
 
@@ -160,7 +160,7 @@
     }
 
     .section-content {
-        padding: 1.5rem;
+        padding: 1rem;
     }
 
     .transaction-item {
@@ -215,7 +215,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .stat-item {
@@ -326,19 +326,19 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <a href="{% url 'savings:process_transaction' %}" class="btn btn-primary">
+            <a href="{% url 'savings:process_transaction' %}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus"></i>
                 New Transaction
             </a>
-            <a href="#" class="btn btn-success" onclick="processDeposit()">
+            <a href="#" class="btn btn-success btn-sm" onclick="processDeposit()">
                 <i class="fas fa-arrow-down"></i>
                 Deposit
             </a>
-            <a href="#" class="btn btn-warning" onclick="processWithdrawal()">
+            <a href="#" class="btn btn-warning btn-sm" onclick="processWithdrawal()">
                 <i class="fas fa-arrow-up"></i>
                 Withdrawal
             </a>
-            <a href="{% url 'savings:account_list' %}" class="btn btn-secondary">
+            <a href="{% url 'savings:account_list' %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-arrow-left"></i>
                 Back to Accounts
             </a>

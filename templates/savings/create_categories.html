@@ -32,7 +32,7 @@
     }
 
     .form-group {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .form-label {
@@ -121,7 +121,7 @@
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         .form-row {
@@ -154,7 +154,7 @@
                     type="text" 
                     id="name" 
                     name="name" 
-                    class="form-control" 
+                    class="form-control form-control-sm" 
                     required
                     placeholder="e.g., Regular Savings"
                     maxlength="100"
@@ -170,7 +170,7 @@
                     type="text" 
                     id="code" 
                     name="code" 
-                    class="form-control" 
+                    class="form-control form-control-sm" 
                     required
                     placeholder="e.g., REG_SAV"
                     maxlength="20"
@@ -198,7 +198,7 @@
                 type="number" 
                 id="display_order" 
                 name="display_order" 
-                class="form-control" 
+                class="form-control form-control-sm" 
                 value="0"
                 min="0"
                 max="999"
@@ -207,10 +207,10 @@
         </div>
 
         <div class="btn-group">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fas fa-save"></i> Create Category
             </button>
-            <a href="{% url 'savings:view_categories' %}" class="btn btn-secondary">
+            <a href="{% url 'savings:view_categories' %}" class="btn btn-secondary btn-sm">
                 <i class="fas fa-times"></i> Cancel
             </a>
         </div>

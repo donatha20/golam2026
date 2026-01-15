@@ -41,7 +41,7 @@
     .stat-card {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: 1px solid #e5e7eb;
         transition: transform 0.2s;
@@ -100,7 +100,7 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         margin-bottom: 2rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: 1px solid #e5e7eb;
@@ -136,7 +136,7 @@
         overflow: hidden;
     }
     .table-header {
-        padding: 1.5rem;
+        padding: 1rem;
         border-bottom: 1px solid #e5e7eb;
         display: flex;
         justify-content: space-between;
@@ -430,10 +430,10 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span id="selected-count">0 penalties selected</span>
                 <div class="action-buttons">
-                    <button type="button" class="btn btn-success" onclick="clearSelectedPenalties()">
+                    <button type="button" class="btn btn-success btn-sm" onclick="clearSelectedPenalties()">
                         <i class="fas fa-check"></i> Clear Selected
                     </button>
-                    <button type="button" class="btn btn-warning" onclick="waiveSelectedPenalties()">
+                    <button type="button" class="btn btn-warning btn-sm" onclick="waiveSelectedPenalties()">
                         <i class="fas fa-hand-holding-medical"></i> Waive Selected
                     </button>
                 </div>
@@ -499,10 +499,10 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <a href="{% url 'loans:clear_penalty' penalty.id %}" class="btn btn-success">
+                            <a href="{% url 'loans:clear_penalty' penalty.id %}" class="btn btn-success btn-sm">
                                 <i class="fas fa-check"></i> Clear
                             </a>
-                            <a href="{% url 'loans:waive_penalty' penalty.id %}" class="btn btn-warning">
+                            <a href="{% url 'loans:waive_penalty' penalty.id %}" class="btn btn-warning btn-sm">
                                 <i class="fas fa-hand-holding-medical"></i> Waive
                             </a>
                         </div>

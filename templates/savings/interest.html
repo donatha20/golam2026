@@ -13,13 +13,13 @@
     <!-- Interest Calculation Summary -->
     <div class="col-lg-4">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-calculator me-2 text-primary-teal"></i>
                     Interest Summary
                 </h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="row text-center">
                     <div class="col-12 mb-3">
                         <div class="border rounded p-3">
@@ -45,7 +45,7 @@
                     <button type="button" class="btn btn-primary-teal" id="calculate-interest-btn">
                         <i class="fas fa-calculator me-1"></i>Calculate Interest
                     </button>
-                    <button type="button" class="btn btn-success" id="post-interest-btn">
+                    <button type="button" class="btn btn-success btn-sm" id="post-interest-btn">
                         <i class="fas fa-plus me-1"></i>Post Interest
                     </button>
                 </div>
@@ -70,9 +70,9 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-compact">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
                                 <th>Account</th>
@@ -177,7 +177,7 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="calculation_period" class="form-label">Calculation Period</label>
-                        <select class="form-select" id="calculation_period" name="calculation_period" required>
+                        <select class="form-select form-select-sm" id="calculation_period" name="calculation_period" required>
                             <option value="">Select Period</option>
                             <option value="current_month">Current Month</option>
                             <option value="last_month">Last Month</option>
@@ -188,11 +188,11 @@
                         <div class="row">
                             <div class="col-6">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date">
+                                <input type="date" class="form-control form-control-sm" id="start_date" name="start_date">
                             </div>
                             <div class="col-6">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date">
+                                <input type="date" class="form-control form-control-sm" id="end_date" name="end_date">
                             </div>
                         </div>
                     </div>
@@ -207,7 +207,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary-teal" id="confirm-calculation-btn">Calculate</button>
             </div>
         </div>

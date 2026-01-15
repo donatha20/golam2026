@@ -13,7 +13,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .stat-card {
@@ -155,7 +155,7 @@
     .table-container {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -236,7 +236,7 @@
     .filters-section {
         background: white;
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         border: 1px solid #e5e7eb;
         margin-bottom: 2rem;
@@ -327,7 +327,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stats Cards -->
+<!-- Stats Cards 
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-title">Total Payments</div>
@@ -359,7 +359,7 @@
     </div>
 </div>
 
-<!-- Action Buttons -->
+<!-- Action Buttons 
 <div class="action-buttons-section">
     <div class="action-buttons-grid">
         <a href="{% url 'repayments:record_repayment' %}" class="action-btn action-btn-primary">
@@ -381,7 +381,7 @@
     </div>
 </div>
 
-<!-- Filters Section -->
+<!-- Filters Section 
 <div class="filters-section">
     <form method="get" class="filters-form">
         <div class="filters-grid">
@@ -419,7 +419,7 @@
         </div>
     </form>
 </div>
-
+-->
 <!-- Payments Table -->
 <div class="table-container">
     {% if table.data %}

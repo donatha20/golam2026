@@ -59,22 +59,23 @@ urlpatterns = [
     path('finance/', include('apps.finance_tracker.urls')),
     path('financial-statements/', include('apps.financial_statements.urls')),
     path('loans/', include('apps.loans.urls')),
+    path('payroll/', include('apps.payroll.urls')),
     path('repayments/', include('apps.repayments.urls')),
     path('savings/', include('apps.savings.urls')),
     path('sms/', include('apps.sms.urls')),
 ]
 
 # Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT)
-
-    # Django Debug Toolbar
-    try:
-        import debug_toolbar
-        urlpatterns = [
-            path('__debug__/', include(debug_toolbar.urls)),
-        ] + urlpatterns
-    except ImportError:
-        # Debug toolbar not installed, skip
-        pass
+#if settings.DEBUG:
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0] if settings.STATICFILES_DIRS else settings.STATIC_ROOT)
+#
+#    # Django Debug Toolbar
+#   try:
+#        import debug_toolbar
+ #       urlpatterns = [
+  #          path('__debug__/', include(debug_toolbar.urls)),
+   #     ] + urlpatterns
+    #except ImportError:
+     #   # Debug toolbar not installed, skip
+      #  pass
