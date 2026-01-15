@@ -12,11 +12,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # Database for production
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+  "default": dj_database_url.config(conn_max_age=600, ssl_require=True)
+
 }
 
 # Email Configuration for production
