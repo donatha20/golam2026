@@ -21,12 +21,11 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    
     <!-- Django Tables2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
 
-        {% load static %}
-        <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
 
     <!-- Global Table Header Styling -->
     <style>
@@ -57,14 +56,14 @@
         /* Django Tables2 sortable column links - use teal shades */
         table thead th a,
         .table thead th a {
-            color: #16a085 !important; /* Lighter teal for sortable columns */
-            text-decoration: none !important; /* Remove underlines */
+            color: #16a085 !important;
+            text-decoration: none !important;
             font-weight: 600 !important;
         }
 
         table thead th a:hover,
         .table thead th a:hover {
-            color: #138d75 !important; /* Darker teal on hover */
+            color: #138d75 !important;
             text-decoration: none !important;
         }
 
@@ -73,7 +72,7 @@
         table thead th.desc a,
         .table thead th.asc a,
         .table thead th.desc a {
-            color: #0e6b5d !important; /* Darkest teal for sorted column */
+            color: #0e6b5d !important;
             font-weight: 700 !important;
         }
 
@@ -141,6 +140,7 @@
             background: #f8fafc;
             color: #374151;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         /* Sidebar Styles */
@@ -171,7 +171,6 @@
             display: none;
         }
 
-        /* Show icons but hide text in collapsed state */
         .sidebar.collapsed .nav-link span {
             width: auto;
             overflow: hidden;
@@ -282,6 +281,7 @@
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
             font-size: 0.9rem;
+            cursor: pointer;
         }
 
         .nav-link i {
@@ -300,7 +300,7 @@
             color: #2b7a76;
             background: rgba(43, 122, 118, 0.08);
             border-left-color: #2b7a76;
-            font-weight: 700; /* Bold the active menu item */
+            font-weight: 700;
         }
 
         .nav-link:hover {
@@ -352,7 +352,7 @@
         .nav-submenu .nav-link.active {
             color: #2b7a76;
             background: rgba(43, 122, 118, 0.1);
-            font-weight: 700; /* Bold active submenu items */
+            font-weight: 700;
         }
 
         .nav-toggle {
@@ -456,6 +456,20 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+        }
+
+        /* MOBILE MENU TOGGLE BUTTON - CRITICAL FIX */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #2b7a76;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            z-index: 1001;
         }
 
         .sidebar-toggle {
@@ -664,16 +678,41 @@
 
         .content {
             padding: 1rem;
-            padding-top: 90px; /* Add space for fixed header */
+            padding-top: 90px;
             position: relative;
             z-index: 1;
             overflow-x: hidden;
         }
 
-        /* Responsive Design */
+        /* MOBILE OVERLAY - CRITICAL FIX */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design - FIXED VERSION */
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
+                width: 280px;
+                z-index: 1000;
             }
 
             .sidebar.show {
@@ -685,11 +724,13 @@
             }
 
             .main-content {
-                margin-left: 0;
+                margin-left: 0 !important;
+                width: 100%;
             }
 
-            .main-content.sidebar-collapsed {
-                margin-left: 0;
+            .header {
+                left: 0 !important;
+                padding: 1rem;
             }
 
             .search-bar input {
@@ -697,7 +738,34 @@
             }
 
             .sidebar-toggle {
-                display: block;
+                display: none;
+            }
+
+            .page-title {
+                font-size: 0.85rem;
+            }
+
+            /* Make submenus more visible on mobile */
+            .nav-submenu {
+                background: rgba(43, 122, 118, 0.05);
+                border-left: 2px solid #2b7a76;
+                margin-left: 10px;
+            }
+            
+            .nav-submenu .nav-link {
+                padding-left: 2.5rem;
+                font-size: 0.9rem;
+            }
+            
+            /* Make parent items more distinguishable */
+            .nav-section > .nav-link:not([href="#"]) {
+                font-weight: 600;
+                background: rgba(43, 122, 118, 0.08);
+            }
+
+            .nav-section > .nav-link[onclick*="toggleSubmenu"] {
+                font-weight: 600;
+                background: rgba(43, 122, 118, 0.08);
             }
         }
 
@@ -712,6 +780,9 @@
 </head>
 <body>
     {% csrf_token %}
+    <!-- Mobile Menu Overlay -->
+    <div class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <button class="sidebar-expand-btn" onclick="toggleSidebar()" title="Expand">
@@ -736,7 +807,7 @@
             
             {% if user.role == 'admin' %}
             <div class="nav-section" data-section="users" data-url-prefix="/users/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('users-submenu')" data-tooltip="Users">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('users-submenu');" data-tooltip="Users">
                     <span><i class="fas fa-users-cog"></i> Users</span>
                     <i class="fas fa-chevron-down nav-toggle" id="users-toggle"></i>
                 </a>
@@ -755,7 +826,7 @@
             {% endif %}
             
             <div class="nav-section" data-section="clients" data-url-prefix="/borrowers/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('clients-submenu')" data-tooltip="Clients">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('clients-submenu');" data-tooltip="Clients">
                     <span><i class="fas fa-user"></i> Clients</span>
                     <i class="fas fa-chevron-down nav-toggle" id="clients-toggle"></i>
                 </a>
@@ -776,7 +847,7 @@
             </div>
             
             <div class="nav-section" data-section="groups" data-url-prefix="/borrowers/groups/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('groups-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('groups-submenu');">
                     <span><i class="fas fa-users"></i> Groups</span>
                     <i class="fas fa-chevron-down nav-toggle" id="groups-toggle"></i>
                 </a>
@@ -791,7 +862,7 @@
             </div>
             
             <div class="nav-section" data-section="capital" data-url-prefix="/finance/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('capital-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('capital-submenu');">
                     <span><i class="fas fa-university"></i> Capital</span>
                     <i class="fas fa-chevron-down nav-toggle" id="capital-toggle"></i>
                 </a>
@@ -818,7 +889,7 @@
             </div>
 
             <div class="nav-section" data-section="loans" data-url-prefix="/loans/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('loans-submenu')" data-tooltip="Loans">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('loans-submenu');" data-tooltip="Loans">
                     <span><i class="fas fa-money-bill-wave"></i> Loans</span>
                     <i class="fas fa-chevron-down nav-toggle" id="loans-toggle"></i>
                 </a>
@@ -908,7 +979,7 @@
             </div>
 
             <div class="nav-section" data-section="repayments" data-url-prefix="/repayments/">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('repayments-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('repayments-submenu');">
                     <span><i class="fas fa-credit-card"></i> Repayments</span>
                     <i class="fas fa-chevron-down nav-toggle" id="repayments-toggle"></i>
                 </a>
@@ -935,13 +1006,13 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('savings-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('savings-submenu');">
                     <span><i class="fas fa-sack-dollar"></i> Saving Accounts</span>
                     <i class="fas fa-chevron-down nav-toggle" id="savings-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="savings-submenu">
                     <!-- Saving Account Management Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('saving-account-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('saving-account-submenu');">
                         <span><i class="fas fa-university"></i> Saving Account</span>
                         <i class="fas fa-chevron-down nav-toggle" id="saving-account-toggle"></i>
                     </a>
@@ -1003,35 +1074,22 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('assets-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('assets-submenu');">
                     <span><i class="fas fa-boxes"></i> Assets</span>
                     <i class="fas fa-chevron-down nav-toggle" id="assets-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="assets-submenu">
-                    <!--
-                    <a href="{% url 'assets:dashboard' %}" class="nav-link">
-                        <span><i class="fas fa-tachometer-alt"></i> Assets Dashboard</span>
-                    </a>
-                    -->
-                    
                     <a href="{% url 'assets:add_asset' %}" class="nav-link">
                         <span><i class="fas fa-plus-circle"></i> Add Asset</span>
                     </a>
-                    
                     <a href="{% url 'assets:asset_list' %}" class="nav-link">
                         <span><i class="fas fa-list"></i> Asset List</span>
                     </a>
-                    <!--
-                    <a href="{% url 'assets:asset_reports' %}" class="nav-link">
-                        <span><i class="fas fa-chart-bar"></i> Asset Reports</span>
-                    </a>
-                    -->
-                    
                 </div>
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('collaterals-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('collaterals-submenu');">
                     <span><i class="fas fa-shield-alt"></i> Collaterals</span>
                     <i class="fas fa-chevron-down nav-toggle" id="collaterals-toggle"></i>
                 </a>
@@ -1042,23 +1100,11 @@
                     <a href="{% url 'assets:collateral_list' %}" class="nav-link">
                         <span><i class="fas fa-list"></i> Collateral List</span>
                     </a>
-                    <!--
-                     <a href="{% url 'assets:collateral_reports' %}" class="nav-link">
-                        <span><i class="fas fa-chart-bar"></i> Collateral Reports</span>
-                    </a>
-                    <a href="{% url 'assets:collateral_list' %}?status=under_verification" class="nav-link">
-                        <span><i class="fas fa-clock"></i> Pending Verification</span>
-                    </a>
-                    <a href="{% url 'assets:collateral_list' %}?status=held" class="nav-link">
-                        <span><i class="fas fa-shield-alt"></i> Held as Security</span>
-                    </a>
-                    -->
-                   
                 </div>
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('sms-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('sms-submenu');">
                     <span><i class="fas fa-sms"></i> SMS Management</span>
                     <i class="fas fa-chevron-down nav-toggle" id="sms-toggle"></i>
                 </a>
@@ -1085,7 +1131,7 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('payroll-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-submenu');">
                     <span><i class="fas fa-calculator"></i> Employee Payroll</span>
                     <i class="fas fa-chevron-down nav-toggle" id="payroll-toggle"></i>
                 </a>
@@ -1095,7 +1141,7 @@
                     </a>
                     
                     <!-- Employee Management -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('employee-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('employee-submenu');">
                         <span><i class="fas fa-users"></i> Employee Management</span>
                         <i class="fas fa-chevron-down nav-toggle" id="employee-toggle"></i>
                     </a>
@@ -1115,7 +1161,7 @@
                     </div>
                     
                     <!-- Payroll Processing -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('payroll-processing-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-processing-submenu');">
                         <span><i class="fas fa-calculator"></i> Generate Payroll</span>
                         <i class="fas fa-chevron-down nav-toggle" id="payroll-processing-toggle"></i>
                     </a>
@@ -1137,7 +1183,7 @@
                     </a>
                     
                     <!-- Deductions & Allowances -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('deductions-allowances-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('deductions-allowances-submenu');">
                         <span><i class="fas fa-cogs"></i> Deductions & Allowances</span>
                         <i class="fas fa-chevron-down nav-toggle" id="deductions-allowances-toggle"></i>
                     </a>
@@ -1173,12 +1219,12 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('income-expenditure-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('income-expenditure-submenu');">
                     <span><i class="fas fa-chart-pie"></i> Income & Expenditure</span>
                     <i class="fas fa-chevron-down nav-toggle" id="income-expenditure-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="income-expenditure-submenu">
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('income-sub-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sub-submenu');">
                         <span><i class="fas fa-plus-circle"></i> Income</span>
                         <i class="fas fa-chevron-down nav-toggle" id="income-sub-toggle"></i>
                     </a>
@@ -1193,7 +1239,7 @@
                             <span><i class="fas fa-check-circle text-warning"></i> Approval Queue</span>
                         </a>
                     </div>
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('expenditure-sub-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('expenditure-sub-submenu');">
                         <span><i class="fas fa-minus-circle"></i> Expenditure</span>
                         <i class="fas fa-chevron-down nav-toggle" id="expenditure-sub-toggle"></i>
                     </a>
@@ -1212,7 +1258,7 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('reports-submenu')">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('reports-submenu');">
                     <span><i class="fas fa-chart-bar"></i> Reports</span>
                     <i class="fas fa-chevron-down nav-toggle" id="reports-toggle"></i>
                 </a>
@@ -1241,35 +1287,9 @@
                 </div>
             </div>
 
-            <!-- General Ledger 
-             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('general-ledger-submenu')">
-                    <span><i class="fas fa-book"></i> General Ledger</span>
-                    <i class="fas fa-chevron-down nav-toggle" id="general-ledger-toggle"></i>
-                </a>
-                <div class="nav-submenu" id="general-ledger-submenu">
-                    <a href="{% url 'financial_statements:manage_classifications' %}" class="nav-link">
-                        <span><i class="fas fa-sitemap"></i> Chart of Accounts</span>
-                    </a>
-                    <a href="{% url 'financial_statements:trial_balance_report' %}" class="nav-link">
-                        <span><i class="fas fa-balance-scale"></i> Trial Balance</span>
-                    </a>
-                    <a href="{% url 'financial_statements:statement_runs' %}" class="nav-link">
-                        <span><i class="fas fa-journal-whills"></i> Journal Entries</span>
-                    </a>
-                    <a href="{% url 'financial_statements:manage_periods' %}" class="nav-link">
-                        <span><i class="fas fa-calendar-alt"></i> Account Balances</span>
-                    </a>
-                    <a href="{% url 'financial_statements:dashboard' %}" class="nav-link">
-                        <span><i class="fas fa-file-invoice"></i> Ledger Reports</span>
-                    </a>
-                </div>
-            </div>
-
-           -->
             {% if user.role == 'admin' or user.role == 'manager' %}
               <div class="nav-section">
-                <a href="#" class="nav-link" onclick="toggleSubmenu('settings-submenu')" data-tooltip="Settings">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('settings-submenu');" data-tooltip="Settings">
                     <span><i class="fas fa-cog"></i> Settings</span>
                     <i class="fas fa-chevron-down nav-toggle" id="settings-toggle"></i>
                 </a>
@@ -1279,7 +1299,7 @@
                     </a>
                     
                     <!-- Company Info Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('company-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('company-submenu');">
                         <span><i class="fas fa-building"></i> Company Info</span>
                         <i class="fas fa-chevron-down nav-toggle" id="company-toggle"></i>
                     </a>
@@ -1293,7 +1313,7 @@
                     </div>
                     
                     <!-- Working Mode Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('working-mode-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('working-mode-submenu');">
                         <span><i class="fas fa-clock"></i> Working Mode</span>
                         <i class="fas fa-chevron-down nav-toggle" id="working-mode-toggle"></i>
                     </a>
@@ -1307,7 +1327,7 @@
                     </div>
                     
                     <!-- Public Holidays Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('holidays-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('holidays-submenu');">
                         <span><i class="fas fa-calendar-alt"></i> Public Holidays</span>
                         <i class="fas fa-chevron-down nav-toggle" id="holidays-toggle"></i>
                     </a>
@@ -1321,7 +1341,7 @@
                     </div>
                     
                     <!-- Branches Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('branches-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('branches-submenu');">
                         <span><i class="fas fa-map-marker-alt"></i> Branches</span>
                         <i class="fas fa-chevron-down nav-toggle" id="branches-toggle"></i>
                     </a>
@@ -1335,7 +1355,7 @@
                     </div>
                     
                     <!-- Loan Categories Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('loan-categories-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('loan-categories-submenu');">
                         <span><i class="fas fa-tags"></i> Loans Categories</span>
                         <i class="fas fa-chevron-down nav-toggle" id="loan-categories-toggle"></i>
                     </a>
@@ -1349,7 +1369,7 @@
                     </div>
                     
                     <!-- Loan Sectors Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('loan-sectors-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('loan-sectors-submenu');">
                         <span><i class="fas fa-industry"></i> Loans Sectors</span>
                         <i class="fas fa-chevron-down nav-toggle" id="loan-sectors-toggle"></i>
                     </a>
@@ -1363,7 +1383,7 @@
                     </div>
                     
                     <!-- Penalty Settings Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('penalty-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('penalty-submenu');">
                         <span><i class="fas fa-exclamation-triangle"></i> Penalty Settings</span>
                         <i class="fas fa-chevron-down nav-toggle" id="penalty-toggle"></i>
                     </a>
@@ -1377,7 +1397,7 @@
                     </div>
                     
                     <!-- Income Sources Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('income-sources-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sources-submenu');">
                         <span><i class="fas fa-coins"></i> Income Sources</span>
                         <i class="fas fa-chevron-down nav-toggle" id="income-sources-toggle"></i>
                     </a>
@@ -1391,7 +1411,7 @@
                     </div>
                     
                     <!-- Expense Categories Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('expense-categories-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('expense-categories-submenu');">
                         <span><i class="fas fa-receipt"></i> Expense Categories</span>
                         <i class="fas fa-chevron-down nav-toggle" id="expense-categories-toggle"></i>
                     </a>
@@ -1405,7 +1425,7 @@
                     </div>
                     
                     <!-- Fixed Assets Categories Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('assets-categories-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('assets-categories-submenu');">
                         <span><i class="fas fa-boxes"></i> Fixed Assets Categories</span>
                         <i class="fas fa-chevron-down nav-toggle" id="assets-categories-toggle"></i>
                     </a>
@@ -1419,7 +1439,7 @@
                     </div>
                     
                     <!-- Bank Accounts & Cash Section -->
-                    <a href="#" class="nav-link" onclick="toggleSubmenu('bank-accounts-submenu')">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('bank-accounts-submenu');">
                         <span><i class="fas fa-university"></i> Bank Accounts & Cash</span>
                         <i class="fas fa-chevron-down nav-toggle" id="bank-accounts-toggle"></i>
                     </a>
@@ -1436,16 +1456,15 @@
                     <a href="{% url 'core:system_settings' %}" class="nav-link">
                         <span><i class="fas fa-sliders-h"></i> System Settings</span>
                     </a>
-                    
                 </div>
-                {% endif %}
+            </div>
+            {% endif %}
                 
-                <!-- Logout Section -->
-                <div class="nav-section">
-                    <a href="#" onclick="confirmLogout()" class="nav-link logout-nav" data-tooltip="Logout">
-                        <span><i class="fas fa-sign-out-alt"></i> Logout</span>
-                    </a>
-                </div>
+            <!-- Logout Section -->
+            <div class="nav-section">
+                <a href="#" onclick="confirmLogout()" class="nav-link logout-nav" data-tooltip="Logout">
+                    <span><i class="fas fa-sign-out-alt"></i> Logout</span>
+                </a>
             </div>
         </nav>
     </div>
@@ -1454,6 +1473,10 @@
     <div class="main-content">
         <div class="header">
             <div class="header-left">
+                <!-- MOBILE MENU BUTTON - CRITICAL ADDITION -->
+                <button class="mobile-menu-toggle" onclick="toggleMobileSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
             </div>
             
@@ -1503,72 +1526,41 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // MOBILE SIDEBAR TOGGLE - CRITICAL FIX
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('active');
+            
+            // Prevent body scroll when sidebar is open
+            document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+        }
 
-        
-        // Initialize sidebar with current section open
-        document.addEventListener('DOMContentLoaded', function() {
-            // Restore scroll position only
-            const savedScrollPosition = localStorage.getItem('sidebarScrollPosition');
-            const sidebar = document.querySelector('.sidebar-nav');
-            if (savedScrollPosition && sidebar) {
-                sidebar.scrollTop = parseInt(savedScrollPosition);
-            }
-
-            const currentPath = window.location.pathname.replace(/\/+$/, '');
-            const submenuLinks = document.querySelectorAll('.nav-submenu .nav-link[href]');
-            let openedSubmenu = null;
-
-            submenuLinks.forEach(link => {
-                const linkPath = new URL(link.href, window.location.origin).pathname.replace(/\/+$/, '');
-                if (linkPath && (currentPath === linkPath || currentPath.startsWith(linkPath + '/'))) {
-                    link.classList.add('active');
-                    const submenu = link.closest('.nav-submenu');
-                    if (submenu) {
-                        submenu.classList.add('show');
-                        const toggle = document.getElementById(submenu.id.replace('-submenu', '-toggle'));
-                        if (toggle) {
-                            toggle.classList.add('rotated');
-                        }
-                        openedSubmenu = submenu;
-                    }
-                }
-            });
-
-            if (openedSubmenu) {
-                document.querySelectorAll('.nav-submenu.show').forEach(submenu => {
-                    if (submenu !== openedSubmenu) {
-                        submenu.classList.remove('show');
-                        const toggle = document.getElementById(submenu.id.replace('-submenu', '-toggle'));
-                        if (toggle) {
-                            toggle.classList.remove('rotated');
-                        }
-                    }
-                });
-            }
-
-            // Save scroll position when scrolling
-            if (sidebar) {
-                sidebar.addEventListener('scroll', function() {
-                    localStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
-                });
-            }
+        // Close sidebar when clicking on overlay
+        document.querySelector('.sidebar-overlay').addEventListener('click', function() {
+            toggleMobileSidebar();
         });
 
-        // Modified toggleSubmenu to keep only one section open at a time
+        // Enhanced toggleSubmenu function that handles mobile behavior
         function toggleSubmenu(submenuId) {
             const submenu = document.getElementById(submenuId);
             const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
             const isOpen = submenu.classList.contains('show');
 
-            document.querySelectorAll('.nav-submenu.show').forEach(openSubmenu => {
-                if (openSubmenu.id !== submenuId) {
-                    openSubmenu.classList.remove('show');
-                    const openToggle = document.getElementById(openSubmenu.id.replace('-submenu', '-toggle'));
-                    if (openToggle) {
-                        openToggle.classList.remove('rotated');
+            // Close other open submenus only on mobile
+            if (window.innerWidth <= 768) {
+                document.querySelectorAll('.nav-submenu.show').forEach(openSubmenu => {
+                    if (openSubmenu.id !== submenuId) {
+                        openSubmenu.classList.remove('show');
+                        const openToggle = document.getElementById(openSubmenu.id.replace('-submenu', '-toggle'));
+                        if (openToggle) {
+                            openToggle.classList.remove('rotated');
+                        }
                     }
-                }
-            });
+                });
+            }
 
             if (isOpen) {
                 submenu.classList.remove('show');
@@ -1577,21 +1569,111 @@
                 submenu.classList.add('show');
                 toggle.classList.add('rotated');
             }
+            
+            // On mobile, prevent the click from bubbling up to close the sidebar
+            if (window.innerWidth <= 768) {
+                return false;
+            }
         }
 
-        // Save scroll position when clicking on navigation links
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.nav-link') && e.target.closest('.nav-submenu')) {
-                const sidebar = document.querySelector('.sidebar-nav');
-                if (sidebar) {
-                    localStorage.setItem('sidebarScrollPosition', sidebar.scrollTop);
+        // Handle click events on navigation links for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event listeners to all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Only handle on mobile
+                    if (window.innerWidth <= 768) {
+                        // Check if this is a parent item with a submenu
+                        const parentSection = this.closest('.nav-section');
+                        const hasSubmenu = parentSection && parentSection.querySelector('.nav-submenu');
+                        const isParentItem = hasSubmenu && this.getAttribute('href') === '#';
+                        
+                        // If it's a parent item (like "Clients", "Loans", etc.), only toggle submenu
+                        if (isParentItem) {
+                            // Prevent default to avoid any unwanted behavior
+                            e.preventDefault();
+                            // Don't close the sidebar for parent items
+                            return false;
+                        }
+                        
+                        // For all other links (child items, dashboard, etc.), close the sidebar
+                        if (!this.classList.contains('logout-nav')) {
+                            // Add a small delay to allow the click to register before closing
+                            setTimeout(() => {
+                                toggleMobileSidebar();
+                            }, 100);
+                        }
+                    }
+                });
+            });
+
+            // Restore desktop sidebar state
+            const isCollapsed = localStorage.getItem('sidebarCollapsed');
+            if (isCollapsed === 'true') {
+                toggleSidebar();
+            }
+
+            // Auto-expand current section
+            const currentPath = window.location.pathname;
+            const navSections = document.querySelectorAll('.nav-section[data-url-prefix]');
+            
+            let bestMatch = null;
+            let bestMatchLength = 0;
+            
+            navSections.forEach(section => {
+                const urlPrefix = section.getAttribute('data-url-prefix');
+                if (currentPath.startsWith(urlPrefix) && urlPrefix.length > bestMatchLength) {
+                    bestMatch = section;
+                    bestMatchLength = urlPrefix.length;
+                }
+            });
+            
+            if (bestMatch) {
+                const submenuId = bestMatch.querySelector('.nav-submenu')?.id;
+                if (submenuId) {
+                    const submenu = document.getElementById(submenuId);
+                    const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
+                    if (submenu && toggle) {
+                        submenu.classList.add('show');
+                        toggle.classList.add('rotated');
+                    }
                 }
             }
+            
+            // Mark active link
+            const allNavLinks = document.querySelectorAll('.nav-link[href]');
+            allNavLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && currentPath === href) {
+                    link.classList.add('active');
+                    
+                    // Also make sure parent is active if this is a submenu item
+                    const parentSubmenu = link.closest('.nav-submenu');
+                    if (parentSubmenu) {
+                        const parentLink = parentSubmenu.previousElementSibling;
+                        if (parentLink && parentLink.classList.contains('nav-link')) {
+                            parentLink.classList.add('active');
+                        }
+                    }
+                }
+            });
         });
 
-        // Logout confirmation function
+        // Original sidebar toggle function (for desktop)
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const toggleButton = document.querySelector('.sidebar-toggle');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            toggleButton.classList.toggle('collapsed');
+            
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+
+        // Keep your existing confirmLogout and performLogout functions
         function confirmLogout() {
-            // Create custom confirmation modal
             const confirmModal = document.createElement('div');
             confirmModal.className = 'modal fade';
             confirmModal.id = 'logoutConfirmModal';
@@ -1624,88 +1706,15 @@
             `;
             
             document.body.appendChild(confirmModal);
-            
             const modal = new bootstrap.Modal(confirmModal);
             modal.show();
             
-            // Remove modal from DOM when hidden
             confirmModal.addEventListener('hidden.bs.modal', function() {
                 document.body.removeChild(confirmModal);
             });
         }
 
-        // Sidebar toggle functionality
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const toggleButton = document.querySelector('.sidebar-toggle');
-            
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('sidebar-collapsed');
-            toggleButton.classList.toggle('collapsed');
-            
-            // Save state to localStorage
-            const isCollapsed = sidebar.classList.contains('collapsed');
-            localStorage.setItem('sidebarCollapsed', isCollapsed);
-        }
-
-        // Initialize sidebar state from localStorage
-        document.addEventListener('DOMContentLoaded', function() {
-            const isCollapsed = localStorage.getItem('sidebarCollapsed');
-            // Default to collapsed if no preference is saved
-            const shouldCollapse = isCollapsed === null ? true : isCollapsed === 'true';
-            
-            if (shouldCollapse) {
-                const sidebar = document.querySelector('.sidebar');
-                const mainContent = document.querySelector('.main-content');
-                const toggleButton = document.querySelector('.sidebar-toggle');
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('sidebar-collapsed');
-                toggleButton.classList.add('collapsed');
-            }
-            
-            // Auto-expand submenu based on current URL
-            const currentPath = window.location.pathname;
-            const navSections = document.querySelectorAll('.nav-section[data-url-prefix]');
-            
-            // Find the most specific matching section (longest prefix match)
-            let bestMatch = null;
-            let bestMatchLength = 0;
-            
-            navSections.forEach(section => {
-                const urlPrefix = section.getAttribute('data-url-prefix');
-                if (currentPath.startsWith(urlPrefix) && urlPrefix.length > bestMatchLength) {
-                    bestMatch = section;
-                    bestMatchLength = urlPrefix.length;
-                }
-            });
-            
-            // Expand only the best matching section
-            if (bestMatch) {
-                const submenuId = bestMatch.querySelector('.nav-submenu')?.id;
-                if (submenuId) {
-                    const submenu = document.getElementById(submenuId);
-                    const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
-                    if (submenu && toggle) {
-                        submenu.classList.add('show');
-                        toggle.classList.add('rotated');
-                    }
-                }
-            }
-            
-            // Mark only the exact matching link as active
-            const allNavLinks = document.querySelectorAll('.nav-link[href]');
-            allNavLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && href !== '#' && currentPath === href) {
-                    link.classList.add('active');
-                }
-            });
-        });
-
-        // Perform actual logout
         function performLogout() {
-            // Show loading state
             const body = document.body;
             const loadingOverlay = document.createElement('div');
             loadingOverlay.style.cssText = `
@@ -1734,12 +1743,10 @@
             
             body.appendChild(loadingOverlay);
             
-            // Create a form and submit it for logout
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/logout/';  // Use direct URL path
+            form.action = '/logout/';
             
-            // Add CSRF token
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
             if (csrfToken) {
                 const csrfInput = document.createElement('input');
@@ -1751,7 +1758,6 @@
             
             document.body.appendChild(form);
             
-            // Small delay for better UX
             setTimeout(() => {
                 form.submit();
             }, 1000);
