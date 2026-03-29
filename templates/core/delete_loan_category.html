@@ -1,0 +1,77 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Loan Category - Golam Financial Services{% endblock %}
+
+{% block page_title %}Delete Loan Category{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Deactivate Loan Category
+                    </h4>
+                    <a href="{% url 'core:view_loan_categories' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Are you sure you want to deactivate this loan category? It will no longer appear in active category lists.</p>
+
+                    <table class="table table-sm table-bordered mb-4">
+                        <tr>
+                            <th class="bg-light" style="width:40%">Category Name</th>
+                            <td>{{ category.name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Code</th>
+                            <td>{{ category.code }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Default Interest Rate</th>
+                            <td>{{ category.default_interest_rate }}%</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Loan Amount Range</th>
+                            <td>
+                                {% if category.min_loan_amount and category.max_loan_amount %}
+                                    Tsh {{ category.min_loan_amount }} – Tsh {{ category.max_loan_amount }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Term Range</th>
+                            <td>
+                                {% if category.min_term_months and category.max_term_months %}
+                                    {{ category.min_term_months }} – {{ category.max_term_months }} months
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Description</th>
+                            <td>{{ category.description|default:"—" }}</td>
+                        </tr>
+                    </table>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Yes, Deactivate
+                        </button>
+                        <a href="{% url 'core:view_loan_categories' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Holiday - Golam Financial Services{% endblock %}
+{% block page_title %}Delete Holiday{% endblock %}
+
+{% block content %}
+<div class="container-fluid"><div class="row justify-content-center"><div class="col-md-6"><div class="card border-danger"><div class="card-header bg-danger text-white d-flex justify-content-between align-items-center"><h4 class="card-title mb-0"><i class="fas fa-exclamation-triangle"></i> Delete Holiday</h4><a href="{% url 'core:view_holidays' %}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Back</a></div><div class="card-body"><p class="text-muted mb-4">Are you sure you want to permanently delete this holiday?</p><table class="table table-sm table-bordered mb-4"><tr><th class="bg-light" style="width:40%">Holiday Name</th><td>{{ holiday.name }}</td></tr><tr><th class="bg-light">Date</th><td>{{ holiday.date }}</td></tr><tr><th class="bg-light">Recurring</th><td>{% if holiday.is_recurring %}Yes{% else %}No{% endif %}</td></tr><tr><th class="bg-light">Description</th><td>{{ holiday.description|default:'—' }}</td></tr></table><form method="post">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Yes, Delete</button><a href="{% url 'core:view_holidays' %}" class="btn btn-secondary btn-sm"><i class="fas fa-times"></i> Cancel</a></form></div></div></div></div></div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Branch - Golam Financial Services{% endblock %}
+
+{% block page_title %}Delete Branch{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-exclamation-triangle text-danger"></i> Deactivate Branch
+                    </h4>
+                    <a href="{% url 'core:view_branches' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Branches
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning!</strong> Are you sure you want to deactivate this branch?
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Branch Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Branch Name:</strong> {{ branch.name }}</p>
+                                    <p><strong>Branch Code:</strong> {{ branch.code }}</p>
+                                    <p><strong>Location:</strong> {{ branch.city }}, {{ branch.state }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    {% if branch.manager_name %}
+                                        <p><strong>Manager:</strong> {{ branch.manager_name }}</p>
+                                    {% endif %}
+                                    {% if branch.phone_number %}
+                                        <p><strong>Phone:</strong> {{ branch.phone_number }}</p>
+                                    {% endif %}
+                                    {% if branch.email %}
+                                        <p><strong>Email:</strong> {{ branch.email }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Deactivate Branch
+                            </button>
+                            <a href="{% url 'core:view_branches' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

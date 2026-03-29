@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
+                'apps.core.context_processors.currency_settings',
             ],
         },
     },
@@ -152,7 +153,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@golamfinancia
 SERVER_EMAIL = config('SERVER_EMAIL', default='admin@golamfinancial.co.tz')
 
 # Microfinance System Specific Settings
-DEFAULT_CURRENCY = config('DEFAULT_CURRENCY', default='USD')
+DEFAULT_CURRENCY = config('DEFAULT_CURRENCY', default='TSH')
 DEFAULT_INTEREST_RATE = config('DEFAULT_INTEREST_RATE', default=15.0, cast=float)
 DEFAULT_LOAN_DURATION = config('DEFAULT_LOAN_DURATION', default=12, cast=int)
 

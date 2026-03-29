@@ -1,0 +1,104 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Branches - Golam Financial Services{% endblock %}
+
+{% block page_title %}Branches{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-map-marker-alt"></i> Branch Management
+                    </h4>
+                    <a href="{% url 'core:add_branch' %}" class="btn btn-primary-teal btn-sm">
+                        <i class="fas fa-plus"></i> Add Branch
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    {% if branches %}
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Branch Code</th>
+                                        <th>Branch Name</th>
+                                        <th>Location</th>
+                                        <th>Manager</th>
+                                        <th>Contact</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for branch in branches %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ branch.code }}</strong>
+                                        </td>
+                                        <td>
+                                            {{ branch.name }}
+                                            {% if branch.is_head_office %}
+                                                <span class="badge bg-primary ms-2">Head Office</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ branch.city }}, {{ branch.state }}
+                                        </td>
+                                        <td>
+                                            {% if branch.manager_name %}
+                                                {{ branch.manager_name }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if branch.phone_number %}
+                                                <i class="fas fa-phone text-primary-teal"></i> {{ branch.phone_number }}<br>
+                                            {% endif %}
+                                            {% if branch.email %}
+                                                <i class="fas fa-envelope text-primary-teal"></i> {{ branch.email }}
+                                            {% endif %}
+                                            {% if not branch.phone_number and not branch.email %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if branch.is_active %}success{% else %}danger{% endif %}">
+                                                {% if branch.is_active %}Active{% else %}Inactive{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'core:edit_branch' branch.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'core:delete_branch' branch.id %}" class="btn btn-sm btn-outline-danger" title="Deactivate">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                            <h5>No Branches Found</h5>
+                            <p class="text-muted">Add your first branch to get started.</p>
+                            <a href="{% url 'core:add_branch' %}" class="btn btn-primary-teal">
+                                <i class="fas fa-plus"></i> Add First Branch
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

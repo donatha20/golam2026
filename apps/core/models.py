@@ -223,10 +223,10 @@ class CompanyProfile(models.Model):
     address_line_2 = models.CharField(max_length=200, blank=True, null=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=100, default='India')
+    postal_code = models.CharField(max_length=20, blank=True, default='')
+    country = models.CharField(max_length=100, default='Tanzania')
 
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
 
@@ -234,7 +234,7 @@ class CompanyProfile(models.Model):
     logo = models.ImageField(upload_to='company/', blank=True, null=True)
 
     # Financial Information
-    base_currency = models.CharField(max_length=10, default='INR')
+    base_currency = models.CharField(max_length=10, default='TSH')
     financial_year_start = models.DateField()
 
     # Settings
@@ -261,11 +261,8 @@ class Branch(models.Model):
     code = models.CharField(max_length=20, unique=True)
 
     # Contact Information
-    address_line_1 = models.CharField(max_length=200)
-    address_line_2 = models.CharField(max_length=200, blank=True, null=True)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    postal_code = models.CharField(max_length=20)
 
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)

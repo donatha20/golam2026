@@ -144,7 +144,7 @@
         <!-- Transaction Header -->
         <div class="transaction-header {{ capital.transaction_type }}">
             <div class="transaction-amount">
-                {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
+                {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ capital.amount|floatformat:2 }}
             </div>
             <div>{{ capital.get_transaction_type_display }} - {{ capital.get_capital_type_display }}</div>
         </div>

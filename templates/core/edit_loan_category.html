@@ -1,0 +1,117 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Loan Category - Golam Financial Services{% endblock %}
+
+{% block page_title %}Edit Loan Category{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-tags"></i> Edit Loan Category
+                    </h4>
+                    <a href="{% url 'core:view_loan_categories' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Loan Categories
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Category Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ category.name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="code" class="form-label">Category Code <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="code" name="code" value="{{ category.code }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-2">Interest Rate Settings</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="default_interest_rate" class="form-label">Default Rate (%) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control form-control-sm" id="default_interest_rate" name="default_interest_rate" value="{{ category.default_interest_rate }}" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="min_interest_rate" class="form-label">Min Rate (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="min_interest_rate" name="min_interest_rate" value="{{ category.min_interest_rate }}" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="max_interest_rate" class="form-label">Max Rate (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="max_interest_rate" name="max_interest_rate" value="{{ category.max_interest_rate }}" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-2">Loan Amount Range</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="min_loan_amount" class="form-label">Min Loan Amount (Tsh)</label>
+                                    <input type="number" class="form-control form-control-sm" id="min_loan_amount" name="min_loan_amount" value="{{ category.min_loan_amount }}" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="max_loan_amount" class="form-label">Max Loan Amount (Tsh)</label>
+                                    <input type="number" class="form-control form-control-sm" id="max_loan_amount" name="max_loan_amount" value="{{ category.max_loan_amount }}" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-2">Loan Term Range</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="min_term_months" class="form-label">Min Term (Months)</label>
+                                    <input type="number" class="form-control form-control-sm" id="min_term_months" name="min_term_months" value="{{ category.min_term_months }}" min="1">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="max_term_months" class="form-label">Max Term (Months)</label>
+                                    <input type="number" class="form-control form-control-sm" id="max_term_months" name="max_term_months" value="{{ category.max_term_months }}" min="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control form-control-sm" id="description" name="description" rows="3">{{ category.description }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-save"></i> Update Loan Category
+                            </button>
+                            <a href="{% url 'core:view_loan_categories' %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Bank Account - Golam Financial Services{% endblock %}
+
+{% block page_title %}Delete Bank Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Deactivate Bank Account
+                    </h4>
+                    <a href="{% url 'core:view_bank_accounts' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Are you sure you want to deactivate this bank account? It will no longer appear in active account lists.</p>
+
+                    <table class="table table-sm table-bordered mb-4">
+                        <tr>
+                            <th class="bg-light" style="width:40%">Account Name</th>
+                            <td>{{ account.name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Account Number</th>
+                            <td>{{ account.account_number }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Account Type</th>
+                            <td>{{ account.get_account_type_display }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Bank Name</th>
+                            <td>{{ account.bank_name|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Current Balance</th>
+                            <td>Tsh {{ account.current_balance }}</td>
+                        </tr>
+                    </table>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Yes, Deactivate
+                        </button>
+                        <a href="{% url 'core:view_bank_accounts' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -26,7 +26,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 
 # Admin Email for Production
 ADMINS = [
-    ('Golam Admin', config('ADMIN_EMAIL', default='admin@golamfinancial.co.tz')),
+    ('Golam Admin', config('ADMIN_EMAIL', default='donathakamwela.20@gmail.com')),
 ]
 
 # Production specific settings

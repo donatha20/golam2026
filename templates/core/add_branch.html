@@ -1,0 +1,129 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Add Branch - Golam Financial Services{% endblock %}
+
+{% block page_title %}Add Branch{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-map-marker-alt"></i> Add New Branch
+                    </h4>
+                    <a href="{% url 'core:view_branches' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Branches
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Branch Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="name" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="code" class="form-label">Branch Code <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="code" name="code" required>
+                                    <small class="form-text text-muted">Unique identifier for the branch</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4">Location Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="city" name="city" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="state" name="state" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4">Contact Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone_number" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control form-control-sm" id="phone_number" name="phone_number">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control form-control-sm" id="email" name="email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4">Manager Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="manager_name" class="form-label">Manager Name</label>
+                                    <input type="text" class="form-control form-control-sm" id="manager_name" name="manager_name">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="manager_phone" class="form-label">Manager Phone</label>
+                                    <input type="tel" class="form-control form-control-sm" id="manager_phone" name="manager_phone">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="manager_email" class="form-label">Manager Email</label>
+                                    <input type="email" class="form-control form-control-sm" id="manager_email" name="manager_email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-4">Settings</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                                    <label class="form-check-label" for="is_active">
+                                        Branch is Active
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_head_office" name="is_head_office">
+                                    <label class="form-check-label" for="is_head_office">
+                                        This is the Head Office
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary-teal">
+                                <i class="fas fa-save"></i> Save Branch
+                            </button>
+                            <a href="{% url 'core:view_branches' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

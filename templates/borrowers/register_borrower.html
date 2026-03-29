@@ -263,7 +263,7 @@
                             <option value="">Select Branch</option>
                             {% for branch in branches %}
                             <option value="{{ branch.id }}" {% if branch == user.branch %}selected{% endif %}>
-                                {{ branch.name }} - {{ branch.location }}
+                                {{ branch.name }} - {{ branch.city }}, {{ branch.state }}
                             </option>
                             {% endfor %}
                         </select>

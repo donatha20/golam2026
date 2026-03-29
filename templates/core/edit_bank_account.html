@@ -1,0 +1,98 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Bank Account - Golam Financial Services{% endblock %}
+
+{% block page_title %}Edit Bank Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-university"></i> Edit Bank Account
+                    </h4>
+                    <a href="{% url 'core:view_bank_accounts' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Bank Accounts
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Account Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ account.name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="account_number" class="form-label">Account Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="account_number" name="account_number" value="{{ account.account_number }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="account_type" class="form-label">Account Type <span class="text-danger">*</span></label>
+                                    <select class="form-control form-control-sm" id="account_type" name="account_type" required>
+                                        {% for value, label in account_types %}
+                                            <option value="{{ value }}" {% if account.account_type == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label d-block">Current Balance</label>
+                                    <p class="form-control-plaintext form-control-sm font-weight-bold">Tsh {{ account.current_balance }}</p>
+                                    <small class="form-text text-muted">Balance is managed through transactions and cannot be edited here.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="bank_name" class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control form-control-sm" id="bank_name" name="bank_name" value="{{ account.bank_name }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="bank_branch" class="form-label">Bank Branch</label>
+                                    <input type="text" class="form-control form-control-sm" id="bank_branch" name="bank_branch" value="{{ account.bank_branch }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check mt-2">
+                                    <input type="checkbox" class="form-check-input" id="is_default" name="is_default" {% if account.is_default %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_default">Set as Default Account</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-save"></i> Update Bank Account
+                            </button>
+                            <a href="{% url 'core:view_bank_accounts' %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

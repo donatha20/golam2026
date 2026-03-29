@@ -66,13 +66,9 @@
                             <label for="state" class="form-label">State *</label>
                             <input type="text" class="form-control form-control-sm" id="state" name="state" value="{{ company.state|default:'' }}" required>
                         </div>
-                        <div class="col-md-4">
-                            <label for="postal_code" class="form-label">Postal Code *</label>
-                            <input type="text" class="form-control form-control-sm" id="postal_code" name="postal_code" value="{{ company.postal_code|default:'' }}" required>
-                        </div>
                         <div class="col-md-6">
                             <label for="country" class="form-label">Country *</label>
-                            <input type="text" class="form-control form-control-sm" id="country" name="country" value="{{ company.country|default:'India' }}" required>
+                            <input type="text" class="form-control form-control-sm" id="country" name="country" value="{{ company.country|default:'Tanzania' }}" required>
                         </div>
                     </div>
 
@@ -107,10 +103,10 @@
                         <div class="col-md-6">
                             <label for="base_currency" class="form-label">Base Currency *</label>
                             <select class="form-control form-control-sm" id="base_currency" name="base_currency" required>
-                                <option value="INR" {% if company.base_currency == 'INR' or not company %}selected{% endif %}>INR - Indian Rupee</option>
+                                <option value="TSH" {% if company.base_currency == 'TZS' or not company %}selected{% endif %}>TSH - Tanzanian Shilling</option>
                                 <option value="USD" {% if company.base_currency == 'USD' %}selected{% endif %}>USD - US Dollar</option>
                                 <option value="EUR" {% if company.base_currency == 'EUR' %}selected{% endif %}>EUR - Euro</option>
-                                <option value="GBP" {% if company.base_currency == 'GBP' %}selected{% endif %}>GBP - British Pound</option>
+                            
                             </select>
                         </div>
                         <div class="col-md-6">

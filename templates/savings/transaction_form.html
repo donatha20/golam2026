@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function updatePreview(amount) {
-        transactionAmountSpan.textContent = `₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+        transactionAmountSpan.textContent = `TSH${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
         
         let newBalance;
         if (transactionType === 'deposit') {
@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', function() {
             newBalance = currentBalance - amount;
         }
         
-        newBalanceSpan.textContent = `₹${newBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+        newBalanceSpan.textContent = `TSH${newBalance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
         
         // Color coding for new balance
         if (newBalance < 0) {

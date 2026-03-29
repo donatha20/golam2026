@@ -6,9 +6,9 @@ from django.core.validators import RegexValidator
 from django.utils import timezone
 from apps.core.models import (
     AuditModel, GenderChoices, MaritalStatusChoices, 
-    IDTypeChoices, StatusChoices
+    IDTypeChoices, StatusChoices, Branch
 )
-from apps.accounts.models import CustomUser, Branch
+from apps.accounts.models import CustomUser
 import uuid
 
 

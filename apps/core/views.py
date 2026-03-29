@@ -112,7 +112,7 @@ def dashboard(request):
         # Create default system settings if they don't exist
         default_settings = [
             ('company_name', 'Golam Financial Services', 'text', 'Company name displayed in the system', 'general'),
-            ('default_currency', 'INR', 'text', 'Default currency for the system', 'general'),
+            ('default_currency', 'TSH', 'text', 'Default currency for the system', 'general'),
             ('max_loan_amount', '1000000', 'number', 'Maximum loan amount allowed', 'loans'),
             ('default_interest_rate', '18.0', 'number', 'Default interest rate for loans', 'loans'),
             ('enable_sms_notifications', 'true', 'boolean', 'Enable SMS notifications', 'notifications'),
@@ -537,7 +537,6 @@ def company_profile(request):
             company.address_line_2 = request.POST.get('address_line_2', company.address_line_2)
             company.city = request.POST.get('city', company.city)
             company.state = request.POST.get('state', company.state)
-            company.postal_code = request.POST.get('postal_code', company.postal_code)
             company.country = request.POST.get('country', company.country)
             company.phone_number = request.POST.get('phone_number', company.phone_number)
             company.email = request.POST.get('email', company.email)
@@ -568,7 +567,7 @@ def company_profile(request):
                 address_line_2=request.POST.get('address_line_2', ''),
                 city=request.POST.get('city', ''),
                 state=request.POST.get('state', ''),
-                postal_code=request.POST.get('postal_code', ''),
+                
                 country=request.POST.get('country', 'India'),
                 phone_number=request.POST.get('phone_number', ''),
                 email=request.POST.get('email', ''),
@@ -826,16 +825,28 @@ def add_branch(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         code = request.POST.get('code')
-        address = request.POST.get('address', '')
-        phone = request.POST.get('phone', '')
+        city = request.POST.get('city')
+        state = request.POST.get('state')
+        phone_number = request.POST.get('phone_number', '')
         email = request.POST.get('email', '')
+        manager_name = request.POST.get('manager_name', '')
+        manager_phone = request.POST.get('manager_phone', '')
+        manager_email = request.POST.get('manager_email', '')
+        is_active = request.POST.get('is_active') == 'on'
+        is_head_office = request.POST.get('is_head_office') == 'on'
 
         branch = Branch.objects.create(
             name=name,
             code=code,
-            address=address,
-            phone=phone,
-            email=email
+            city=city,
+            state=state,
+            phone_number=phone_number,
+            email=email,
+            manager_name=manager_name,
+            manager_phone=manager_phone,
+            manager_email=manager_email,
+            is_active=is_active,
+            is_head_office=is_head_office
         )
 
         messages.success(request, f'Branch "{branch.name}" added successfully!')
@@ -873,9 +884,15 @@ def edit_branch(request, branch_id):
     if request.method == 'POST':
         branch.name = request.POST.get('name', branch.name)
         branch.code = request.POST.get('code', branch.code)
-        branch.address = request.POST.get('address', branch.address)
-        branch.phone = request.POST.get('phone', branch.phone)
+        branch.city = request.POST.get('city', branch.city)
+        branch.state = request.POST.get('state', branch.state)
+        branch.phone_number = request.POST.get('phone_number', branch.phone_number)
         branch.email = request.POST.get('email', branch.email)
+        branch.manager_name = request.POST.get('manager_name', branch.manager_name)
+        branch.manager_phone = request.POST.get('manager_phone', branch.manager_phone)
+        branch.manager_email = request.POST.get('manager_email', branch.manager_email)
+        branch.is_active = request.POST.get('is_active') == 'on'
+        branch.is_head_office = request.POST.get('is_head_office') == 'on'
         branch.save()
 
         messages.success(request, f'Branch "{branch.name}" updated successfully!')

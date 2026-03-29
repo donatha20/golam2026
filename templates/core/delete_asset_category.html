@@ -1,0 +1,9 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Delete Asset Category - Golam Financial Services{% endblock %}
+{% block page_title %}Delete Asset Category{% endblock %}
+
+{% block content %}
+<div class="container-fluid"><div class="row justify-content-center"><div class="col-md-6"><div class="card border-danger"><div class="card-header bg-danger text-white d-flex justify-content-between align-items-center"><h4 class="card-title mb-0"><i class="fas fa-exclamation-triangle"></i> Deactivate Asset Category</h4><a href="{% url 'core:view_asset_categories' %}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Back</a></div><div class="card-body"><p class="text-muted mb-4">Are you sure you want to deactivate this asset category?</p><table class="table table-sm table-bordered mb-4"><tr><th class="bg-light" style="width:40%">Category Name</th><td>{{ category.name }}</td></tr><tr><th class="bg-light">Code</th><td>{{ category.code }}</td></tr><tr><th class="bg-light">Depreciation Method</th><td>{{ category.get_depreciation_method_display }}</td></tr><tr><th class="bg-light">Depreciation Rate</th><td>{{ category.depreciation_rate }}%</td></tr><tr><th class="bg-light">Useful Life</th><td>{{ category.useful_life_years }} years</td></tr><tr><th class="bg-light">Description</th><td>{{ category.description|default:'—' }}</td></tr></table><form method="post">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Yes, Deactivate</button><a href="{% url 'core:view_asset_categories' %}" class="btn btn-secondary btn-sm"><i class="fas fa-times"></i> Cancel</a></form></div></div></div></div></div>
+{% endblock %}

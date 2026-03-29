@@ -433,7 +433,7 @@
                         {{ capital.get_transaction_type_display }}
                     </div>
                     <div class="amount-display">
-                        {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}₹{{ capital.amount|floatformat:2 }}
+                        {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ capital.amount|floatformat:2 }}
                     </div>
                     <div class="date-display">{{ capital.transaction_date|date:"F d, Y" }}</div>
                 </div>

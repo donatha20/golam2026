@@ -13,7 +13,8 @@ from datetime import datetime, timedelta
 from .models import Borrower, BorrowerGroup, GroupMembership, BorrowerStatus
 from .tables import BorrowerTable, BorrowerGroupTable, RegistrationReportTable
 from .forms import BorrowerRegistrationForm, BorrowerGroupForm
-from apps.accounts.models import UserRole, UserActivity, Branch
+from apps.accounts.models import UserRole, UserActivity
+from apps.core.models import Branch
 from apps.loans.models import Loan
 
 

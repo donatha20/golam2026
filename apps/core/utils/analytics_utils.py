@@ -471,7 +471,7 @@ def prepare_data_for_export(queryset, fields):
 def format_currency(amount):
     """Format currency for display."""
     if isinstance(amount, Decimal):
-        return f"Tsh {amount:,.2f}"
+        return f"TSH {amount:,.2f}"
     elif isinstance(amount, (int, float)):
-        return f"Tsh {amount:,.2f}"
+        return f"TSH {amount:,.2f}"
     return str(amount)

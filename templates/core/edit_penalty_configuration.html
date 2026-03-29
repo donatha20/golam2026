@@ -1,0 +1,93 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Edit Penalty Configuration - Golam Financial Services{% endblock %}
+
+{% block page_title %}Edit Penalty Configuration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-exclamation-circle"></i> Edit Penalty Configuration
+                    </h4>
+                    <a href="{% url 'core:view_penalty_configurations' %}" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Penalties
+                    </a>
+                </div>
+                <div class="card-body p-compact">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Penalty Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm" id="name" name="name" value="{{ penalty.name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="penalty_type" class="form-label">Penalty Type <span class="text-danger">*</span></label>
+                                    <select class="form-control form-control-sm" id="penalty_type" name="penalty_type" required>
+                                        {% for value, label in penalty_types %}
+                                            <option value="{{ value }}" {% if penalty.penalty_type == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3 mt-2">Penalty Rates</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="percentage_rate" class="form-label">Percentage Rate (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="percentage_rate" name="percentage_rate" value="{{ penalty.percentage_rate }}" min="0" step="0.01">
+                                    <small class="form-text text-muted">Applied as % of outstanding amount</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="fixed_amount" class="form-label">Fixed Amount (Tsh)</label>
+                                    <input type="number" class="form-control form-control-sm" id="fixed_amount" name="fixed_amount" value="{{ penalty.fixed_amount }}" min="0" step="0.01">
+                                    <small class="form-text text-muted">Flat fee charged per penalty event</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="daily_rate" class="form-label">Daily Rate (%)</label>
+                                    <input type="number" class="form-control form-control-sm" id="daily_rate" name="daily_rate" value="{{ penalty.daily_rate }}" min="0" step="0.0001">
+                                    <small class="form-text text-muted">Applied per day overdue</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="grace_period_days" class="form-label">Grace Period (Days)</label>
+                                    <input type="number" class="form-control form-control-sm" id="grace_period_days" name="grace_period_days" value="{{ penalty.grace_period_days }}" min="0">
+                                    <small class="form-text text-muted">Days before penalty kicks in</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-save"></i> Update Penalty Configuration
+                            </button>
+                            <a href="{% url 'core:view_penalty_configurations' %}" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
