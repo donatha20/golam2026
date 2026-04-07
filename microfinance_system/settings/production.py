@@ -3,6 +3,8 @@ Production settings for microfinance_system project.
 """
 
 from .base import *
+import dj_database_url
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -11,14 +13,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # Database for production
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('golament_database'),
-        'USER': config('golament_admin'),
-        'PASSWORD': config('Golam123@'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
+  "default": dj_database_url.config(conn_max_age=600, ssl_require=True)
+
 }
 
 # Email Configuration for production
