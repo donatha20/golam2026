@@ -1,0 +1,122 @@
+{% extends 'dashboard_base.html' %}
+{% load render_table from django_tables2 %}
+
+{% block title %}Manage Expenditure Categories - Golam Financial Services{% endblock %}
+{% block page_title %}Expenditure Categories{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-page {
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+
+    .category-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 1rem;
+    }
+
+    .panel {
+        background: #fff;
+        border: 1px solid #dbe5ee;
+        border-radius: 12px;
+        box-shadow: 0 10px 20px rgba(15, 41, 64, 0.06);
+        overflow: hidden;
+    }
+
+    .panel-head {
+        padding: 0.85rem 1rem;
+        background: #fff7f4;
+        border-bottom: 1px solid #efdcd3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+
+    .panel-title {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f2940;
+    }
+
+    .panel-body {
+        padding: 1rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+        color: #5e7286;
+        font-weight: 700;
+    }
+
+    .form-control,
+    .form-select,
+    textarea {
+        border-color: #dbe5ee;
+        border-radius: 10px;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+    }
+
+    @media (max-width: 992px) {
+        .category-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="category-page">
+    <div class="category-layout">
+        <div class="panel">
+            <div class="panel-head">
+                <h5 class="panel-title"><i class="fas fa-plus-circle me-1"></i>New Expenditure Category</h5>
+            </div>
+            <div class="panel-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors|striptags }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="action-row">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i>Save Category</button>
+                        <a href="{% url 'finance_tracker:add_expenditure' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h5 class="panel-title"><i class="fas fa-list me-1"></i>Expenditure Category List</h5>
+            </div>
+            <div class="panel-body table-wrap">
+                {% render_table table %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

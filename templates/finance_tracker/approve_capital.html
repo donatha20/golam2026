@@ -4,23 +4,26 @@
 
 {% block extra_css %}
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
+
     .approval-page {
-        background: #f5f7fa;
+        font-family: 'Manrope', sans-serif;
+        background: radial-gradient(circle at 15% 0%, #ecf8f8 0%, #f8fcfd 38%, #ffffff 100%);
         min-height: 100vh;
         padding: 0;
         margin: 0;
     }
 
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f766e 0%, #0e7490 60%, #0b6478 100%);
         color: white;
-        padding: 2.5rem 2rem;
+        padding: 2.1rem 2rem;
         margin: 0 0 2rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 12px 28px rgba(14, 87, 98, 0.3);
     }
     
     .page-title {
-        font-size: 1.75rem;
+        font-size: 1.4rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
         display: flex;
@@ -48,20 +51,21 @@
     
     .main-section {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 12px 24px rgba(15, 41, 64, 0.08);
+        border: 1px solid #dce7ed;
         overflow: hidden;
     }
     
     .transaction-showcase {
         text-align: center;
-        padding: 3rem 2rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-bottom: 1px solid #dee2e6;
+        padding: 2.2rem 2rem;
+        background: linear-gradient(135deg, #f5fbfb 0%, #edf6fb 100%);
+        border-bottom: 1px solid #dde8ef;
     }
     
     .transaction-id-display {
-        font-size: 2.25rem;
+        font-size: 1.45rem;
         font-weight: 700;
         color: #1f2937;
         margin-bottom: 1rem;
@@ -89,7 +93,7 @@
     }
     
     .amount-display {
-        font-size: 4rem;
+        font-size: 2.2rem;
         font-weight: 700;
         margin-bottom: 1rem;
         line-height: 1;
@@ -105,16 +109,16 @@
     
     .date-display {
         color: #6b7280;
-        font-size: 1.05rem;
+        font-size: 0.92rem;
         font-weight: 500;
     }
     
     .details-section {
-        padding: 2rem;
+        padding: 1.35rem;
     }
     
     .section-heading {
-        font-size: 1.15rem;
+        font-size: 1rem;
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 1.5rem;
@@ -132,8 +136,9 @@
     .info-card {
         padding: 1.25rem;
         border-radius: 10px;
-        background: #f9fafb;
-        border-left: 4px solid #667eea;
+        background: #f5fafc;
+        border-left: 4px solid #0e7490;
+        border: 1px solid #dce7ed;
         transition: all 0.2s ease;
     }
     
@@ -154,7 +159,7 @@
     .info-value {
         font-weight: 600;
         color: #1f2937;
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
     
     .description-box {
@@ -162,20 +167,21 @@
     }
     
     .description-text {
-        background: #f9fafb;
+        background: #f5fafc;
         padding: 1.25rem;
         border-radius: 10px;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #0e7490;
+        border: 1px solid #dce7ed;
         color: #4b5563;
         line-height: 1.7;
         font-size: 0.95rem;
     }
     
     .approval-section {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 2rem;
+        background: linear-gradient(135deg, #f5fbfb 0%, #eef6fa 100%);
+        padding: 1.2rem;
         border-radius: 10px;
-        border: 2px solid #e2e8f0;
+        border: 1px solid #dce7ed;
     }
     
     .form-field {
@@ -204,8 +210,8 @@
     
     .text-input:focus {
         outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        border-color: #0e7490;
+        box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
     }
     
     .button-group {
@@ -269,9 +275,10 @@
     
     .side-panel {
         background: white;
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 2rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 12px 24px rgba(15, 41, 64, 0.08);
+        border: 1px solid #dce7ed;
         position: sticky;
         top: 2rem;
         height: fit-content;
@@ -297,17 +304,17 @@
         color: #065f46;
     }
     
-    .status-rejected {
+    .status-cancelled {
         background-color: #fee2e2;
         color: #991b1b;
     }
     
     .audit-box {
-        background: #f9fafb;
+        background: #f5fafc;
         padding: 1.25rem;
         border-radius: 10px;
         margin-bottom: 1.5rem;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #dce7ed;
     }
     
     .audit-row {
@@ -387,7 +394,7 @@
         }
         
         .amount-display {
-            font-size: 3rem;
+            font-size: 1.75rem;
         }
         
         .info-grid {
@@ -411,16 +418,7 @@
 
 {% block content %}
 <div class="approval-page">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div class="content-wrapper">
-            <h1 class="page-title">
-                <i class="fas fa-clipboard-check"></i>
-                Capital Approval
-            </h1>
-            <p class="page-subtitle">Review and approve capital transaction: {{ capital.capital_id }}</p>
-        </div>
-    </div>
+    
 
     <div class="content-wrapper">
         <div class="approval-layout">
@@ -433,7 +431,7 @@
                         {{ capital.get_transaction_type_display }}
                     </div>
                     <div class="amount-display">
-                        {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ capital.amount|floatformat:2 }}
+                        {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}Tsh {{ capital.amount|floatformat:2 }}
                     </div>
                     <div class="date-display">{{ capital.transaction_date|date:"F d, Y" }}</div>
                 </div>

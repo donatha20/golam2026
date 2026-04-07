@@ -4,7 +4,44 @@
 {% block title %}Shareholders Management - Golam Financial Services{% endblock %}
 {% block page_title %}Shareholders Management{% endblock %}
 
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
+
+    .shareholders-page {
+        font-family: 'Manrope', sans-serif;
+        background: radial-gradient(circle at 10% 0%, #edf8f9 0%, #f9fcfd 35%, #ffffff 100%);
+        border-radius: 16px;
+        padding: 0.9rem;
+    }
+
+    .shareholders-page .card {
+        border-radius: 14px;
+        border: 1px solid #d9e5ed;
+        box-shadow: 0 10px 24px rgba(15, 41, 64, 0.07);
+    }
+
+    .shareholders-page .card-header {
+        background: #f5fafc;
+        border-bottom: 1px solid #d9e5ed;
+    }
+
+    .shareholders-page .table thead th {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .money-val {
+        font-weight: 700;
+        color: #0f2940;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="shareholders-page">
 <div class="row">
     <!-- Statistics Cards -->
     <div class="col-lg-3 col-md-6 mb-4">
@@ -34,7 +71,7 @@
     <div class="col-lg-3 col-md-6 mb-4">
         <div class="card text-center">
             <div class="card-body p-compact">
-                <h5 class="card-title text-warning">{{ stats.total_investment|floatformat:0 }}</h5>
+                <h5 class="card-title text-warning">Tsh {{ stats.total_investment|floatformat:0 }}</h5>
                 <p class="card-text">Total Investment</p>
             </div>
         </div>
@@ -103,8 +140,8 @@
                                     <span class="badge bg-secondary">{{ shareholder.get_shareholder_type_display }}</span>
                                 </td>
                                 <td>{{ shareholder.shares_owned|floatformat:0 }}</td>
-                                <td>{{ shareholder.share_value|floatformat:0 }}</td>
-                                <td>{{ shareholder.total_investment|floatformat:0 }}</td>
+                                <td><span class="money-val">Tsh {{ shareholder.share_value|floatformat:0 }}</span></td>
+                                <td><span class="money-val">Tsh {{ shareholder.total_investment|floatformat:0 }}</span></td>
                                 <td>
                                     <span class="badge bg-{% if shareholder.status == 'active' %}success{% elif shareholder.status == 'inactive' %}warning{% else %}danger{% endif %}">
                                         {{ shareholder.get_status_display }}
@@ -169,6 +206,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 

@@ -88,7 +88,7 @@
     
     .approval-header {
         display: flex;
-        justify-content: between;
+        justify-content: space-between;
         align-items: flex-start;
         margin-bottom: 1rem;
     }
@@ -255,7 +255,7 @@
             <div class="stat-label">Pending Approvals</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">{{ currency_symbol }}{{ total_pending_amount|floatformat:0 }}</div>
+            <div class="stat-value">Tsh {{ total_pending_amount|floatformat:0 }}</div>
             <div class="stat-label">Total Pending Amount</div>
         </div>
     </div>
@@ -280,7 +280,7 @@
                             </span>
                         </div>
                         <div class="approval-amount">
-                            {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ capital.amount|floatformat:2 }}
+                            {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}Tsh {{ capital.amount|floatformat:2 }}
                         </div>
                     </div>
 

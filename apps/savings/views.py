@@ -631,7 +631,7 @@ def record_transaction(request, transaction_type):
         return redirect('savings:dashboard')
     
     # Get all active savings accounts for the form
-    accounts = SavingsAccount.objects.filter(status='active').select_related('borrower', 'product')
+    accounts = SavingsAccount.objects.filter(status='active').select_related('borrower', 'savings_product')
     
     if request.method == 'POST':
         account_id = request.POST.get('account_id')
@@ -657,37 +657,46 @@ def record_transaction(request, transaction_type):
                     'transaction_type': transaction_type
                 })
             
-            # Create transaction based on type
-            transaction = SavingsTransaction.objects.create(
-                account=account,
-                transaction_type=transaction_type,
-                amount=amount,
-                balance_after_transaction=account.balance,
-                processed_by=request.user,
-                notes=notes
-            )
-            
-            # Update account balance
+            model_transaction_type = 'charge' if transaction_type == 'charges' else transaction_type
+
+            balance_before = account.balance
+            balance_after = balance_before
+
             if transaction_type == 'deposit':
-                account.balance += amount
+                balance_after = balance_before + amount
             elif transaction_type == 'withdrawal':
-                # Check sufficient balance
                 if account.available_balance < amount:
                     messages.error(request, 'Insufficient balance for withdrawal.')
-                    transaction.delete()
                     return render(request, 'savings/record_transaction.html', {
                         'accounts': accounts,
                         'transaction_type': transaction_type
                     })
-                account.balance -= amount
+                balance_after = balance_before - amount
             elif transaction_type == 'charges':
-                account.balance -= amount
+                if account.available_balance < amount:
+                    messages.error(request, 'Insufficient balance for charges.')
+                    return render(request, 'savings/record_transaction.html', {
+                        'accounts': accounts,
+                        'transaction_type': transaction_type
+                    })
+                balance_after = balance_before - amount
             elif transaction_type == 'interest':
-                account.balance += amount
-            
-            # Update the transaction with new balance
-            transaction.balance_after_transaction = account.balance
-            transaction.save()
+                balance_after = balance_before + amount
+
+            SavingsTransaction.objects.create(
+                savings_account=account,
+                transaction_type=model_transaction_type,
+                amount=amount,
+                balance_before=balance_before,
+                balance_after=balance_after,
+                processed_by=request.user,
+                notes=notes,
+                status='completed'
+            )
+
+            account.balance = balance_after
+            account.available_balance = account.balance - account.total_holds
+            account.last_transaction_date = timezone.now().date()
             account.save()
             
             messages.success(request, f'{transaction_type.title()} of Tsh {amount:,.2f} recorded successfully.')
@@ -740,14 +749,15 @@ def process_transaction(request):
     return render(request, 'savings/process_transaction.html', context)
 
 
+@login_required
 def transaction_detail(request, transaction_id):
     """
     Display detailed view of a specific transaction.
     """
-    if not request.user.is_authenticated:
-        return redirect('accounts:login')
-    
-    transaction = get_object_or_404(SavingsTransaction, id=transaction_id)
+    transaction = get_object_or_404(
+        SavingsTransaction.objects.select_related('savings_account__borrower', 'processed_by'),
+        id=transaction_id
+    )
     
     context = {
         'transaction': transaction,
@@ -767,28 +777,48 @@ def reverse_transaction(request, transaction_id):
         return denied_response
     
     transaction = get_object_or_404(SavingsTransaction, id=transaction_id)
+    account = transaction.savings_account
+
+    if not account:
+        messages.error(request, 'Cannot reverse transaction without an associated savings account.')
+        return redirect('savings:transaction_detail', transaction_id=transaction_id)
+
+    if transaction.status != 'completed':
+        messages.error(request, 'Only completed transactions can be reversed.')
+        return redirect('savings:transaction_detail', transaction_id=transaction_id)
     
     try:
-        # Create reverse transaction
-        reverse_transaction = SavingsTransaction.objects.create(
-            account=transaction.account,
-            transaction_type='reversal',
+        # Reverse by applying the opposite financial effect to account balance.
+        if transaction.transaction_type in ['deposit', 'interest']:
+            if account.balance < transaction.amount:
+                messages.error(request, 'Cannot reverse: current account balance is below transaction amount.')
+                return redirect('savings:transaction_detail', transaction_id=transaction_id)
+            reverse_type = 'withdrawal'
+            balance_before = account.balance
+            balance_after = account.balance - transaction.amount
+        else:
+            reverse_type = 'deposit'
+            balance_before = account.balance
+            balance_after = account.balance + transaction.amount
+
+        SavingsTransaction.objects.create(
+            savings_account=account,
+            transaction_type=reverse_type,
             amount=transaction.amount,
-            balance_after_transaction=transaction.account.balance,
+            balance_before=balance_before,
+            balance_after=balance_after,
             processed_by=request.user,
-            notes=f'Reversal of transaction {transaction.id}',
-            reference_number=f'REV-{transaction.id}'
+            notes=f'Reversal of transaction {transaction.reference_number or transaction.id}',
+            status='completed'
         )
 
-        # Update account balance
-        if transaction.transaction_type in ['deposit', 'interest']:
-            transaction.account.balance -= transaction.amount
-        else:
-            transaction.account.balance += transaction.amount
+        account.balance = balance_after
+        account.available_balance = account.balance - account.total_holds
+        account.last_transaction_date = timezone.now().date()
+        account.save()
 
-        reverse_transaction.balance_after_transaction = transaction.account.balance
-        reverse_transaction.save()
-        transaction.account.save()
+        transaction.status = 'cancelled'
+        transaction.save(update_fields=['status'])
 
         messages.success(request, 'Transaction reversed successfully.')
         return redirect('savings:transaction_list')

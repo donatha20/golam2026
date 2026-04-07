@@ -454,7 +454,7 @@
             <div class="balance-title">
                 <i class="fas fa-university"></i> Available Balance
             </div>
-            <div class="balance-amount">{{ currency_symbol }}{{ account_balances.total_liquid_assets|floatformat:2 }}</div>
+            <div class="balance-amount">Tsh {{ account_balances.total_liquid_assets|floatformat:2 }}</div>
         </div>
 
         <!-- Capital Statistics -->
@@ -466,11 +466,11 @@
             
             <div class="stats-grid">
                 <div class="stat-card capital">
-                    <div class="stat-value capital">{{ currency_symbol }}{{ capital_stats.total_capital|floatformat:0 }}</div>
+                    <div class="stat-value capital">Tsh {{ capital_stats.total_capital|floatformat:0 }}</div>
                     <div class="stat-label capital">Total Capital</div>
                 </div>
                 <div class="stat-card withdrawal">
-                    <div class="stat-value withdrawal">{{ currency_symbol }}{{ capital_stats.total_withdrawals|floatformat:0 }}</div>
+                    <div class="stat-value withdrawal">Tsh {{ capital_stats.total_withdrawals|floatformat:0 }}</div>
                     <div class="stat-label withdrawal">Total Withdrawals</div>
                 </div>
                 <div class="stat-card">
@@ -500,7 +500,7 @@
                                 <div class="recent-date">{{ capital.transaction_date|date:"M d, Y" }}</div>
                             </div>
                             <div class="recent-amount {{ capital.transaction_type }}">
-                                {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ capital.amount|floatformat:2 }}
+                                {% if capital.transaction_type == 'injection' %}+{% else %}-{% endif %}Tsh {{ capital.amount|floatformat:2 }}
                             </div>
                         </div>
                     {% endfor %}
@@ -551,7 +551,7 @@
 
         // Confirmation for withdrawal
         const confirmWithdrawal = confirm(
-            `Are you sure you want to record a capital withdrawal of {{ currency_symbol|escapejs }}${parseFloat(amount).toLocaleString()}?\n\n` +
+            `Are you sure you want to record a capital withdrawal of Tsh ${parseFloat(amount).toLocaleString()}?\n\n` +
             'This action will reduce the available capital of the institution.'
         );
 

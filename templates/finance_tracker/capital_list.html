@@ -448,7 +448,7 @@
             <div class="stat-icon capital">
                 <i class="fas fa-arrow-up"></i>
             </div>
-            <div class="stat-value capital">{{ currency_symbol }}{{ stats.total_capital|floatformat:0 }}</div>
+            <div class="stat-value capital">Tsh {{ stats.total_capital|floatformat:0 }}</div>
             <div class="stat-label">Total Capital Injected</div>
         </div>
         
@@ -456,7 +456,7 @@
             <div class="stat-icon withdrawal">
                 <i class="fas fa-arrow-down"></i>
             </div>
-            <div class="stat-value withdrawal">{{ currency_symbol }}{{ stats.pending_capital|floatformat:0 }}</div>
+            <div class="stat-value withdrawal">Tsh {{ stats.pending_capital|floatformat:0 }}</div>
             <div class="stat-label">Pending Approval</div>
         </div>
         
@@ -559,7 +559,7 @@
                             </td>
                             <td>{{ transaction.get_capital_type_display }}</td>
                             <td class="transaction-amount {{ transaction.transaction_type }}">
-                                {% if transaction.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ transaction.amount|floatformat:2 }}
+                                {% if transaction.transaction_type == 'injection' %}+{% else %}-{% endif %}Tsh {{ transaction.amount|floatformat:2 }}
                             </td>
                             <td>
                                 {% if transaction.shareholder %}
