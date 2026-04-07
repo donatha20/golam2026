@@ -4,7 +4,7 @@ Production settings for microfinance_system project.
 
 from .base import *
 import dj_database_url
-
+from decouple import config
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -13,7 +13,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # Database for production
 DATABASES = {
-  "default": dj_database_url.config(conn_max_age=600, ssl_require=True)
+  "default": dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
 
 }
 
