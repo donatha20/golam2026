@@ -342,8 +342,17 @@ class Loan(AuditModel):
         
         if self.status == LoanStatusChoices.APPROVED and not self.amount_approved:
             self.amount_approved = self.amount_requested
+
+        manual_interest_amount = getattr(self, '_manual_interest_amount', None)
+        if manual_interest_amount is not None and self.amount_approved:
+            principal = Decimal(str(self.amount_approved))
+            manual_interest = Decimal(str(manual_interest_amount))
+            self.total_interest = manual_interest
+            self.total_amount = principal + manual_interest
+            total_paid = Decimal(str(self.total_paid or 0))
+            self.outstanding_balance = self.total_amount - total_paid
         
-        if self.amount_approved and self.interest_rate and self.duration_months:
+        elif self.amount_approved and self.interest_rate and self.duration_months:
             self.calculate_loan_totals()
         
         if self.status == LoanStatusChoices.DISBURSED and self.disbursement_date and not self.maturity_date:
@@ -787,3 +796,5 @@ def apply_penalty_if_missed(sender, instance, **kwargs):
                 amount=Decimal('500.00'),  # You can use a dynamic logic
                 reason="Auto penalty for missed schedule"
             )
+
+

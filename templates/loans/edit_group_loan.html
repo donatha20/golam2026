@@ -1,0 +1,26 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Edit Group Loan{% endblock %}
+{% block page_title %}Edit Group Loan{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Edit Group Loan {{ loan.loan_number }}</h5>
+            <a href="{% url 'loans:group_loans' %}" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+        <div class="card-body">
+            <div class="mb-3 text-muted">
+                Group: <strong>{{ group_loan.group.group_name }}</strong>
+            </div>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary btn-sm">Update Group Loan</button>
+                <a href="{% url 'loans:group_loans' %}" class="btn btn-light btn-sm">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

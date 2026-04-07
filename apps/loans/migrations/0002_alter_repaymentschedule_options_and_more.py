@@ -59,3 +59,5 @@ class Migration(migrations.Migration):
             bases=('loans.loanpenalty',),
         ),
     ]
+
+

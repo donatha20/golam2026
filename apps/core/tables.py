@@ -89,15 +89,26 @@ class UserTable(tables.Table):
     
     def render_actions(self, record):
         """Render action buttons."""
+        edit_url = reverse('accounts:edit_user', args=[record.id])
+        toggle_url = reverse('accounts:toggle_user_status', args=[record.id])
+        toggle_title = 'Deactivate User' if record.is_active else 'Activate User'
+        toggle_icon = 'fa-user-slash' if record.is_active else 'fa-user-check'
+        toggle_class = 'btn-delete' if record.is_active else 'btn-edit'
         return format_html(
             '<div class="action-buttons">'
-            '<button class="btn-action btn-edit" title="Edit User">'
+            '<a href="{}" class="btn-action btn-edit" title="Edit User">'
             '<i class="fas fa-edit"></i>'
+            '</a>'
+            '<button type="button" class="btn-action {} btn-toggle-status" title="{}" data-user-id="{}" data-url="{}">'
+            '<i class="fas {}"></i>'
             '</button>'
-            '<button class="btn-action btn-delete" title="Delete User">'
-            '<i class="fas fa-trash"></i>'
-            '</button>'
-            '</div>'
+            '</div>',
+            edit_url,
+            toggle_class,
+            toggle_title,
+            record.id,
+            toggle_url,
+            toggle_icon,
         )
 
 
@@ -111,7 +122,7 @@ class UserActivityTable(tables.Table):
     action = tables.Column(verbose_name="Action")
     description = tables.Column(verbose_name="Description")
     ip_address = tables.Column(verbose_name="IP Address")
-    timestamp = tables.DateTimeColumn(format="M d, H:i", verbose_name="Time")
+    timestamp = tables.DateTimeColumn(format="M d, Y H:i:s", verbose_name="Time")
     
     class Meta:
         model = UserActivity
@@ -160,8 +171,8 @@ class UserSessionTable(tables.Table):
     
     # Session details
     status = tables.Column(empty_values=(), orderable=False, verbose_name="Status")
-    login_time = tables.DateTimeColumn(format="M d, H:i", verbose_name="Login")
-    logout_time = tables.DateTimeColumn(format="M d, H:i", verbose_name="Logout")
+    login_time = tables.DateTimeColumn(format="M d, Y H:i:s", verbose_name="Login")
+    logout_time = tables.DateTimeColumn(format="M d, Y H:i:s", verbose_name="Logout")
     ip_address = tables.Column(verbose_name="IP Address")
     duration = tables.Column(empty_values=(), orderable=False, verbose_name="Duration")
     
@@ -218,3 +229,5 @@ class UserSessionTable(tables.Table):
                 '<span class="text-success">{}</span>',
                 f"{int(hours)}h {int(minutes)}m"
             )
+
+

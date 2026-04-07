@@ -1,0 +1,84 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+	<div class="col-md-3">
+		<div class="card"><div class="card-body"><small class="text-muted">Total Users</small><h5 class="mb-0">{{ total_users }}</h5></div></div>
+	</div>
+	<div class="col-md-3">
+		<div class="card"><div class="card-body"><small class="text-muted">Active Users</small><h5 class="mb-0 text-success">{{ active_users }}</h5></div></div>
+	</div>
+	<div class="col-md-3">
+		<div class="card"><div class="card-body"><small class="text-muted">Inactive Users</small><h5 class="mb-0 text-danger">{{ inactive_users }}</h5></div></div>
+	</div>
+	<div class="col-md-3 text-end">
+		<a href="{% url 'accounts:create_user' %}" class="btn btn-primary">
+			<i class="fas fa-user-plus"></i> Add User
+		</a>
+	</div>
+</div>
+
+<div class="card">
+	<div class="card-body">
+		<form method="get" class="row g-2 mb-3">
+			<div class="col-md-5">
+				<input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search by username, name, email">
+			</div>
+			<div class="col-md-3">
+				<select class="form-select" name="status">
+					<option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+					<option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+					<option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+				</select>
+			</div>
+			<div class="col-md-2">
+				<button class="btn btn-outline-primary w-100" type="submit">Filter</button>
+			</div>
+		</form>
+
+		<div class="table-responsive">
+			<table class="table table-sm table-hover">
+				<thead>
+					<tr>
+						<th>Username</th>
+						<th>Name</th>
+						<th>Email</th>
+						<th>Role</th>
+						<th>Status</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+				{% for user_obj in page_obj %}
+					<tr>
+						<td>{{ user_obj.username }}</td>
+						<td>{{ user_obj.get_full_name|default:'-' }}</td>
+						<td>{{ user_obj.email|default:'-' }}</td>
+						<td>{{ user_obj.get_role_display|default:user_obj.role }}</td>
+						<td>
+							<span class="badge bg-{% if user_obj.is_active %}success{% else %}danger{% endif %}">
+								{% if user_obj.is_active %}Active{% else %}Inactive{% endif %}
+							</span>
+						</td>
+						<td>
+							<a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:edit_user' user_obj.id %}">Edit</a>
+							<form method="post" action="{% url 'accounts:toggle_user_status' user_obj.id %}" style="display:inline;">
+								{% csrf_token %}
+								<button class="btn btn-sm btn-outline-secondary" type="submit">
+									{% if user_obj.is_active %}Deactivate{% else %}Activate{% endif %}
+								</button>
+							</form>
+						</td>
+					</tr>
+				{% empty %}
+					<tr><td colspan="6" class="text-center text-muted">No users found.</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+{% endblock %}

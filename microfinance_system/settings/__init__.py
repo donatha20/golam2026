@@ -16,3 +16,5 @@ elif ENVIRONMENT == 'staging':
     DEBUG = True  # Enable debug for staging
 else:
     from .development import *
+
+

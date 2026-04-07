@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Sum, Q, Count, Avg, Min, Max
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 from decimal import Decimal
 import json
@@ -18,8 +19,22 @@ from .models import (
     SavingsAccount, SavingsTransaction, SavingsInterestCalculation, 
     SavingsAccountHold
 )
-from apps.accounts.models import UserActivity
+from apps.accounts.models import UserActivity, UserRole
 from apps.borrowers.models import Borrower
+
+
+def _require_admin_access(request):
+    """Restrict sensitive actions to admin/manager-level users."""
+    if any([
+        getattr(request.user, 'role', None) in {UserRole.ADMIN, UserRole.MANAGER},
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ]):
+        return None
+
+    messages.error(request, 'Access denied. Admin or manager privileges required.')
+    return redirect('core:dashboard')
 
 
 @login_required
@@ -182,6 +197,10 @@ def edit_category(request, category_id):
 @login_required
 def delete_category(request, category_id):
     """Delete category."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     category = get_object_or_404(SavingsCategory, id=category_id)
     
     if request.method == 'POST':
@@ -258,8 +277,13 @@ def set_charges(request):
     return render(request, 'savings/set_charges.html', context)
 
 
+@login_required
 def set_withdraw_charges(request):
     """Set withdrawal charges configuration."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -298,6 +322,10 @@ def set_withdraw_charges(request):
 @login_required
 def set_service_charges(request):
     """Set service charges configuration."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -369,6 +397,10 @@ def view_charges(request):
     
     # Handle POST actions (activate, deactivate, delete)
     if request.method == 'POST':
+        denied_response = _require_admin_access(request)
+        if denied_response:
+            return denied_response
+
         action = request.POST.get('action')
         charge_id = request.POST.get('charge_id')
         
@@ -414,6 +446,7 @@ def view_charges(request):
     return render(request, 'savings/view_charges.html', context)
 
 
+@login_required
 def view_withdraw_charges(request):
     """View all withdrawal charges."""
     charges = SavingsCharge.objects.filter(
@@ -450,6 +483,10 @@ def view_service_charges(request):
 @login_required
 def edit_charge(request, charge_id):
     """Edit existing charge."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     charge = get_object_or_404(SavingsCharge, id=charge_id)
     
     if request.method == 'POST':
@@ -486,6 +523,10 @@ def edit_charge(request, charge_id):
 @login_required
 def delete_charge(request, charge_id):
     """Delete charge."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     charge = get_object_or_404(SavingsCharge, id=charge_id)
     charge_type = charge.charge_type
     
@@ -516,6 +557,7 @@ def account_list(request):
     return view_accounts(request)
 
 
+@login_required
 def view_accounts(request):
     """View all savings accounts with filtering and search."""
     accounts = SavingsAccount.objects.select_related(
@@ -714,43 +756,45 @@ def transaction_detail(request, transaction_id):
     return render(request, 'savings/transaction_detail.html', context)
 
 
+@login_required
+@require_http_methods(["POST"])
 def reverse_transaction(request, transaction_id):
     """
     Reverse a specific transaction.
     """
-    if not request.user.is_authenticated:
-        return redirect('accounts:login')
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     transaction = get_object_or_404(SavingsTransaction, id=transaction_id)
     
-    if request.method == 'POST':
-        try:
-            # Create reverse transaction
-            reverse_transaction = SavingsTransaction.objects.create(
-                account=transaction.account,
-                transaction_type='reversal',
-                amount=transaction.amount,
-                balance_after_transaction=transaction.account.balance,
-                processed_by=request.user,
-                notes=f'Reversal of transaction {transaction.id}',
-                reference_number=f'REV-{transaction.id}'
-            )
-            
-            # Update account balance
-            if transaction.transaction_type in ['deposit', 'interest']:
-                transaction.account.balance -= transaction.amount
-            else:
-                transaction.account.balance += transaction.amount
-            
-            reverse_transaction.balance_after_transaction = transaction.account.balance
-            reverse_transaction.save()
-            transaction.account.save()
-            
-            messages.success(request, 'Transaction reversed successfully.')
-            return redirect('savings:transaction_list')
-            
-        except Exception as e:
-            messages.error(request, f'Error reversing transaction: {str(e)}')
+    try:
+        # Create reverse transaction
+        reverse_transaction = SavingsTransaction.objects.create(
+            account=transaction.account,
+            transaction_type='reversal',
+            amount=transaction.amount,
+            balance_after_transaction=transaction.account.balance,
+            processed_by=request.user,
+            notes=f'Reversal of transaction {transaction.id}',
+            reference_number=f'REV-{transaction.id}'
+        )
+
+        # Update account balance
+        if transaction.transaction_type in ['deposit', 'interest']:
+            transaction.account.balance -= transaction.amount
+        else:
+            transaction.account.balance += transaction.amount
+
+        reverse_transaction.balance_after_transaction = transaction.account.balance
+        reverse_transaction.save()
+        transaction.account.save()
+
+        messages.success(request, 'Transaction reversed successfully.')
+        return redirect('savings:transaction_list')
+
+    except Exception as e:
+        messages.error(request, f'Error reversing transaction: {str(e)}')
     
     return redirect('savings:transaction_detail', transaction_id=transaction_id)
 
@@ -2070,3 +2114,5 @@ def generate_report(request):
             'success': False,
             'message': f'Error generating report: {str(e)}'
         })
+
+

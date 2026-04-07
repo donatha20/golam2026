@@ -1,0 +1,25 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Deactivate Shareholder{% endblock %}
+{% block page_title %}Deactivate Shareholder{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Confirm Deactivation</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Are you sure you want to deactivate <strong>{{ shareholder.name }}</strong> ({{ shareholder.shareholder_id }})?</p>
+                <p class="text-muted">This is a soft delete. The shareholder record will be kept but marked as inactive.</p>
+                <form method="post" class="mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Deactivate</button>
+                    <a href="{% url 'finance_tracker:shareholder_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

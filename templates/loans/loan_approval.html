@@ -1,8 +1,8 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Approve & Disburse Loan - Golam Financial Services{% endblock %}
-{% block page_title %}Loan Approval & Disbursement{% endblock %}
+{% block title %}Approve Loan - Golam Financial Services{% endblock %}
+{% block page_title %}Loan Approval{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -341,8 +341,8 @@
                 <div class="info-value">{{ loan.duration_months }} months</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Interest Rate</div>
-                <div class="info-value">{{ loan.interest_rate }}% per annum</div>
+                <div class="info-label">Interest Amount</div>
+                <div class="info-value">Tsh {{ loan.total_interest|floatformat:2 }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Repayment Frequency</div>
@@ -375,7 +375,7 @@
                 <span>Tsh {{ loan.processing_fee|floatformat:2 }}</span>
             </div>
             <div class="calculation-row">
-                <span>Total Interest ({{ loan.interest_rate }}%):</span>
+                <span>Total Interest Amount:</span>
                 <span>Tsh {{ loan.total_interest|floatformat:2 }}</span>
             </div>
             <div class="calculation-row total">
@@ -389,7 +389,7 @@
     <div class="approval-form-card">
         <h2 class="card-title">
             <i class="fas fa-hand-holding-usd"></i>
-            Loan Approval & Disbursement
+            Loan Approval
         </h2>
         
         <form method="post" id="approvalForm">
@@ -398,7 +398,7 @@
             <div class="form-section">
                 <h3 class="section-title">
                     <i class="fas fa-hand-holding-usd"></i>
-                    Approval & Disbursement Details
+                    Approval Details
                 </h3>
                 
                 <div class="form-group">
@@ -422,14 +422,14 @@
             
             <!-- Approval Actions -->
             <div class="approval-actions">
-                <a href="{% url 'loans:disbursed_loans' %}" class="btn-cancel">
+                <a href="{% url 'loans:approved_loans' %}" class="btn-cancel">
                     <i class="fas fa-times"></i> Cancel
                 </a>
                 <button type="button" class="btn-reject" onclick="rejectLoan()">
                     <i class="fas fa-times-circle"></i> Reject
                 </button>
                 <button type="submit" class="btn-approve">
-                    <i class="fas fa-hand-holding-usd"></i> Approve & Disburse Loan
+                    <i class="fas fa-check"></i> Approve Loan
                 </button>
             </div>
         </form>

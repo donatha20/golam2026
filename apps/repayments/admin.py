@@ -364,3 +364,5 @@ class CollectionSummaryAdmin(admin.ModelAdmin):
             f'{queryset.count()} summaries regenerated successfully.'
         )
     generate_summaries.short_description = "Regenerate selected summaries"
+
+

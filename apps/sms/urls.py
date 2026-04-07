@@ -24,3 +24,5 @@ urlpatterns = [
     path('settings/', views.sms_settings, name='settings'),
     path('test/', views.test_sms, name='test_sms'),
 ]
+
+

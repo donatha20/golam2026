@@ -500,3 +500,5 @@ class InterestCalculationForm(forms.Form):
                 raise forms.ValidationError('Calculation date cannot be before period end date.')
 
         return cleaned_data
+
+

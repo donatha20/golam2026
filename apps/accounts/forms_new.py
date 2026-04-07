@@ -228,3 +228,5 @@ class BranchForm(forms.ModelForm):
             if existing.exists():
                 raise ValidationError('A branch with this code already exists.')
         return code
+
+

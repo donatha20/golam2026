@@ -559,3 +559,5 @@ def collateral_reports(request):
     }
 
     return render(request, 'assets/collateral_reports.html', context)
+
+

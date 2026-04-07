@@ -358,3 +358,5 @@ class PeriodFilterForm(forms.Form):
         years = AccountingPeriod.objects.dates('start_date', 'year', order='DESC')
         year_choices = [('', 'All Years')] + [(year.year, year.year) for year in years]
         self.fields['year'].choices = year_choices
+
+

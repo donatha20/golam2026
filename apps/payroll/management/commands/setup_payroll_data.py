@@ -303,3 +303,5 @@ class Command(BaseCommand):
             )
             if created:
                 self.stdout.write(f'Created deduction type: {deduction.name}')
+
+

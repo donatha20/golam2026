@@ -1,0 +1,23 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Edit Loan{% endblock %}
+{% block page_title %}Edit Loan{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Edit Loan {{ loan.loan_number }}</h5>
+            <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary btn-sm">Update Loan</button>
+                <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-light btn-sm">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

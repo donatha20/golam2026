@@ -452,3 +452,5 @@ class PayrollReportAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'payroll_period', 'department', 'employee', 'generated_by'
         )
+
+

@@ -211,3 +211,5 @@ class Migration(migrations.Migration):
             index=models.Index(fields=['disbursement_date'], name='loans_loan_disburs_33922a_idx'),
         ),
     ]
+
+

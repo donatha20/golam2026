@@ -31,7 +31,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write(
-            self.style.SUCCESS('🔧 Starting Database Optimization...\n')
+            self.style.SUCCESS('ðŸ”§ Starting Database Optimization...\n')
         )
 
         if options['analyze_queries']:
@@ -44,12 +44,12 @@ class Command(BaseCommand):
             self.vacuum_database()
 
         self.stdout.write(
-            self.style.SUCCESS('\n✅ Database optimization completed!')
+            self.style.SUCCESS('\nâœ… Database optimization completed!')
         )
 
     def analyze_queries(self):
         """Analyze database queries for optimization opportunities."""
-        self.stdout.write('📊 Analyzing database queries...')
+        self.stdout.write('ðŸ“Š Analyzing database queries...')
         
         with connection.cursor() as cursor:
             # Check database engine
@@ -63,7 +63,7 @@ class Command(BaseCommand):
                 self.analyze_mysql_queries(cursor)
             else:
                 self.stdout.write(
-                    self.style.WARNING('⚠️  Query analysis not supported for this database engine')
+                    self.style.WARNING('âš ï¸  Query analysis not supported for this database engine')
                 )
 
     def analyze_sqlite_queries(self, cursor):
@@ -75,7 +75,7 @@ class Command(BaseCommand):
         """)
         tables = cursor.fetchall()
         
-        self.stdout.write(f'📋 Found {len(tables)} tables')
+        self.stdout.write(f'ðŸ“‹ Found {len(tables)} tables')
         
         for table_name, sql in tables:
             if table_name.startswith('django_'):
@@ -87,7 +87,7 @@ class Command(BaseCommand):
             
             if row_count > 1000:
                 self.stdout.write(
-                    self.style.WARNING(f'⚠️  Large table: {table_name} ({row_count} rows)')
+                    self.style.WARNING(f'âš ï¸  Large table: {table_name} ({row_count} rows)')
                 )
 
     def analyze_postgresql_queries(self, cursor):
@@ -100,7 +100,7 @@ class Command(BaseCommand):
         """)
         
         stats = cursor.fetchall()
-        self.stdout.write('📊 Table Statistics:')
+        self.stdout.write('ðŸ“Š Table Statistics:')
         for schema, table, inserts, updates, deletes, live_tuples in stats[:10]:
             self.stdout.write(f'  {table}: {live_tuples} rows, {inserts} inserts, {updates} updates')
 
@@ -109,7 +109,7 @@ class Command(BaseCommand):
         cursor.execute("SHOW TABLE STATUS")
         stats = cursor.fetchall()
         
-        self.stdout.write('📊 Table Statistics:')
+        self.stdout.write('ðŸ“Š Table Statistics:')
         for stat in stats:
             table_name = stat[0]
             rows = stat[4] or 0
@@ -118,7 +118,7 @@ class Command(BaseCommand):
 
     def create_recommended_indexes(self):
         """Create recommended database indexes."""
-        self.stdout.write('🔍 Creating recommended indexes...')
+        self.stdout.write('ðŸ” Creating recommended indexes...')
         
         indexes = [
             # Borrowers indexes
@@ -173,16 +173,16 @@ class Command(BaseCommand):
                     # Index might already exist
                     if 'already exists' not in str(e).lower():
                         self.stdout.write(
-                            self.style.WARNING(f'⚠️  Failed to create index: {str(e)}')
+                            self.style.WARNING(f'âš ï¸  Failed to create index: {str(e)}')
                         )
             
             self.stdout.write(
-                self.style.SUCCESS(f'✅ Created/verified {created_count} indexes')
+                self.style.SUCCESS(f'âœ… Created/verified {created_count} indexes')
             )
 
     def vacuum_database(self):
         """Vacuum database to reclaim space and update statistics."""
-        self.stdout.write('🧹 Vacuuming database...')
+        self.stdout.write('ðŸ§¹ Vacuuming database...')
         
         db_engine = settings.DATABASES['default']['ENGINE']
         
@@ -190,25 +190,25 @@ class Command(BaseCommand):
             if 'sqlite' in db_engine:
                 cursor.execute("VACUUM;")
                 cursor.execute("ANALYZE;")
-                self.stdout.write('✅ SQLite database vacuumed and analyzed')
+                self.stdout.write('âœ… SQLite database vacuumed and analyzed')
                 
             elif 'postgresql' in db_engine:
                 # PostgreSQL VACUUM cannot be run inside a transaction
                 connection.set_autocommit(True)
                 cursor.execute("VACUUM ANALYZE;")
                 connection.set_autocommit(False)
-                self.stdout.write('✅ PostgreSQL database vacuumed and analyzed')
+                self.stdout.write('âœ… PostgreSQL database vacuumed and analyzed')
                 
             elif 'mysql' in db_engine:
                 cursor.execute("OPTIMIZE TABLE borrowers_borrower;")
                 cursor.execute("OPTIMIZE TABLE loans_loan;")
                 cursor.execute("OPTIMIZE TABLE loans_repaymentschedule;")
                 cursor.execute("OPTIMIZE TABLE savings_savingsaccount;")
-                self.stdout.write('✅ MySQL tables optimized')
+                self.stdout.write('âœ… MySQL tables optimized')
                 
             else:
                 self.stdout.write(
-                    self.style.WARNING('⚠️  Vacuum not supported for this database engine')
+                    self.style.WARNING('âš ï¸  Vacuum not supported for this database engine')
                 )
 
     def get_database_size(self):
@@ -220,14 +220,14 @@ class Command(BaseCommand):
                 db_path = settings.DATABASES['default']['NAME']
                 import os
                 size = os.path.getsize(db_path) / (1024 * 1024)  # MB
-                self.stdout.write(f'📊 Database size: {size:.2f} MB')
+                self.stdout.write(f'ðŸ“Š Database size: {size:.2f} MB')
                 
             elif 'postgresql' in db_engine:
                 cursor.execute("""
                     SELECT pg_size_pretty(pg_database_size(current_database()))
                 """)
                 size = cursor.fetchone()[0]
-                self.stdout.write(f'📊 Database size: {size}')
+                self.stdout.write(f'ðŸ“Š Database size: {size}')
                 
             elif 'mysql' in db_engine:
                 cursor.execute("""
@@ -236,4 +236,6 @@ class Command(BaseCommand):
                     WHERE table_schema = DATABASE()
                 """)
                 size = cursor.fetchone()[0]
-                self.stdout.write(f'📊 Database size: {size} MB')
+                self.stdout.write(f'ðŸ“Š Database size: {size} MB')
+
+

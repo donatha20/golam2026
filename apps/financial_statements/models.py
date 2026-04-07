@@ -253,3 +253,5 @@ class BudgetLine(models.Model):
         # This would be calculated dynamically based on actual account balances
         # Implementation would depend on the specific period and account type
         pass
+
+

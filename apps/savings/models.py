@@ -954,3 +954,5 @@ class SavingsAccountHold(models.Model):
         if reason:
             self.release_reason = reason
         self.save()
+
+

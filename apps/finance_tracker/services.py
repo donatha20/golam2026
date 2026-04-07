@@ -268,3 +268,5 @@ def create_expenditure_journal_entry(expenditure_instance, user=None):
 def get_account_balances():
     """Get current account balances for dashboard display."""
     return AccountingService.get_financial_summary()
+
+

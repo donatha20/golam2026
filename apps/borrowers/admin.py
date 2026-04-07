@@ -170,3 +170,5 @@ class GroupMembershipAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+

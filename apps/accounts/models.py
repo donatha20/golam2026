@@ -11,6 +11,8 @@ class UserRole(models.TextChoices):
     """User role choices."""
     ADMIN = 'admin', 'Administrator'
     LOAN_OFFICER = 'loan_officer', 'Loan Officer'
+    ACCOUNTANT = 'accountant', 'Accountant'
+    MANAGER = 'manager', 'Manager'
 
 
 class Branch(TimeStampedModel):
@@ -106,6 +108,11 @@ class CustomUser(AbstractUser):
         """Check if user is a loan officer."""
         return self.role == UserRole.LOAN_OFFICER
 
+    @property
+    def has_limited_visibility(self):
+        """Check if user should have limited visibility in sensitive modules."""
+        return self.role in {UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT}
+
     def can_manage_user(self, user):
         """Check if this user can manage another user."""
         if self.is_admin:
@@ -158,3 +165,5 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.action} - {self.timestamp}"
+
+

@@ -27,3 +27,5 @@ urlpatterns = [
     # Activity logs (admin only)
     path('activity-log/', views.user_activity_log, name='activity_log'),
 ]
+
+

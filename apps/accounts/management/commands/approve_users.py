@@ -147,3 +147,5 @@ Nanenane - Morogoro, Tanzania
             self.stdout.write(
                 self.style.WARNING(f'Failed to send email to {user.email}: {str(e)}')
             )
+
+

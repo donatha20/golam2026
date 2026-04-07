@@ -231,3 +231,5 @@ class JournalEntryLine(models.Model):
     def is_credit(self):
         """Check if this is a credit line."""
         return self.credit_amount > 0
+
+

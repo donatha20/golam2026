@@ -13,6 +13,8 @@ class SavingsConfig(AppConfig):
         """Import signals when app is ready."""
         try:
             import apps.savings.signals
-            print("✅ Savings signals imported successfully")
+            print("âœ… Savings signals imported successfully")
         except ImportError as e:
-            print(f"❌ Error importing savings signals: {e}")
+            print(f"âŒ Error importing savings signals: {e}")
+
+

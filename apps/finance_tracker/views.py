@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Sum, Q, Count
+from django.db.models import Sum, Q, Count, Avg
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from datetime import datetime, timedelta
@@ -17,7 +17,14 @@ from .tables import IncomeTable, ExpenditureTable, IncomeCategoryTable, Expendit
 from .approval_tables import IncomeApprovalTable, ExpenditureApprovalTable
 from .filters import IncomeFilter, ExpenditureFilter, CategoryFilter
 from .services import get_account_balances, AccountingService
-from apps.accounts.models import UserActivity
+from apps.accounts.models import UserActivity, UserRole
+
+
+def _deny_loan_officer(request, message='You do not have permission to access this page.'):
+    if request.user.role in {UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT}:
+        messages.error(request, message)
+        return redirect('core:dashboard')
+    return None
 
 
 @login_required
@@ -28,6 +35,7 @@ def add_income(request):
         if form.is_valid():
             income = form.save(commit=False)
             income.recorded_by = request.user
+            income.status = 'pending'
             income.save()
 
             # Log activity
@@ -40,7 +48,7 @@ def add_income(request):
                 ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
             )
 
-            messages.success(request, f'Income record added successfully! ID: {income.income_id}')
+            messages.success(request, f'Income record submitted for approval successfully! ID: {income.income_id}')
             return redirect('finance_tracker:add_income')
         else:
             messages.error(request, 'Please correct the errors below.')
@@ -81,8 +89,12 @@ def add_income(request):
 @login_required
 def view_income(request):
     """View all approved income records with filtering and search."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     # Get only approved income records
-    income_queryset = Income.objects.filter(status='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-income_date', '-created_at')
+    income_queryset = Income.objects.filter(status__iexact='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-income_date', '-created_at')
 
     # Apply filters using django-filter
     income_filter = IncomeFilter(request.GET, queryset=income_queryset)
@@ -97,16 +109,16 @@ def view_income(request):
     current_month = timezone.now().month
 
     stats = {
-        'total_records': Income.objects.count(),
-        'total_amount': Income.objects.aggregate(total=Sum('amount'))['total'] or 0,
-        'this_month': Income.objects.filter(
+        'total_records': income_queryset.count(),
+        'total_amount': income_queryset.aggregate(total=Sum('amount'))['total'] or 0,
+        'this_month': income_queryset.filter(
             income_date__month=current_month,
             income_date__year=current_year
         ).aggregate(total=Sum('amount'))['total'] or 0,
-        'this_year': Income.objects.filter(
+        'this_year': income_queryset.filter(
             income_date__year=current_year
         ).aggregate(total=Sum('amount'))['total'] or 0,
-        'avg_amount': Income.objects.aggregate(avg=Sum('amount'))['avg'] or 0,
+        'avg_amount': income_queryset.aggregate(avg=Avg('amount'))['avg'] or 0,
     }
 
     # Category breakdown
@@ -187,8 +199,155 @@ def add_expenditure(request):
 
 
 @login_required
+def edit_income(request, income_id):
+    """Edit an income record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    income = get_object_or_404(Income, id=income_id)
+
+    if request.method == 'POST':
+        form = IncomeForm(request.POST, instance=income)
+        if form.is_valid():
+            updated_income = form.save(commit=False)
+            # Keep approval workflow consistent after edits.
+            if str(updated_income.status).lower() == 'approved':
+                updated_income.status = 'PENDING'
+                updated_income.approved_by = None
+                updated_income.approval_date = None
+            updated_income.save()
+
+            UserActivity.objects.create(
+                user=request.user,
+                action='UPDATE',
+                object_id=updated_income.id,
+                description=f'Updated income: {updated_income.get_source_display()} - Tsh {updated_income.amount:,.2f}',
+                content_type='Income',
+                ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+            )
+
+            messages.success(request, f'Income record {updated_income.income_id} updated successfully.')
+            return redirect('finance_tracker:view_income')
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = IncomeForm(instance=income)
+
+    context = {
+        'form': form,
+        'income': income,
+        'title': 'Edit Income Record',
+        'page_title': f'Edit Income {income.income_id}',
+    }
+    return render(request, 'finance_tracker/edit_income.html', context)
+
+
+@login_required
+def delete_income(request, income_id):
+    """Delete an income record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    income = get_object_or_404(Income, id=income_id)
+
+    if request.method == 'POST':
+        income_ref = income.income_id
+        income.delete()
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DELETE',
+            object_id=income_id,
+            description=f'Deleted income record: {income_ref}',
+            content_type='Income',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+
+        messages.success(request, f'Income record {income_ref} deleted successfully.')
+        return redirect('finance_tracker:view_income')
+
+    return render(request, 'finance_tracker/delete_income.html', {'income': income})
+
+
+@login_required
+def edit_expenditure(request, expenditure_id):
+    """Edit an expenditure record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id)
+
+    if request.method == 'POST':
+        form = ExpenditureForm(request.POST, instance=expenditure)
+        if form.is_valid():
+            updated_expenditure = form.save(commit=False)
+            if str(updated_expenditure.status).lower() == 'approved':
+                updated_expenditure.status = 'pending'
+                updated_expenditure.approved_by = None
+                updated_expenditure.approval_date = None
+            updated_expenditure.save()
+
+            UserActivity.objects.create(
+                user=request.user,
+                action='UPDATE',
+                object_id=updated_expenditure.id,
+                description=f'Updated expenditure: {updated_expenditure.get_expenditure_type_display()} - Tsh {updated_expenditure.amount:,.2f}',
+                content_type='Expenditure',
+                ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+            )
+
+            messages.success(request, f'Expenditure record {updated_expenditure.expenditure_id} updated successfully.')
+            return redirect('finance_tracker:view_expenditures')
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ExpenditureForm(instance=expenditure)
+
+    context = {
+        'form': form,
+        'expenditure': expenditure,
+        'title': 'Edit Expenditure Record',
+        'page_title': f'Edit Expenditure {expenditure.expenditure_id}',
+    }
+    return render(request, 'finance_tracker/edit_expenditure.html', context)
+
+
+@login_required
+def delete_expenditure(request, expenditure_id):
+    """Delete an expenditure record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id)
+
+    if request.method == 'POST':
+        expenditure_ref = expenditure.expenditure_id
+        expenditure.delete()
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DELETE',
+            object_id=expenditure_id,
+            description=f'Deleted expenditure record: {expenditure_ref}',
+            content_type='Expenditure',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+
+        messages.success(request, f'Expenditure record {expenditure_ref} deleted successfully.')
+        return redirect('finance_tracker:view_expenditures')
+
+    return render(request, 'finance_tracker/delete_expenditure.html', {'expenditure': expenditure})
+
+
+@login_required
 def view_expenditures(request):
     """View all approved expenditure records with filtering and search."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     # Get only approved expenditure records
     expenditure_queryset = Expenditure.objects.filter(status='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-expenditure_date', '-created_at')
 
@@ -245,8 +404,12 @@ def view_expenditures(request):
 @login_required
 def income_approval_queue(request):
     """View pending income records for approval."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     # Get pending income records
-    pending_income = Income.objects.filter(status='pending').select_related('category', 'recorded_by').order_by('-created_at')
+    pending_income = Income.objects.filter(status__iexact='pending').select_related('category', 'recorded_by').order_by('-created_at')
 
     # Create data table
     table = IncomeApprovalTable(pending_income)
@@ -271,6 +434,10 @@ def income_approval_queue(request):
 @login_required
 def expenditure_approval_queue(request):
     """View pending expenditure records for approval."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     # Get pending expenditure records
     pending_expenditures = Expenditure.objects.filter(status='pending').select_related('category', 'recorded_by').order_by('-created_at')
 
@@ -297,9 +464,17 @@ def expenditure_approval_queue(request):
 @login_required
 def approve_income(request, income_id):
     """Approve an income record."""
-    income = get_object_or_404(Income, id=income_id, status='pending')
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    income = get_object_or_404(Income, id=income_id, status__iexact='pending')
     
     if request.method == 'POST':
+        if income.recorded_by_id == request.user.id:
+            messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
+            return redirect('finance_tracker:income_approval_queue')
+
         income.status = 'approved'
         income.approved_by = request.user
         income.approval_date = timezone.now()
@@ -324,9 +499,17 @@ def approve_income(request, income_id):
 @login_required
 def reject_income(request, income_id):
     """Reject an income record."""
-    income = get_object_or_404(Income, id=income_id, status='pending')
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    income = get_object_or_404(Income, id=income_id, status__iexact='pending')
     
     if request.method == 'POST':
+        if income.recorded_by_id == request.user.id:
+            messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
+            return redirect('finance_tracker:income_approval_queue')
+
         rejection_reason = request.POST.get('rejection_reason', '')
         income.status = 'rejected'
         income.approved_by = request.user
@@ -353,9 +536,17 @@ def reject_income(request, income_id):
 @login_required
 def approve_expenditure(request, expenditure_id):
     """Approve an expenditure record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
     
     if request.method == 'POST':
+        if expenditure.recorded_by_id == request.user.id:
+            messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
+            return redirect('finance_tracker:expenditure_approval_queue')
+
         expenditure.status = 'approved'
         expenditure.approved_by = request.user
         expenditure.approval_date = timezone.now()
@@ -380,9 +571,17 @@ def approve_expenditure(request, expenditure_id):
 @login_required
 def reject_expenditure(request, expenditure_id):
     """Reject an expenditure record."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
     
     if request.method == 'POST':
+        if expenditure.recorded_by_id == request.user.id:
+            messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
+            return redirect('finance_tracker:expenditure_approval_queue')
+
         rejection_reason = request.POST.get('rejection_reason', '')
         expenditure.status = 'rejected'
         expenditure.approved_by = request.user
@@ -547,29 +746,6 @@ def manage_expenditure_categories(request):
 
     return render(request, 'finance_tracker/manage_expenditure_categories.html', context)
 
-
-@login_required
-def approve_expenditure(request, expenditure_id):
-    """Approve a pending expenditure."""
-    expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
-
-    if request.method == 'POST':
-        expenditure.status = 'approved'
-        expenditure.approved_by = request.user
-        expenditure.approval_date = timezone.now()
-        expenditure.save()
-
-        messages.success(request, f'Expenditure {expenditure.expenditure_id} approved successfully!')
-        return redirect('finance_tracker:view_expenditures')
-
-    context = {
-        'expenditure': expenditure,
-        'title': f'Approve Expenditure {expenditure.expenditure_id}',
-    }
-
-    return render(request, 'finance_tracker/approve_expenditure.html', context)
-
-
 @login_required
 def financial_summary_api(request):
     """API endpoint for financial summary data."""
@@ -609,7 +785,19 @@ def financial_summary_api(request):
 @login_required
 def shareholder_list(request):
     """List all shareholders."""
-    shareholders = Shareholder.objects.all().order_by('name')
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    status_filter = request.GET.get('status', 'active').lower()
+
+    shareholders = Shareholder.objects.all()
+    if status_filter == 'active':
+        shareholders = shareholders.filter(status='active')
+    elif status_filter == 'inactive':
+        shareholders = shareholders.filter(status='inactive')
+
+    shareholders = shareholders.order_by('name')
 
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -636,6 +824,7 @@ def shareholder_list(request):
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
+        'status_filter': status_filter,
         'stats': stats,
     }
     return render(request, 'finance_tracker/shareholder_list.html', context)
@@ -644,6 +833,10 @@ def shareholder_list(request):
 @login_required
 def add_shareholder(request):
     """Add new shareholder."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         form = ShareholderForm(request.POST)
         if form.is_valid():
@@ -670,8 +863,78 @@ def add_shareholder(request):
 
 
 @login_required
+def edit_shareholder(request, shareholder_id):
+    """Edit shareholder details."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    shareholder = get_object_or_404(Shareholder, id=shareholder_id)
+
+    if request.method == 'POST':
+        form = ShareholderForm(request.POST, instance=shareholder)
+        if form.is_valid():
+            updated_shareholder = form.save()
+
+            UserActivity.objects.create(
+                user=request.user,
+                action='UPDATE',
+                object_id=updated_shareholder.id,
+                description=f'Updated shareholder: {updated_shareholder.name}',
+                content_type='Shareholder',
+                ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+            )
+
+            messages.success(request, f'Shareholder {updated_shareholder.name} updated successfully.')
+            return redirect('finance_tracker:shareholder_list')
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ShareholderForm(instance=shareholder)
+
+    context = {
+        'form': form,
+        'shareholder': shareholder,
+        'title': 'Edit Shareholder',
+        'page_title': f'Edit Shareholder {shareholder.shareholder_id}',
+    }
+    return render(request, 'finance_tracker/edit_shareholder.html', context)
+
+
+@login_required
+def deactivate_shareholder(request, shareholder_id):
+    """Soft-deactivate a shareholder."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    shareholder = get_object_or_404(Shareholder, id=shareholder_id)
+
+    if request.method == 'POST':
+        shareholder.status = 'inactive'
+        shareholder.save(update_fields=['status', 'updated_at'])
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DELETE',
+            object_id=shareholder.id,
+            description=f'Deactivated shareholder: {shareholder.name}',
+            content_type='Shareholder',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+
+        messages.success(request, f'Shareholder {shareholder.name} has been deactivated.')
+        return redirect('finance_tracker:shareholder_list')
+
+    return render(request, 'finance_tracker/delete_shareholder.html', {'shareholder': shareholder})
+
+
+@login_required
 def capital_list(request):
     """List all capital transactions."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     capital_transactions = Capital.objects.select_related('shareholder', 'created_by').order_by('-transaction_date')
 
     # Filter functionality
@@ -716,6 +979,10 @@ def capital_list(request):
 @login_required
 def add_capital(request):
     """Add new capital injection."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         form = CapitalInjectionForm(request.POST)
         if form.is_valid():
@@ -786,6 +1053,10 @@ def add_capital(request):
 @login_required
 def withdraw_capital(request):
     """Withdraw capital."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         form = CapitalWithdrawalForm(request.POST)
         if form.is_valid():
@@ -854,8 +1125,94 @@ def withdraw_capital(request):
 
 
 @login_required
+def edit_capital(request, capital_id):
+    """Edit a capital transaction while preserving approval workflow."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    capital = get_object_or_404(Capital, id=capital_id)
+    if capital.status not in {'pending', 'approved'}:
+        messages.error(request, 'Only pending or approved capital transactions can be edited.')
+        return redirect('finance_tracker:capital_list')
+
+    if request.method == 'POST':
+        form = CapitalForm(request.POST, instance=capital)
+        if form.is_valid():
+            updated_capital = form.save(commit=False)
+            if updated_capital.status == 'approved':
+                updated_capital.status = 'pending'
+                updated_capital.approved_by = None
+                updated_capital.approval_date = None
+            updated_capital.save()
+
+            UserActivity.objects.create(
+                user=request.user,
+                action='UPDATE',
+                object_id=updated_capital.id,
+                description=(
+                    f'Updated capital {updated_capital.get_transaction_type_display().lower()}: '
+                    f'{updated_capital.get_capital_type_display()} - Tsh {updated_capital.amount:,.2f}'
+                ),
+                content_type='Capital',
+                ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+            )
+
+            messages.success(request, f'Capital transaction {updated_capital.capital_id} updated successfully.')
+            return redirect('finance_tracker:capital_list')
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CapitalForm(instance=capital)
+
+    context = {
+        'form': form,
+        'capital': capital,
+        'title': 'Edit Capital Transaction',
+        'page_title': f'Edit Capital {capital.capital_id}',
+    }
+    return render(request, 'finance_tracker/edit_capital.html', context)
+
+
+@login_required
+def delete_capital(request, capital_id):
+    """Soft-delete a capital transaction by cancelling it."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
+    capital = get_object_or_404(Capital, id=capital_id)
+    if capital.status not in {'pending', 'approved'}:
+        messages.error(request, 'Only pending or approved capital transactions can be cancelled.')
+        return redirect('finance_tracker:capital_list')
+
+    if request.method == 'POST':
+        capital.status = 'cancelled'
+        capital.approved_by = request.user
+        capital.approval_date = timezone.now()
+        capital.save(update_fields=['status', 'approved_by', 'approval_date', 'updated_at'])
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DELETE',
+            object_id=capital.id,
+            description=f'Cancelled capital transaction: {capital.capital_id}',
+            content_type='Capital',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
+        )
+
+        messages.success(request, f'Capital transaction {capital.capital_id} cancelled successfully.')
+        return redirect('finance_tracker:capital_list')
+
+    return render(request, 'finance_tracker/delete_capital.html', {'capital': capital})
+
+
+@login_required
 def capital_approval_list(request):
     """List all capital transactions pending approval."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     pending_capital = Capital.objects.filter(status='pending').select_related('created_by', 'shareholder').order_by('-created_at')
     
     context = {
@@ -870,9 +1227,17 @@ def capital_approval_list(request):
 @login_required
 def approve_capital(request, capital_id):
     """Approve a capital transaction."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     capital = get_object_or_404(Capital, id=capital_id, status='pending')
     
     if request.method == 'POST':
+        if capital.created_by_id == request.user.id:
+            messages.error(request, 'Self-approval is not allowed. Another approver must review this transaction.')
+            return redirect('finance_tracker:capital_approval_list')
+
         action = request.POST.get('action')
         comments = request.POST.get('comments', '')
         
@@ -911,6 +1276,8 @@ def approve_capital(request, capital_id):
             )
             
             messages.warning(request, f'Capital {capital.get_transaction_type_display().lower()} rejected.')
+        else:
+            messages.error(request, 'Invalid approval action.')
         
         return redirect('finance_tracker:capital_approval_list')
     
@@ -924,6 +1291,10 @@ def approve_capital(request, capital_id):
 @login_required
 def capital_approval_detail(request, capital_id):
     """View details of a capital transaction for approval."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     capital = get_object_or_404(Capital, id=capital_id)
     
     context = {
@@ -936,6 +1307,10 @@ def capital_approval_detail(request, capital_id):
 @login_required
 def retained_earnings(request):
     """Calculate and display retained earnings."""
+    denied_response = _deny_loan_officer(request)
+    if denied_response:
+        return denied_response
+
     # Get date range parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -957,7 +1332,8 @@ def retained_earnings(request):
     # Calculate total income for the period
     total_income = Income.objects.filter(
         income_date__gte=start_date,
-        income_date__lte=end_date
+        income_date__lte=end_date,
+        status__iexact='approved'
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     # Calculate total expenditures for the period
@@ -972,7 +1348,8 @@ def retained_earnings(request):
     
     # Calculate cumulative retained earnings (all-time)
     cumulative_income = Income.objects.filter(
-        income_date__lte=end_date
+        income_date__lte=end_date,
+        status__iexact='approved'
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     cumulative_expenditure = Expenditure.objects.filter(
@@ -1008,7 +1385,8 @@ def retained_earnings(request):
             
         month_income = Income.objects.filter(
             income_date__gte=month_start,
-            income_date__lte=month_end
+            income_date__lte=month_end,
+            status__iexact='approved'
         ).aggregate(total=Sum('amount'))['total'] or 0
         
         month_expenditure = Expenditure.objects.filter(
@@ -1035,7 +1413,8 @@ def retained_earnings(request):
         
         year_income = Income.objects.filter(
             income_date__gte=year_start,
-            income_date__lte=year_end
+            income_date__lte=year_end,
+            status__iexact='approved'
         ).aggregate(total=Sum('amount'))['total'] or 0
         
         year_expenditure = Expenditure.objects.filter(
@@ -1108,6 +1487,10 @@ def retained_earnings(request):
 @login_required
 def retained_earnings_api(request):
     """API endpoint for retained earnings data (for charts/widgets)."""
+    denied_response = _deny_loan_officer(request, message='Access denied.')
+    if denied_response:
+        return denied_response
+
     # Get last 12 months of data
     monthly_retained_earnings = []
     
@@ -1121,7 +1504,8 @@ def retained_earnings_api(request):
         
         # Calculate cumulative retained earnings up to this month
         cumulative_income = Income.objects.filter(
-            income_date__lte=month_end
+            income_date__lte=month_end,
+            status__iexact='approved'
         ).aggregate(total=Sum('amount'))['total'] or 0
         
         cumulative_expenditure = Expenditure.objects.filter(
@@ -1165,3 +1549,5 @@ def retained_earnings_api(request):
             'retained_earnings': current_retained_earnings['retained_earnings'],
         }
     })
+
+

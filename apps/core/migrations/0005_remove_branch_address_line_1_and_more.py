@@ -19,3 +19,5 @@ class Migration(migrations.Migration):
             name="address_line_2",
         ),
     ]
+
+

@@ -34,3 +34,5 @@ def period_status_change_notification(sender, instance, created, **kwargs):
         if instance.status == 'closed' and instance.closed_at:
             # Could send notifications, generate closing reports, etc.
             pass
+
+

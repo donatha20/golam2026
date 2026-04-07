@@ -1,0 +1,22 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Deactivate Borrower{% endblock %}
+{% block page_title %}Deactivate Borrower{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-warning">
+        <div class="card-header bg-warning">
+            Confirm Deactivation
+        </div>
+        <div class="card-body">
+            <p>Deactivate borrower <strong>{{ borrower.get_full_name }}</strong> ({{ borrower.borrower_id }})?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning btn-sm">Deactivate</button>
+                <a href="{% url 'borrowers:borrower_detail' borrower.id %}" class="btn btn-secondary btn-sm">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

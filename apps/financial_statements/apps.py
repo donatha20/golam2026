@@ -8,3 +8,5 @@ class FinancialStatementsConfig(AppConfig):
     
     def ready(self):
         import apps.financial_statements.signals
+
+

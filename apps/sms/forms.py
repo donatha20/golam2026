@@ -218,3 +218,5 @@ class SMSFilterForm(forms.Form):
             'type': 'date'
         })
     )
+
+

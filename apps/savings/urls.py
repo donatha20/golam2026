@@ -57,3 +57,5 @@ urlpatterns = [
     path('api/check-eligibility/', views.check_loan_eligibility_api, name='check_loan_eligibility_api'),
     path('api/balance/<str:account_number>/', views.account_balance_api, name='account_balance_api'),
 ]
+
+

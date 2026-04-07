@@ -339,3 +339,5 @@ def require_ajax(view_func):
             return JsonResponse({'error': 'AJAX request required'}, status=400)
         return view_func(request, *args, **kwargs)
     return wrapper
+
+

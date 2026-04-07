@@ -360,3 +360,5 @@ class CategoryFilter(django_filters.FilterSet):
                 Q(description__icontains=value)
             )
         return queryset
+
+

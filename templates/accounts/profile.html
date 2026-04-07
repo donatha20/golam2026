@@ -1,7 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'dashboard_base.html' %}
 {% load static %}
 
 {% block title %}Profile - Golam Financial Services{% endblock %}
+{% block page_title %}Profile{% endblock %}
 
 {% block breadcrumb_items %}
     <li class="breadcrumb-item active">Profile</li>
@@ -9,7 +10,7 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-lg-10 mx-auto">
         <div class="card">
             <div class="card-header py-compact">
                 <h5 class="mb-0">
@@ -21,44 +22,152 @@
                 <div class="row">
                     <div class="col-md-4 text-center mb-4">
                         <div class="avatar-lg bg-primary-teal rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                            <i class="fas fa-user fa-3x text-white"></i>
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="Profile" class="img-fluid rounded-circle" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            {% endif %}
                         </div>
                         <h4>{{ user.get_full_name|default:user.username }}</h4>
                         <p class="text-muted">{{ user.get_role_display }}</p>
+                        <p class="mb-1"><strong>Username:</strong> {{ user.username }}</p>
+                        <p class="mb-1"><strong>Branch:</strong> {{ user.branch|default:"Not assigned" }}</p>
+                        <p class="text-muted small mb-0">
+                            Joined {{ user.date_joined|date:"F d, Y" }}
+                        </p>
                     </div>
                     <div class="col-md-8">
-                        <table class="table table-borderless">
-                            <tr>
-                                <td class="fw-medium">Username:</td>
-                                <td>{{ user.username }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Email:</td>
-                                <td>{{ user.email|default:"Not provided" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Role:</td>
-                                <td>
-                                    <span class="badge bg-primary-teal">{{ user.get_role_display }}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Branch:</td>
-                                <td>{{ user.branch|default:"Not assigned" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Phone:</td>
-                                <td>{{ user.phone_number|default:"Not provided" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Date Joined:</td>
-                                <td>{{ user.date_joined|date:"F d, Y" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-medium">Last Login:</td>
-                                <td>{{ user.last_login|date:"F d, Y H:i"|default:"Never" }}</td>
-                            </tr>
-                        </table>
+                        <ul class="nav nav-pills mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if not form.errors and not form.non_field_errors %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#profile-view" type="button" role="tab" aria-selected="true">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if form.errors or form.non_field_errors %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#profile-edit" type="button" role="tab" aria-selected="false">
+                                    <i class="fas fa-pen me-1"></i> Edit
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade {% if not form.errors and not form.non_field_errors %}show active{% endif %}" id="profile-view" role="tabpanel">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td class="fw-medium">Username:</td>
+                                        <td>{{ user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Email:</td>
+                                        <td>{{ user.email|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Role:</td>
+                                        <td><span class="badge bg-primary-teal">{{ user.get_role_display }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Phone:</td>
+                                        <td>{{ user.phone_number|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Date of Birth:</td>
+                                        <td>{{ user.date_of_birth|date:"F d, Y"|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Address:</td>
+                                        <td>{{ user.address|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Emergency Contact:</td>
+                                        <td>{{ user.emergency_contact_name|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Emergency Phone:</td>
+                                        <td>{{ user.emergency_contact_phone|default:"Not provided" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-medium">Last Login:</td>
+                                        <td>{{ user.last_login|date:"F d, Y H:i"|default:"Never" }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="tab-pane fade {% if form.errors or form.non_field_errors %}show active{% endif %}" id="profile-edit" role="tabpanel">
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+
+                                    {% if form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            {{ form.non_field_errors }}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.first_name.id_for_label }}">First Name</label>
+                                            {{ form.first_name }}
+                                            {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors }}</div>{% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.last_name.id_for_label }}">Last Name</label>
+                                            {{ form.last_name }}
+                                            {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors }}</div>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+                                            {{ form.email }}
+                                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                                            {{ form.phone_number }}
+                                            {% if form.phone_number.errors %}<div class="text-danger small mt-1">{{ form.phone_number.errors }}</div>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                                            {{ form.date_of_birth }}
+                                            {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors }}</div>{% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+                                            {{ form.profile_picture }}
+                                            {% if form.profile_picture.errors %}<div class="text-danger small mt-1">{{ form.profile_picture.errors }}</div>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="{{ form.address.id_for_label }}">Address</label>
+                                        {{ form.address }}
+                                        {% if form.address.errors %}<div class="text-danger small mt-1">{{ form.address.errors }}</div>{% endif %}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.emergency_contact_name.id_for_label }}">Emergency Contact Name</label>
+                                            {{ form.emergency_contact_name }}
+                                            {% if form.emergency_contact_name.errors %}<div class="text-danger small mt-1">{{ form.emergency_contact_name.errors }}</div>{% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label" for="{{ form.emergency_contact_phone.id_for_label }}">Emergency Contact Phone</label>
+                                            {{ form.emergency_contact_phone }}
+                                            {% if form.emergency_contact_phone.errors %}<div class="text-danger small mt-1">{{ form.emergency_contact_phone.errors }}</div>{% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                        <button type="submit" class="btn btn-primary-teal">
+                                            <i class="fas fa-save me-1"></i> Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

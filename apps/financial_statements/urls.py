@@ -38,3 +38,5 @@ urlpatterns = [
     path('reports/loan-aging/', views.loan_aging_report, name='loan_aging_report'),
     path('reports/collection-summary/', views.collection_summary_report, name='collection_summary_report'),
 ]
+
+

@@ -395,3 +395,5 @@ def export_financial_statement_pdf(statement_data, statement_type, period):
     """Quick function to export financial statements to PDF."""
     exporter = PDFExporter()
     return exporter.generate_financial_statement_pdf(statement_data, statement_type, period)
+
+

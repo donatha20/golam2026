@@ -34,3 +34,5 @@ class Migration(migrations.Migration):
             field=models.CharField(choices=[('PENDING', 'Pending Approval'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected'), ('RECEIVED', 'Received'), ('CANCELLED', 'Cancelled')], default='PENDING', max_length=20),
         ),
     ]
+
+

@@ -83,3 +83,5 @@ urlpatterns = [
     path('ajax/positions/', views.get_positions_by_department, name='ajax_positions'),
     path('ajax/employee-salary/', views.get_employee_salary_info, name='ajax_employee_salary'),
 ]
+
+

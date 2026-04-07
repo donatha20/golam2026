@@ -113,12 +113,17 @@
                                 <td>{{ shareholder.join_date }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <button class="btn btn-sm btn-outline-primary" title="View Details" onclick="viewShareholderDetails({{ shareholder.id }})">
+                                        <a class="btn btn-sm btn-outline-primary" title="View Details" href="{% url 'finance_tracker:shareholder_list' %}?search={{ shareholder.shareholder_id }}">
                                             <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" title="Edit" onclick="editShareholder({{ shareholder.id }})">
+                                        </a>
+                                        <a class="btn btn-sm btn-outline-secondary" title="Edit" href="{% url 'finance_tracker:edit_shareholder' shareholder.id %}">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
+                                        {% if shareholder.status == 'active' %}
+                                        <a class="btn btn-sm btn-outline-danger" title="Deactivate" href="{% url 'finance_tracker:deactivate_shareholder' shareholder.id %}">
+                                            <i class="fas fa-user-slash"></i>
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -180,14 +185,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-
-// Placeholder functions for shareholder actions
-function viewShareholderDetails(shareholderId) {
-    alert('Shareholder details view coming soon! Shareholder ID: ' + shareholderId);
-}
-
-function editShareholder(shareholderId) {
-    alert('Shareholder editing coming soon! Shareholder ID: ' + shareholderId);
-}
 </script>
 {% endblock %}

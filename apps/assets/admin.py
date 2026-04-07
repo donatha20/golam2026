@@ -196,3 +196,5 @@ class CollateralDocumentAdmin(admin.ModelAdmin):
                 return f"{obj.file_size / (1024 * 1024):.1f} MB"
         return "-"
     file_size_display.short_description = "File Size"
+
+

@@ -14,11 +14,24 @@
                     <h4 class="card-title">
                         <i class="fas fa-map-marker-alt"></i> Branch Management
                     </h4>
+                    {% if user.role == 'admin' or user.role == 'manager' %}
                     <a href="{% url 'core:add_branch' %}" class="btn btn-primary-teal btn-sm">
                         <i class="fas fa-plus"></i> Add Branch
                     </a>
+                    {% endif %}
                 </div>
                 <div class="card-body p-compact">
+                    <form method="get" class="row g-2 align-items-end mb-3">
+                        <div class="col-md-3 col-sm-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select id="status" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                            </select>
+                        </div>
+                    </form>
+
                     {% if branches %}
                         <div class="table-responsive">
                             <table class="table table-hover table-sm">
@@ -73,12 +86,18 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
+                                                {% if user.role == 'admin' or user.role == 'manager' %}
                                                 <a href="{% url 'core:edit_branch' branch.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <a href="{% url 'core:delete_branch' branch.id %}" class="btn btn-sm btn-outline-danger" title="Deactivate">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
+                                                {% endif %}
+                                                {% if user.role == 'admin' or user.role == 'manager' %}
+                                                {% if branch.is_active %}
+                                                    <a href="{% url 'core:delete_branch' branch.id %}" class="btn btn-sm btn-outline-danger" title="Deactivate">
+                                                        <i class="fas fa-user-slash"></i>
+                                                    </a>
+                                                {% endif %}
+                                                {% endif %}
                                             </div>
                                         </td>
                                     </tr>
@@ -90,10 +109,12 @@
                         <div class="text-center py-5">
                             <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
                             <h5>No Branches Found</h5>
-                            <p class="text-muted">Add your first branch to get started.</p>
+                            <p class="text-muted">No branches match the selected status filter.</p>
+                            {% if user.role == 'admin' or user.role == 'manager' %}
                             <a href="{% url 'core:add_branch' %}" class="btn btn-primary-teal">
                                 <i class="fas fa-plus"></i> Add First Branch
                             </a>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>

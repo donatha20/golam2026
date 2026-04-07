@@ -15,6 +15,18 @@ from .models import CustomUser, Branch, UserActivity, UserSession
 from .forms import UserProfileForm, UserCreateForm, BranchForm
 
 
+def _has_elevated_access(user):
+    """Return True for admin/manager-style management access."""
+    role = getattr(user, 'role', None)
+    if role in {'admin', 'manager'}:
+        return True
+    return any([
+        getattr(user, 'is_admin', False),
+        getattr(user, 'is_staff', False),
+        getattr(user, 'is_superuser', False),
+    ])
+
+
 @login_required
 def account_settings(request):
     """Account settings and security page."""
@@ -98,15 +110,21 @@ def change_password(request):
 @login_required
 def user_management(request):
     """User management view - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
-    # Get search query
+    # Get list controls
     search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'active').lower()
     
-    # Filter users
+    # Default to active users, but allow admins to view inactive/all records.
     users = CustomUser.objects.all()
+    if status_filter == 'active':
+        users = users.filter(is_active=True)
+    elif status_filter == 'inactive':
+        users = users.filter(is_active=False)
+
     if search_query:
         users = users.filter(
             Q(username__icontains=search_query) |
@@ -123,6 +141,7 @@ def user_management(request):
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
+        'status_filter': status_filter,
         'total_users': CustomUser.objects.count(),
         'active_users': CustomUser.objects.filter(is_active=True).count(),
         'inactive_users': CustomUser.objects.filter(is_active=False).count(),
@@ -134,8 +153,8 @@ def user_management(request):
 @login_required
 def create_user(request):
     """Create new user - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
     if request.method == 'POST':
@@ -166,8 +185,8 @@ def create_user(request):
 @login_required
 def edit_user(request, user_id):
     """Edit user - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
     user = get_object_or_404(CustomUser, id=user_id)
@@ -202,7 +221,7 @@ def edit_user(request, user_id):
 @require_http_methods(["POST"])
 def toggle_user_status(request, user_id):
     """Toggle user active status - admin only."""
-    if not request.user.is_admin:
+    if not _has_elevated_access(request.user):
         return JsonResponse({'error': 'Access denied'}, status=403)
     
     user = get_object_or_404(CustomUser, id=user_id)
@@ -230,22 +249,31 @@ def toggle_user_status(request, user_id):
 @login_required
 def branch_management(request):
     """Branch management view - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
-    branches = Branch.objects.all().order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    branches = Branch.objects.all()
+    if status_filter == 'active':
+        branches = branches.filter(is_active=True)
+    elif status_filter == 'inactive':
+        branches = branches.filter(is_active=False)
+
+    branches = branches.order_by('name')
     
     return render(request, 'accounts/branch_management.html', {
-        'branches': branches
+        'branches': branches,
+        'status_filter': status_filter,
     })
 
 
 @login_required
 def create_branch(request):
     """Create new branch - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
     if request.method == 'POST':
@@ -276,8 +304,8 @@ def create_branch(request):
 @login_required
 def user_activity_log(request):
     """User activity log view - admin only."""
-    if not request.user.is_admin:
-        messages.error(request, 'Access denied. Admin privileges required.')
+    if not _has_elevated_access(request.user):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
         return redirect('core:dashboard')
     
     activities = UserActivity.objects.select_related('user').order_by('-timestamp')
@@ -290,3 +318,5 @@ def user_activity_log(request):
     return render(request, 'accounts/activity_log.html', {
         'page_obj': page_obj
     })
+
+

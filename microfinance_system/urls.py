@@ -22,11 +22,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.views.generic.base import RedirectView
 from apps.core import views as core_views
 
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
+    path('favicon.ico', RedirectView.as_view(url='/static/logo.png', permanent=True)),
 
     # Authentication - using registration templates
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
@@ -79,3 +81,5 @@ urlpatterns = [
     #except ImportError:
      #   # Debug toolbar not installed, skip
       #  pass
+
+

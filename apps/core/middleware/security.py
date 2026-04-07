@@ -240,3 +240,5 @@ class AuditLogMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+

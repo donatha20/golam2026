@@ -642,3 +642,5 @@ class ExpenseApprovalWorkflow(models.Model):
 
     def __str__(self):
         return f"{self.expenditure.expenditure_id} - {self.get_approval_level_display()} - {self.status}"
+
+

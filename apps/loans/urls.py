@@ -23,6 +23,8 @@ urlpatterns = [
     
     # Function-Based Views that exist
     path('add/', views.add_new_loan, name='add_loan'),
+    path('<int:loan_id>/edit/', views.edit_loan, name='edit_loan'),
+    path('<int:loan_id>/delete/', views.delete_loan, name='delete_loan'),
     path('add-group/', views.add_group_loan, name='add_group_loan'),
     path('repayments/<int:loan_id>/', views.loan_repayments, name='loan_repayments'),
     path('repayments/record/<int:schedule_id>/', views.record_repayment, name='record_repayment'),
@@ -70,10 +72,14 @@ urlpatterns = [
     path('group-schedule/create/<int:group_loan_id>/', views.create_group_schedule, name='create_group_schedule'),
     path('group-schedules/', views.group_schedules, name='group_schedules'),
     path('group-loans/', views.group_loans, name='group_loans'),
+    path('group-loans/<int:group_loan_id>/edit/', views.edit_group_loan, name='edit_group_loan'),
+    path('group-loans/<int:group_loan_id>/delete/', views.delete_group_loan, name='delete_group_loan'),
 
     # Adding a placeholder for loan_list view
     path('list/', views.loan_list, name='loan_list'),
     path('pending/', views.pending_loans_list, name='pending_loans'),
+    path('approved/', views.approved_loans_list, name='approved_loans'),
+    path('rejected/', views.rejected_loans_list, name='rejected_loans'),
 
     # Export views
     path('export/loans/pdf/', views.export_loans_pdf, name='export_loans_pdf'),
@@ -82,3 +88,4 @@ urlpatterns = [
     path('export/overdue/pdf/', views.export_overdue_loans_pdf, name='export_overdue_loans_pdf'),
     path('export/overdue/excel/', views.export_overdue_loans_excel, name='export_overdue_loans_excel'),
 ]
+

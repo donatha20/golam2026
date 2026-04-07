@@ -17,12 +17,28 @@ from apps.borrowers.models import Borrower
 from apps.loans.models import Loan
 from apps.repayments.models import Payment
 from apps.savings.models import SavingsAccount
+from apps.accounts.models import UserRole
 from .forms import SendSMSForm, BulkSMSForm
+
+
+def _require_elevated_sms_access(request, json_response=False):
+    if request.user.role in {UserRole.ADMIN, UserRole.MANAGER}:
+        return None
+
+    message = 'Only admin and manager users can access SMS management.'
+    if json_response:
+        return JsonResponse({'success': False, 'message': message}, status=403)
+
+    messages.error(request, message)
+    return redirect('core:dashboard')
 
 
 @login_required
 def sms_dashboard(request):
     """SMS dashboard with statistics and recent activity."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     # Get date range for statistics
     today = timezone.now().date()
@@ -68,6 +84,9 @@ def sms_dashboard(request):
 @login_required
 def sms_logs(request):
     """View SMS logs with filtering and pagination."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     # Get filter parameters
     status_filter = request.GET.get('status', '')
@@ -131,6 +150,9 @@ def sms_logs(request):
 @login_required
 def send_sms(request):
     """Send individual SMS."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     if request.method == 'POST':
         form = SendSMSForm(request.POST)
@@ -162,6 +184,9 @@ def send_sms(request):
 @login_required
 def bulk_sms(request):
     """Send bulk SMS to multiple recipients."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     if request.method == 'POST':
         form = BulkSMSForm(request.POST)
@@ -184,10 +209,7 @@ def bulk_sms(request):
             
             elif recipient_type == 'overdue_borrowers':
                 # Get borrowers with overdue loans
-                overdue_loans = Loan.objects.filter(
-                    status='active',
-                    next_due_date__lt=timezone.now().date()
-                )
+                overdue_loans = Loan.objects.overdue()
                 borrowers = Borrower.objects.filter(
                     loans__in=overdue_loans
                 ).exclude(phone_number__isnull=True).exclude(phone_number='').distinct()
@@ -228,10 +250,7 @@ def bulk_sms(request):
         loans__status='active'
     ).exclude(phone_number__isnull=True).exclude(phone_number='').distinct().count()
     
-    overdue_loans = Loan.objects.filter(
-        status='active',
-        next_due_date__lt=timezone.now().date()
-    )
+    overdue_loans = Loan.objects.overdue()
     overdue_borrowers_count = Borrower.objects.filter(
         loans__in=overdue_loans
     ).exclude(phone_number__isnull=True).exclude(phone_number='').distinct().count()
@@ -251,6 +270,9 @@ def bulk_sms(request):
 @login_required
 def sms_templates(request):
     """Manage SMS templates."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     # Get template usage statistics
     template_stats = SMSLog.objects.exclude(
@@ -267,6 +289,9 @@ def sms_templates(request):
 @login_required
 def test_sms(request):
     """Test SMS functionality."""
+    denied_response = _require_elevated_sms_access(request, json_response=True)
+    if denied_response:
+        return denied_response
     
     if request.method == 'POST':
         phone_number = request.POST.get('phone_number')
@@ -289,6 +314,9 @@ def test_sms(request):
 @login_required
 def sms_settings(request):
     """SMS settings and configuration."""
+    denied_response = _require_elevated_sms_access(request)
+    if denied_response:
+        return denied_response
     
     context = {
         'sms_enabled': sms_service.enabled,
@@ -297,3 +325,5 @@ def sms_settings(request):
     }
     
     return render(request, 'sms/settings.html', context)
+
+

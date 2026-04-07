@@ -176,3 +176,5 @@ class SavingsAccountHoldAdmin(admin.ModelAdmin):
     search_fields = ['savings_account__account_number', 'reference_number', 'reason']
     readonly_fields = ['created_at', 'created_by']
     date_hierarchy = 'hold_date'
+
+

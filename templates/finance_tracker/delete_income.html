@@ -1,0 +1,23 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Delete Income{% endblock %}
+{% block page_title %}Delete Income{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            Confirm Delete
+        </div>
+        <div class="card-body">
+            <p>Are you sure you want to delete income record <strong>{{ income.income_id }}</strong>?</p>
+            <p>Amount: <strong>Tsh {{ income.amount }}</strong></p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                <a href="{% url 'finance_tracker:view_income' %}" class="btn btn-secondary btn-sm">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

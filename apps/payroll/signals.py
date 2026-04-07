@@ -37,3 +37,5 @@ def salary_advance_post_save(sender, instance, created, **kwargs):
         SalaryAdvance.objects.filter(id=instance.id).update(
             remaining_balance=instance.amount
         )
+
+

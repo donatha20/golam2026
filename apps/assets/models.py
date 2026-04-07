@@ -1163,3 +1163,5 @@ class AssetMaintenanceSchedule(models.Model):
             delta = timezone.now().date() - self.scheduled_date
             return delta.days
         return 0
+
+

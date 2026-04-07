@@ -18,6 +18,21 @@ from apps.core.models import Branch
 from apps.loans.models import Loan
 
 
+def _require_elevated_access(request):
+    """Restrict destructive borrower actions to admin/manager users."""
+    role = getattr(request.user, 'role', None)
+    if role in {UserRole.ADMIN, UserRole.MANAGER}:
+        return None
+    if any([
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ]):
+        return None
+    messages.error(request, 'Access denied. Admin or manager privileges required.')
+    return redirect('core:dashboard')
+
+
 @login_required
 def borrower_list(request):
     """Display list of all borrowers/clients."""
@@ -88,7 +103,7 @@ def register_borrower(request):
             except Branch.DoesNotExist:
                 messages.error(request, 'Selected branch not found.')
                 return render(request, 'borrowers/register_borrower.html', {
-                    'branches': Branch.objects.all(),
+                    'branches': Branch.objects.filter(is_active=True),
                     'gender_choices': [('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
                     'marital_choices': [
                         ('single', 'Single'), ('married', 'Married'), ('divorced', 'Divorced'),
@@ -111,7 +126,7 @@ def register_borrower(request):
             if not all(required_fields):
                 messages.error(request, 'All required fields must be filled.')
                 return render(request, 'borrowers/register_borrower.html', {
-                    'branches': Branch.objects.all(),
+                    'branches': Branch.objects.filter(is_active=True),
                     'gender_choices': [('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
                     'marital_choices': [
                         ('single', 'Single'), ('married', 'Married'), ('divorced', 'Divorced'),
@@ -177,7 +192,7 @@ def register_borrower(request):
             messages.error(request, f'Error registering borrower: {str(e)}')
     
     context = {
-        'branches': Branch.objects.all(),
+        'branches': Branch.objects.filter(is_active=True),
         'today': timezone.now().date(),
         'gender_choices': [('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
         'marital_choices': [
@@ -325,7 +340,7 @@ def register_group(request):
                 messages.error(request, 'Selected branch not found.')
                 return render(request, 'borrowers/register_group.html', {
                     'available_borrowers': get_available_borrowers(),
-                    'branches': Branch.objects.all(),
+                    'branches': Branch.objects.filter(is_active=True),
                     'today': timezone.now().date(),
                     'meeting_frequency_choices': [
                         ('weekly', 'Weekly'), ('biweekly', 'Bi-weekly'), ('monthly', 'Monthly')
@@ -342,7 +357,7 @@ def register_group(request):
                 messages.error(request, 'Group name, leader, and formation date are required.')
                 return render(request, 'borrowers/register_group.html', {
                     'available_borrowers': get_available_borrowers(),
-                    'branches': Branch.objects.all(),
+                    'branches': Branch.objects.filter(is_active=True),
                     'today': timezone.now().date(),
                     'meeting_frequency_choices': [
                         ('weekly', 'Weekly'), ('biweekly', 'Bi-weekly'), ('monthly', 'Monthly')
@@ -411,7 +426,7 @@ def register_group(request):
 
     context = {
         'available_borrowers': get_available_borrowers(),
-        'branches': Branch.objects.all(),
+        'branches': Branch.objects.filter(is_active=True),
         'today': timezone.now().date(),
         'meeting_frequency_choices': [
             ('weekly', 'Weekly'), ('biweekly', 'Bi-weekly'), ('monthly', 'Monthly')
@@ -482,8 +497,68 @@ def borrower_edit(request, borrower_id):
     return render(request, 'borrowers/borrower_edit.html', context)
 
 
+@login_required
+def borrower_delete(request, borrower_id):
+    """Deactivate a borrower record (soft delete)."""
+    denied_response = _require_elevated_access(request)
+    if denied_response:
+        return denied_response
+
+    borrower = get_object_or_404(Borrower, id=borrower_id)
+
+    if request.method == 'POST':
+        borrower.status = BorrowerStatus.INACTIVE
+        borrower.updated_by = request.user
+        borrower.save(update_fields=['status', 'updated_by', 'updated_at'])
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DEACTIVATE_BORROWER',
+            description=f'Deactivated borrower: {borrower.get_full_name()} ({borrower.borrower_id})',
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            content_type='Borrower',
+            object_id=borrower.id
+        )
+
+        messages.success(request, f'Borrower {borrower.get_full_name()} deactivated successfully.')
+        return redirect('borrowers:borrower_list')
+
+    return render(request, 'borrowers/borrower_delete.html', {'borrower': borrower})
+
+
+@login_required
+def group_delete(request, group_id):
+    """Deactivate a borrower group (soft delete)."""
+    denied_response = _require_elevated_access(request)
+    if denied_response:
+        return denied_response
+
+    group = get_object_or_404(BorrowerGroup, id=group_id)
+
+    if request.method == 'POST':
+        group.status = StatusChoices.INACTIVE
+        group.updated_by = request.user
+        group.save(update_fields=['status', 'updated_by', 'updated_at'])
+
+        UserActivity.objects.create(
+            user=request.user,
+            action='DEACTIVATE_GROUP',
+            description=f'Deactivated group: {group.group_name} ({group.group_id})',
+            ip_address=request.META.get('REMOTE_ADDR', ''),
+            content_type='BorrowerGroup',
+            object_id=group.id
+        )
+
+        messages.success(request, f'Group {group.group_name} deactivated successfully.')
+        return redirect('borrowers:group_list')
+
+    return render(request, 'borrowers/group_delete.html', {'group': group})
+
+
 def get_available_borrowers():
     """Get borrowers available to be group leaders or members."""
     return Borrower.objects.filter(
         status=BorrowerStatus.ACTIVE
     ).order_by('first_name', 'last_name')
+
+

@@ -357,7 +357,7 @@
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.9rem;">
                 <div><strong>Product:</strong> {{ loan.loan_type.name }}</div>
                 <div><strong>Duration:</strong> {{ loan.duration_months }} months</div>
-                <div><strong>Interest Rate:</strong> {{ loan.interest_rate }}% p.a.</div>
+                <div><strong>Interest Amount:</strong> Tsh {{ loan.total_interest|floatformat:2 }}</div>
                 <div><strong>Frequency:</strong> {{ loan.get_repayment_frequency_display }}</div>
             </div>
         </div>

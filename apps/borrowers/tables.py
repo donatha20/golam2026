@@ -318,3 +318,5 @@ class BorrowerGroupTable(tables.Table):
             '</div>',
             record.id, record.id, record.id
         )
+
+

@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
 from django.conf import settings
+from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 import json
 
@@ -18,6 +19,22 @@ from apps.savings.models import SavingsAccount
 from apps.accounts.models import CustomUser, UserActivity, UserSession, UserRole
 from django_tables2 import RequestConfig
 from .tables import UserTable, UserActivityTable, UserSessionTable
+
+
+def _require_admin_access(request):
+    """Restrict sensitive actions to admin/manager-level users."""
+    role = getattr(request.user, 'role', None)
+    is_elevated_role = role in {UserRole.ADMIN, UserRole.MANAGER}
+    is_admin_flag = any([
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ])
+
+    if not (is_elevated_role or is_admin_flag):
+        messages.error(request, 'Access denied. Admin or manager privileges required.')
+        return redirect('core:dashboard')
+    return None
 
 
 def home(request):
@@ -333,11 +350,20 @@ def handler500(request):
 @login_required
 def user_list(request):
     """Display list of all users - admin only."""
-    if request.user.role != UserRole.ADMIN:
-        messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('core:dashboard')
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
 
-    users = CustomUser.objects.all().order_by('-date_joined')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    all_users = CustomUser.objects.all()
+    users = all_users
+    if status_filter == 'active':
+        users = users.filter(is_active=True)
+    elif status_filter == 'inactive':
+        users = users.filter(is_active=False)
+
+    users = users.order_by('-date_joined')
 
     # Create data table
     table = UserTable(users)
@@ -345,9 +371,10 @@ def user_list(request):
 
     context = {
         'table': table,
-        'total_users': users.count(),
-        'active_users': users.filter(is_active=True).count(),
-        'inactive_users': users.filter(is_active=False).count(),
+        'status_filter': status_filter,
+        'total_users': all_users.count(),
+        'active_users': all_users.filter(is_active=True).count(),
+        'inactive_users': all_users.filter(is_active=False).count(),
     }
     return render(request, 'users/user_list_table.html', context)
 
@@ -355,9 +382,9 @@ def user_list(request):
 @login_required
 def user_logs(request):
     """Display user activity logs."""
-    if request.user.role != UserRole.ADMIN:
-        messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('core:dashboard')
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
 
     # Get recent activities and sessions
     activities = UserActivity.objects.select_related('user').order_by('-timestamp')
@@ -383,9 +410,9 @@ def user_logs(request):
 @login_required
 def add_user(request):
     """Add new user - admin only."""
-    if request.user.role != UserRole.ADMIN:
-        messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('core:dashboard')
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
 
     if request.method == 'POST':
         # Get form data
@@ -592,10 +619,19 @@ def branch_management(request):
     """Manage branches."""
     from .models import Branch
 
-    branches = Branch.objects.all().order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    branches = Branch.objects.all()
+    if status_filter == 'active':
+        branches = branches.filter(is_active=True)
+    elif status_filter == 'inactive':
+        branches = branches.filter(is_active=False)
+
+    branches = branches.order_by('name')
 
     context = {
         'branches': branches,
+        'status_filter': status_filter,
     }
 
     return render(request, 'core/branch_management.html', context)
@@ -606,10 +642,19 @@ def loan_categories(request):
     """Manage loan categories."""
     from .models import LoanCategory
 
-    categories = LoanCategory.objects.all().order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    categories = LoanCategory.objects.all()
+    if status_filter == 'active':
+        categories = categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        categories = categories.filter(is_active=False)
+
+    categories = categories.order_by('name')
 
     context = {
         'categories': categories,
+        'status_filter': status_filter,
     }
 
     return render(request, 'core/loan_categories.html', context)
@@ -620,10 +665,19 @@ def penalty_configurations(request):
     """Manage penalty configurations."""
     from .models import PenaltyConfiguration
 
-    penalties = PenaltyConfiguration.objects.all().order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    penalties = PenaltyConfiguration.objects.all()
+    if status_filter == 'active':
+        penalties = penalties.filter(is_active=True)
+    elif status_filter == 'inactive':
+        penalties = penalties.filter(is_active=False)
+
+    penalties = penalties.order_by('name')
 
     context = {
         'penalties': penalties,
+        'status_filter': status_filter,
     }
 
     return render(request, 'core/penalty_configurations.html', context)
@@ -796,9 +850,14 @@ def edit_holiday(request, holiday_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_holiday(request, holiday_id):
     """Delete holiday."""
     from .models import PublicHoliday
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     holiday = get_object_or_404(PublicHoliday, id=holiday_id)
     
@@ -864,10 +923,19 @@ def view_branches(request):
     """View all branches."""
     from .models import Branch
 
-    branches = Branch.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    branches = Branch.objects.all()
+    if status_filter == 'active':
+        branches = branches.filter(is_active=True)
+    elif status_filter == 'inactive':
+        branches = branches.filter(is_active=False)
+
+    branches = branches.order_by('name')
 
     context = {
         'branches': branches,
+        'status_filter': status_filter,
         'title': 'Branches',
     }
 
@@ -907,9 +975,14 @@ def edit_branch(request, branch_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_branch(request, branch_id):
     """Delete branch."""
     from .models import Branch
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     branch = get_object_or_404(Branch, id=branch_id)
     
@@ -974,10 +1047,19 @@ def view_loan_categories(request):
     """View all loan categories."""
     from .models import LoanCategory
 
-    categories = LoanCategory.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    categories = LoanCategory.objects.all()
+    if status_filter == 'active':
+        categories = categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        categories = categories.filter(is_active=False)
+
+    categories = categories.order_by('name')
 
     context = {
         'categories': categories,
+        'status_filter': status_filter,
         'title': 'Loan Categories',
     }
 
@@ -1016,9 +1098,14 @@ def edit_loan_category(request, category_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_loan_category(request, category_id):
     """Delete loan category."""
     from .models import LoanCategory
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     category = get_object_or_404(LoanCategory, id=category_id)
     
@@ -1109,9 +1196,14 @@ def edit_loan_sector(request, sector_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_loan_sector(request, sector_id):
     """Delete loan sector."""
     from .models import LoanSector
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     sector = get_object_or_404(LoanSector, id=sector_id)
     
@@ -1257,9 +1349,14 @@ def edit_working_mode(request, mode_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_working_mode(request, mode_id):
     """Delete working mode."""
     from .models import WorkingMode
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     mode = get_object_or_404(WorkingMode, id=mode_id)
     
@@ -1282,10 +1379,19 @@ def view_penalty_configurations(request):
     """View all penalty configurations."""
     from .models import PenaltyConfiguration
 
-    penalties = PenaltyConfiguration.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    penalties = PenaltyConfiguration.objects.all()
+    if status_filter == 'active':
+        penalties = penalties.filter(is_active=True)
+    elif status_filter == 'inactive':
+        penalties = penalties.filter(is_active=False)
+
+    penalties = penalties.order_by('name')
 
     context = {
         'penalties': penalties,
+        'status_filter': status_filter,
         'title': 'Penalty Configurations',
     }
 
@@ -1336,9 +1442,14 @@ def edit_penalty_configuration(request, penalty_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_penalty_configuration(request, penalty_id):
     """Delete penalty configuration."""
     from .models import PenaltyConfiguration
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     penalty = get_object_or_404(PenaltyConfiguration, id=penalty_id)
     
@@ -1392,10 +1503,19 @@ def view_income_sources(request):
     """View all income sources."""
     from .models import IncomeSource
 
-    income_sources = IncomeSource.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    income_sources = IncomeSource.objects.all()
+    if status_filter == 'active':
+        income_sources = income_sources.filter(is_active=True)
+    elif status_filter == 'inactive':
+        income_sources = income_sources.filter(is_active=False)
+
+    income_sources = income_sources.order_by('name')
 
     context = {
         'income_sources': income_sources,
+        'status_filter': status_filter,
         'title': 'Income Sources',
     }
 
@@ -1429,9 +1549,14 @@ def edit_income_source(request, source_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_income_source(request, source_id):
     """Delete income source."""
     from .models import IncomeSource
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     source = get_object_or_404(IncomeSource, id=source_id)
     
@@ -1485,10 +1610,19 @@ def view_expense_categories(request):
     """View all expense categories."""
     from .models import ExpenseCategory
 
-    expense_categories = ExpenseCategory.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    expense_categories = ExpenseCategory.objects.all()
+    if status_filter == 'active':
+        expense_categories = expense_categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        expense_categories = expense_categories.filter(is_active=False)
+
+    expense_categories = expense_categories.order_by('name')
 
     context = {
         'expense_categories': expense_categories,
+        'status_filter': status_filter,
         'title': 'Expense Categories',
     }
 
@@ -1522,9 +1656,14 @@ def edit_expense_category(request, category_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_expense_category(request, category_id):
     """Delete expense category."""
     from .models import ExpenseCategory
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     category = get_object_or_404(ExpenseCategory, id=category_id)
     
@@ -1582,10 +1721,19 @@ def view_asset_categories(request):
     """View all asset categories."""
     from .models import AssetCategory
 
-    asset_categories = AssetCategory.objects.filter(is_active=True).order_by('name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    asset_categories = AssetCategory.objects.all()
+    if status_filter == 'active':
+        asset_categories = asset_categories.filter(is_active=True)
+    elif status_filter == 'inactive':
+        asset_categories = asset_categories.filter(is_active=False)
+
+    asset_categories = asset_categories.order_by('name')
 
     context = {
         'asset_categories': asset_categories,
+        'status_filter': status_filter,
         'title': 'Asset Categories',
     }
 
@@ -1621,9 +1769,14 @@ def edit_asset_category(request, category_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_asset_category(request, category_id):
     """Delete asset category."""
     from .models import AssetCategory
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     category = get_object_or_404(AssetCategory, id=category_id)
     
@@ -1682,10 +1835,19 @@ def view_bank_accounts(request):
     """View all bank accounts."""
     from .models import BankAccount
 
-    bank_accounts = BankAccount.objects.filter(is_active=True).order_by('-is_default', 'name')
+    status_filter = request.GET.get('status', 'active').lower()
+
+    bank_accounts = BankAccount.objects.all()
+    if status_filter == 'active':
+        bank_accounts = bank_accounts.filter(is_active=True)
+    elif status_filter == 'inactive':
+        bank_accounts = bank_accounts.filter(is_active=False)
+
+    bank_accounts = bank_accounts.order_by('-is_default', 'name')
 
     context = {
         'bank_accounts': bank_accounts,
+        'status_filter': status_filter,
         'title': 'Bank Accounts',
     }
 
@@ -1721,9 +1883,14 @@ def edit_bank_account(request, account_id):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def delete_bank_account(request, account_id):
     """Delete bank account."""
     from .models import BankAccount
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     account = get_object_or_404(BankAccount, id=account_id)
     
@@ -1745,3 +1912,5 @@ def delete_bank_account(request, account_id):
 def test_dropdown(request):
     """Test dropdown functionality."""
     return render(request, 'test_dropdown.html')
+
+

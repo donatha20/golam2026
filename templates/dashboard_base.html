@@ -6,8 +6,8 @@
     <title>{% block title %}Golam Financial Services{% endblock %}</title>
     
     {% load static %}
-    <link rel="icon" type="image/png" href="{% static 'favicon.png' %}?v=1">
-    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.png' %}?v=1">
+    <link rel="icon" type="image/png" href="{% static 'logo.png' %}?v=2">
+    <link rel="shortcut icon" type="image/png" href="{% static 'logo.png' %}?v=2">
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -82,23 +82,33 @@
             color: #2b7a76 !important;
         }
 
-        /* Override all blue colors with teal throughout the system */
-        a {
+        /* Override link colors without affecting button-like links */
+        a:not([class*="btn"]) {
             color: #2b7a76 !important;
         }
 
-        a:hover {
+        a:not([class*="btn"]):hover {
             color: #1f5d5a !important;
         }
 
         .btn-primary {
             background-color: #2b7a76 !important;
             border-color: #2b7a76 !important;
+            color: #ffffff !important;
         }
 
         .btn-primary:hover {
             background-color: #1f5d5a !important;
             border-color: #1f5d5a !important;
+            color: #ffffff !important;
+        }
+
+        .btn-primary-teal,
+        .btn-primary-teal:visited,
+        .btn-primary-teal:hover,
+        .btn-primary-teal:focus,
+        .btn-primary-teal:active {
+            color: #ffffff !important;
         }
 
         .btn-outline-primary {
@@ -654,6 +664,44 @@
             color: #9ca3af;
         }
 
+        .user-profile-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+            border-radius: 8px;
+            padding: 0.25rem 0.5rem;
+            transition: background 0.2s ease;
+        }
+
+        .user-profile-link:hover {
+            background: #f3f4f6;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .edit-profile-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(43, 122, 118, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2b7a76;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+
+        .edit-profile-btn:hover {
+            background: rgba(43, 122, 118, 0.2);
+            color: #1f5d5a;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
         .logout-btn {
             width: 32px;
             height: 32px;
@@ -861,6 +909,7 @@
                 </div>
             </div>
             
+            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section" data-section="capital" data-url-prefix="/finance/">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('capital-submenu');">
                     <span><i class="fas fa-university"></i> Capital</span>
@@ -887,6 +936,7 @@
                     </a>
                 </div>
             </div>
+            {% endif %}
 
             <div class="nav-section" data-section="loans" data-url-prefix="/loans/">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('loans-submenu');" data-tooltip="Loans">
@@ -906,6 +956,12 @@
                     </a>
                     <a href="{% url 'loans:pending_loans' %}" class="nav-link">
                         <span><i class="fas fa-clipboard-check"></i> Loan Application Approval</span>
+                    </a>
+                    <a href="{% url 'loans:approved_loans' %}" class="nav-link">
+                        <span><i class="fas fa-check-circle"></i> Approved Loans</span>
+                    </a>
+                    <a href="{% url 'loans:rejected_loans' %}" class="nav-link">
+                        <span><i class="fas fa-times-circle"></i> Rejected Loans</span>
                     </a>
                     <a href="{% url 'loans:disbursed_loans' %}" class="nav-link">
                         <span><i class="fas fa-list"></i> Disbursed Loans</span>
@@ -1103,33 +1159,7 @@
                 </div>
             </div>
 
-            <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('sms-submenu');">
-                    <span><i class="fas fa-sms"></i> SMS Management</span>
-                    <i class="fas fa-chevron-down nav-toggle" id="sms-toggle"></i>
-                </a>
-                <div class="nav-submenu" id="sms-submenu">
-                    <a href="{% url 'sms:dashboard' %}" class="nav-link">
-                        <span><i class="fas fa-tachometer-alt"></i> SMS Dashboard</span>
-                    </a>
-                    <a href="{% url 'sms:send_sms' %}" class="nav-link">
-                        <span><i class="fas fa-paper-plane"></i> Send SMS</span>
-                    </a>
-                    <a href="{% url 'sms:bulk_sms' %}" class="nav-link">
-                        <span><i class="fas fa-broadcast-tower"></i> Bulk SMS</span>
-                    </a>
-                    <a href="{% url 'sms:logs' %}" class="nav-link">
-                        <span><i class="fas fa-list"></i> SMS Logs</span>
-                    </a>
-                    <a href="{% url 'sms:templates' %}" class="nav-link">
-                        <span><i class="fas fa-file-alt"></i> Templates</span>
-                    </a>
-                    <a href="{% url 'sms:settings' %}" class="nav-link">
-                        <span><i class="fas fa-cog"></i> SMS Settings</span>
-                    </a>
-                </div>
-            </div>
-
+            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-submenu');">
                     <span><i class="fas fa-calculator"></i> Employee Payroll</span>
@@ -1217,13 +1247,16 @@
                     </a>
                 </div>
             </div>
+            {% endif %}
 
+            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser or user.role == 'loan_officer' %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('income-expenditure-submenu');">
                     <span><i class="fas fa-chart-pie"></i> Income & Expenditure</span>
                     <i class="fas fa-chevron-down nav-toggle" id="income-expenditure-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="income-expenditure-submenu">
+                    {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
                     <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sub-submenu');">
                         <span><i class="fas fa-plus-circle"></i> Income</span>
                         <i class="fas fa-chevron-down nav-toggle" id="income-sub-toggle"></i>
@@ -1254,9 +1287,19 @@
                             <span><i class="fas fa-check-circle text-warning"></i> Approval Queue</span>
                         </a>
                     </div>
+                    {% else %}
+                    <a href="{% url 'finance_tracker:add_income' %}" class="nav-link">
+                        <span><i class="fas fa-plus"></i> Add Income</span>
+                    </a>
+                    <a href="{% url 'finance_tracker:add_expenditure' %}" class="nav-link">
+                        <span><i class="fas fa-minus"></i> Add Expenditure</span>
+                    </a>
+                    {% endif %}
                 </div>
             </div>
+            {% endif %}
 
+            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('reports-submenu');">
                     <span><i class="fas fa-chart-bar"></i> Reports</span>
@@ -1286,8 +1329,9 @@
                     </a>
                 </div>
             </div>
+            {% endif %}
 
-            {% if user.role == 'admin' or user.role == 'manager' %}
+                        {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
               <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('settings-submenu');" data-tooltip="Settings">
                     <span><i class="fas fa-cog"></i> Settings</span>
@@ -1492,13 +1536,18 @@
                 </button>
                 
                 <div class="user-menu">
-                    <div class="user-avatar">
-                        {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name">{{ user.get_full_name }}</div>
-                        <div class="user-role">{{ user.get_role_display }}</div>
-                    </div>
+                    <a href="{% url 'accounts:profile' %}" class="user-profile-link" title="Edit Profile">
+                        <div class="user-avatar">
+                            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">{{ user.get_full_name }}</div>
+                            <div class="user-role">{{ user.get_role_display }}</div>
+                        </div>
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="edit-profile-btn" title="Edit Profile">
+                        <i class="fas fa-pen"></i>
+                    </a>
                     <a href="#" onclick="confirmLogout()" class="logout-btn" title="Logout">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>

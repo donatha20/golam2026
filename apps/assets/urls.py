@@ -22,3 +22,5 @@ urlpatterns = [
     path('collaterals/<int:collateral_id>/', views.collateral_detail, name='collateral_detail'),
     path('collaterals/reports/', views.collateral_reports, name='collateral_reports'),
 ]
+
+

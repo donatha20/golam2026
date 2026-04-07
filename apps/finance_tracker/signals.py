@@ -75,3 +75,5 @@ def delete_expenditure_journal_entry_signal(sender, instance, **kwargs):
         journal_entry.delete()
     except JournalEntry.DoesNotExist:
         pass
+
+

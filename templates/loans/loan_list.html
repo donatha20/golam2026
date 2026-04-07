@@ -293,12 +293,14 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-action btn-view" data-id="{{ loan.id }}" title="View Details">
+                            <a class="btn-action btn-view" href="{% url 'loans:loan_detail' loan.id %}" title="View Details">
                                 <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-action btn-edit" data-id="{{ loan.id }}" title="Edit Loan">
+                            </a>
+                            {% if loan.status == 'pending' %}
+                            <a class="btn-action btn-edit" href="{% url 'loans:edit_loan' loan.id %}" title="Edit Loan">
                                 <i class="fas fa-edit"></i>
-                            </button>
+                            </a>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -347,18 +349,6 @@
         window.URL.revokeObjectURL(url);
     }
     
-    // Action button handlers
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-view')) {
-            const id = e.target.closest('.btn-view').dataset.id;
-            window.location.href = `/loans/repayments/${id}/`;
-        }
-        
-        if (e.target.closest('.btn-edit')) {
-            const id = e.target.closest('.btn-edit').dataset.id;
-            // Add edit functionality here
-            alert('Edit functionality to be implemented');
-        }
-    });
+    // View/edit actions are normal anchor links; no JS override needed.
 </script>
 {% endblock %}

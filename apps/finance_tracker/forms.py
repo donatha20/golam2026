@@ -591,3 +591,5 @@ class CapitalWithdrawalForm(forms.ModelForm):
         self.fields['transaction_date'].initial = timezone.now().date()
         self.fields['shareholder'].queryset = Shareholder.objects.filter(status='active')
         self.fields['shareholder'].empty_label = "Select Shareholder (optional)"
+
+

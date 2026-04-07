@@ -48,10 +48,25 @@
     @media (max-width: 768px) {
         .login-card {
             flex-direction: column;
-            margin: 20px;
+            margin: 0;
+            width: 100vw;
+            max-width: none;
+            min-height: 100dvh;
+            border-radius: 0;
+            box-shadow: none;
         }
         .login-left, .login-right {
             padding: 40px 30px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 0;
+            min-height: 100dvh;
+        }
+        .login-left, .login-right {
+            padding: 28px 18px;
         }
     }
     
@@ -247,6 +262,16 @@
     
     .input-icon .form-control {
         padding-left: 45px;
+        padding-right: 45px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        cursor: pointer;
     }
 </style>
 {% endblock %}
@@ -322,6 +347,7 @@
                     <div class="input-icon">
                         <i class="fas fa-lock"></i>
                         {{ form.password }}
+                        <i class="fas fa-eye password-toggle" onclick="togglePassword('{{ form.password.id_for_label }}', this)"></i>
                     </div>
                     {% if form.password.errors %}
                         <div class="alert alert-danger">
@@ -425,5 +451,19 @@ document.addEventListener('DOMContentLoaded', function() {
         window.history.replaceState({}, document.title, newUrl);
     }
 });
+
+function togglePassword(fieldId, icon) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
 </script>
 {% endblock %}

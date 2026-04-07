@@ -1426,3 +1426,5 @@ class OutstandingBalance(models.Model):
             self.penalty_outstanding + self.fees_outstanding
         )
         super().save(*args, **kwargs)
+
+

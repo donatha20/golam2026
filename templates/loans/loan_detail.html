@@ -90,8 +90,8 @@
                         <strong>{{ loan.amount_approved|floatformat:0 }}</strong>
                     </div>
                     <div class="col-6">
-                        <small class="text-muted d-block">Interest Rate</small>
-                        <strong>{{ loan.interest_rate }}%</strong>
+                        <small class="text-muted d-block">Interest Amount</small>
+                        <strong>{{ loan.total_interest|floatformat:2 }}</strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted d-block">Duration</small>
@@ -147,6 +147,21 @@
                     {% if loan.status == 'pending' %}
                         <a href="{% url 'loans:loan_approval' loan.id %}" class="btn btn-success btn-sm">
                             <i class="fas fa-check me-1"></i>Review for Approval
+                        </a>
+                        <a href="{% url 'loans:delete_loan' loan.id %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i>Delete Loan
+                        </a>
+                    {% elif loan.status == 'approved' %}
+                        <a href="{% url 'loans:edit_loan' loan.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit Loan
+                        </a>
+                        <a href="{% url 'loans:delete_loan' loan.id %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i>Delete Loan
+                        </a>
+                    {% endif %}
+                    {% if loan.status != 'completed' and loan.status != 'written_off' and loan.status != 'rejected' and loan.status != 'pending' and loan.status != 'approved' %}
+                        <a href="{% url 'loans:edit_loan' loan.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit Loan
                         </a>
                     {% endif %}
                     {% if loan.status == 'active' %}

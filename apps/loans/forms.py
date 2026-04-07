@@ -14,6 +14,20 @@ from apps.accounts.models import CustomUser
 
 class ComprehensiveLoanForm(forms.ModelForm):
     """Enhanced form for creating loans with all new fields."""
+
+    interest_amount = forms.DecimalField(
+        min_value=Decimal('0.00'),
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input',
+            'step': '0.01',
+            'min': '0',
+            'placeholder': 'Enter total interest amount (TZS)',
+            'required': True,
+        }),
+        label='Interest Amount (TZS)'
+    )
     
     # Loan category choices
     LOAN_CATEGORY_CHOICES = [
@@ -26,7 +40,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            'borrower', 'loan_category', 'amount_requested', 'interest_rate',
+            'borrower', 'loan_category', 'amount_requested',
             'duration_months', 'proposed_project', 'collateral_name', 
             'collateral_worth', 'collateral_withheld', 'disbursement_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
@@ -44,14 +58,6 @@ class ComprehensiveLoanForm(forms.ModelForm):
                 'min': '1000',
                 'max': '50000000',
                 'placeholder': 'Enter loan amount (TZS)',
-                'required': True
-            }),
-            'interest_rate': forms.NumberInput(attrs={
-                'class': 'form-input',
-                'step': '0.1',
-                'min': '0',
-                'max': '50',
-                'placeholder': 'Enter interest rate (%)',
                 'required': True
             }),
             'duration_months': forms.NumberInput(attrs={
@@ -130,11 +136,16 @@ class ComprehensiveLoanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['borrower'].queryset = Borrower.objects.filter(status='active')
+        self.fields['disbursement_date'].required = False
+        self.fields['start_payment_date'].required = False
+        self.fields['disbursement_date'].widget.attrs.pop('required', None)
+        self.fields['start_payment_date'].widget.attrs.pop('required', None)
         # Make borrower field required
         self.fields['borrower'].required = True
         
         # Ensure critical fields are required
         self.fields['amount_requested'].required = True
+        self.fields['interest_amount'].required = True
         self.fields['duration_months'].required = True
         self.fields['repayment_type'].required = True
         
@@ -152,7 +163,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
         self.fields['borrower'].label = 'Borrower'
         self.fields['loan_category'].label = 'Loan Category'
         self.fields['amount_requested'].label = 'Loan Amount (TZS)'
-        self.fields['interest_rate'].label = 'Annual Interest Rate (%)'
+        self.fields['interest_amount'].label = 'Interest Amount (TZS)'
         self.fields['duration_months'].label = 'Loan Duration (Months)'
         self.fields['proposed_project'].label = 'Purpose of Loan'
         self.fields['collateral_name'].label = 'Collateral Description'
@@ -212,6 +223,20 @@ class ComprehensiveLoanForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+
+        interest_amount = self.cleaned_data.get('interest_amount') or Decimal('0.00')
+        principal = self.cleaned_data.get('amount_requested') or Decimal('0.00')
+        duration_months = self.cleaned_data.get('duration_months') or 0
+
+        # Keep compatibility with existing reports that still use interest_rate.
+        if principal > 0 and duration_months > 0:
+            derived_rate = (interest_amount / principal) * (Decimal('12') / Decimal(str(duration_months))) * Decimal('100')
+            instance.interest_rate = derived_rate.quantize(Decimal('0.01'))
+        else:
+            instance.interest_rate = Decimal('0.00')
+
+        # Persist requested manual interest via model save hook.
+        instance._manual_interest_amount = interest_amount
         
         # Set loan_fees_applied based on radio button choice
         loan_fees_choice = self.cleaned_data.get('loan_fees')
@@ -310,6 +335,20 @@ class LoanForm(forms.ModelForm):
 
 class ComprehensiveGroupLoanForm(forms.ModelForm):
     """Enhanced form for creating group loans with comprehensive fields."""
+
+    interest_amount = forms.DecimalField(
+        min_value=Decimal('0.00'),
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-input',
+            'step': '0.01',
+            'min': '0',
+            'placeholder': 'Enter total interest amount (TZS)',
+            'required': True,
+        }),
+        label='Interest Amount (TZS)'
+    )
     
     # Loan category choices
     LOAN_CATEGORY_CHOICES = [
@@ -325,7 +364,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            'loan_category', 'amount_requested', 'interest_rate',
+            'loan_category', 'amount_requested',
             'duration_months', 'proposed_project', 'collateral_name', 
             'collateral_worth', 'collateral_withheld', 'disbursement_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
@@ -342,14 +381,6 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
                 'min': '10000',
                 'max': '100000000',
                 'placeholder': 'Enter group loan amount (TZS)',
-                'required': True
-            }),
-            'interest_rate': forms.NumberInput(attrs={
-                'class': 'form-input',
-                'step': '0.1',
-                'min': '0',
-                'max': '50',
-                'placeholder': 'Enter interest rate (%)',
                 'required': True
             }),
             'duration_months': forms.NumberInput(attrs={
@@ -435,6 +466,10 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['disbursement_date'].required = False
+        self.fields['start_payment_date'].required = False
+        self.fields['disbursement_date'].widget.attrs.pop('required', None)
+        self.fields['start_payment_date'].widget.attrs.pop('required', None)
         
         # Set the choices for loan_category field
         self.fields['loan_category'] = forms.ChoiceField(
@@ -450,7 +485,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
         self.fields['group'].label = 'Borrower Group'
         self.fields['loan_category'].label = 'Loan Category'
         self.fields['amount_requested'].label = 'Group Loan Amount (TZS)'
-        self.fields['interest_rate'].label = 'Annual Interest Rate (%)'
+        self.fields['interest_amount'].label = 'Interest Amount (TZS)'
         self.fields['duration_months'].label = 'Loan Duration (Months)'
         self.fields['proposed_project'].label = 'Purpose of Group Loan'
         self.fields['collateral_name'].label = 'Group Collateral Description'
@@ -510,6 +545,18 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
+
+        interest_amount = self.cleaned_data.get('interest_amount') or Decimal('0.00')
+        principal = self.cleaned_data.get('amount_requested') or Decimal('0.00')
+        duration_months = self.cleaned_data.get('duration_months') or 0
+
+        if principal > 0 and duration_months > 0:
+            derived_rate = (interest_amount / principal) * (Decimal('12') / Decimal(str(duration_months))) * Decimal('100')
+            instance.interest_rate = derived_rate.quantize(Decimal('0.01'))
+        else:
+            instance.interest_rate = Decimal('0.00')
+
+        instance._manual_interest_amount = interest_amount
         
         # Set loan_fees_applied based on radio button choice
         loan_fees_choice = self.cleaned_data.get('loan_fees')
@@ -809,8 +856,8 @@ class OldLoanImportForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['borrower'].queryset = Borrower.objects.all()
-        self.fields['group'].queryset = BorrowerGroup.objects.all()
+        self.fields['borrower'].queryset = Borrower.objects.filter(status='active')
+        self.fields['group'].queryset = BorrowerGroup.objects.filter(status='active')
         self.fields['group'].required = False
         self.fields['closed_date'].required = False
 
@@ -907,3 +954,5 @@ class RolloverForm(forms.Form):
         if new_due_date <= timezone.now().date():
             raise ValidationError('New due date must be in the future')
         return new_due_date
+
+

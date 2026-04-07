@@ -600,3 +600,5 @@ class BankAccount(models.Model):
         if self.is_default:
             BankAccount.objects.filter(is_default=True).update(is_default=False)
         super().save(*args, **kwargs)
+
+

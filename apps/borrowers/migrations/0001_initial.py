@@ -175,3 +175,5 @@ class Migration(migrations.Migration):
             unique_together={('group', 'borrower')},
         ),
     ]
+
+

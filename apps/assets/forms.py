@@ -506,3 +506,5 @@ class CollateralDocumentForm(forms.ModelForm):
                 raise forms.ValidationError('File type not allowed. Please upload PDF, Word, or image files.')
 
         return document_file
+
+

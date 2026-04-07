@@ -185,3 +185,5 @@ class Command(BaseCommand):
         )
         self.stdout.write('Admin: username=admin, password=admin123')
         self.stdout.write('Loan Officer: username=officer1, password=officer123')
+
+

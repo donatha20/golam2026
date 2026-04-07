@@ -15,3 +15,5 @@ class Migration(migrations.Migration):
             name='postal_code',
         ),
     ]
+
+

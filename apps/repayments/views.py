@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.db.models import Sum, Q, Count, Avg, F
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 from decimal import Decimal
 import json
@@ -24,6 +25,23 @@ from .forms import (
     PaymentForm, BulkPaymentForm, PaymentAllocationForm, PaymentReversalForm,
     ScheduleAdjustmentForm, DailyCollectionForm, PaymentSearchForm
 )
+
+
+def _require_repayment_approver(request):
+    """Allow only elevated roles for repayment reversals."""
+    role = getattr(request.user, 'role', None)
+    if role in {'admin', 'manager'}:
+        return None
+
+    if any([
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ]):
+        return None
+
+    messages.error(request, 'Access denied. Admin or manager privileges required.')
+    return redirect('core:dashboard')
 
 
 @login_required
@@ -54,9 +72,10 @@ def dashboard(request):
         'overdue_installments': LoanRepaymentSchedule.objects.filter(
             payment_status='overdue'
         ).count(),
-        'overdue_amount': LoanRepaymentSchedule.objects.filter(
-            payment_status='overdue'
-        ).aggregate(total=Sum('total_amount') - Sum('total_paid'))['total'] or Decimal('0.00'),
+        'overdue_amount': (
+            (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')) -
+            (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_paid'))['total'] or Decimal('0.00'))
+        ),
         'overdue_borrowers': LoanRepaymentSchedule.objects.filter(
             payment_status='overdue'
         ).values('loan__borrower').distinct().count(),
@@ -150,6 +169,7 @@ def payment_list(request):
     # Get filter options
     from apps.accounts.models import CustomUser
     collectors = CustomUser.objects.filter(
+        is_active=True,
         collected_payments__isnull=False
     ).distinct().order_by('first_name', 'last_name')
     
@@ -238,9 +258,10 @@ def repayment_schedule(request, loan_id):
             'overdue_installments': schedule.filter(payment_status='overdue').count(),
             'total_scheduled': schedule.aggregate(total=Sum('scheduled_total'))['total'] or Decimal('0.00'),
             'total_paid': schedule.aggregate(total=Sum('total_paid'))['total'] or Decimal('0.00'),
-            'total_outstanding': schedule.aggregate(
-                total=Sum('total_amount') - Sum('total_paid')
-            )['total'] or Decimal('0.00'),
+            'total_outstanding': (
+                (schedule.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')) -
+                (schedule.aggregate(total=Sum('total_paid'))['total'] or Decimal('0.00'))
+            ),
         }    # Get payment history for this loan
     payments = loan.payments.order_by('-payment_date')[:10]
     
@@ -291,9 +312,10 @@ def overdue_payments(request):
     overdue_installments = paginator.get_page(page_number)
     
     # Calculate totals
-    total_overdue_amount = LoanRepaymentSchedule.objects.filter(
-        payment_status='overdue'
-    ).aggregate(total=Sum('total_amount') - Sum('total_paid'))['total'] or Decimal('0.00')
+    total_overdue_amount = (
+        (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')) -
+        (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_paid'))['total'] or Decimal('0.00'))
+    )
     
     context = {
         'overdue_installments': overdue_installments,
@@ -411,6 +433,7 @@ def collection_report(request):
 
         from apps.accounts.models import CustomUser
         collectors = CustomUser.objects.filter(
+            is_active=True,
             collected_payments__payment_date__range=[date_from, date_to]
         ).annotate(
             total_collected=Sum('collected_payments__amount'),
@@ -823,41 +846,45 @@ def payment_detail(request, payment_id):
 
 
 @login_required
+@require_http_methods(["POST"])
 def reverse_payment(request, payment_id):
     """Reverse a payment."""
+    denied_response = _require_repayment_approver(request)
+    if denied_response:
+        return denied_response
+
     payment = get_object_or_404(Payment, pk=payment_id, status=PaymentStatus.COMPLETED, is_reversed=False)
 
-    if request.method == 'POST':
-        form = PaymentReversalForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Mark payment as reversed
-                    payment.is_reversed = True
-                    payment.reversal_reason = form.cleaned_data['reversal_reason']
-                    payment.reversed_by = request.user
-                    payment.reversal_date = timezone.now()
-                    payment.save()
+    form = PaymentReversalForm(request.POST)
+    if form.is_valid():
+        try:
+            with transaction.atomic():
+                # Mark payment as reversed
+                payment.is_reversed = True
+                payment.reversal_reason = form.cleaned_data['reversal_reason']
+                payment.reversed_by = request.user
+                payment.reversal_date = timezone.now()
+                payment.save()
 
-                    # Reverse payment allocations
-                    reverse_payment_allocations(payment)
+                # Reverse payment allocations
+                reverse_payment_allocations(payment)
 
-                    # Update loan balances
-                    update_loan_balances(payment.loan)
+                # Update loan balances
+                update_loan_balances(payment.loan)
 
-                    # Log activity
-                    UserActivity.objects.create(
-                        user=request.user,
-                        action='payment_reversed',
-                        description=f'Reversed payment {payment.payment_reference} for loan {payment.loan.loan_number}',
-                        ip_address=request.META.get('REMOTE_ADDR')
-                    )
+                # Log activity
+                UserActivity.objects.create(
+                    user=request.user,
+                    action='payment_reversed',
+                    description=f'Reversed payment {payment.payment_reference} for loan {payment.loan.loan_number}',
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
 
-                    messages.success(request, f'Payment {payment.payment_reference} reversed successfully')
-                    return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
+                messages.success(request, f'Payment {payment.payment_reference} reversed successfully')
+                return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
 
-            except Exception as e:
-                messages.error(request, f'Error reversing payment: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'Error reversing payment: {str(e)}')
 
     return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
 
@@ -1059,6 +1086,10 @@ def collector_collections(request, collector_id):
 @login_required
 def collection_validation(request):
     """Collection validation interface."""
+    denied_response = _require_repayment_approver(request)
+    if denied_response:
+        return denied_response
+
     # Get collections pending validation
     pending_collections = DailyCollection.objects.filter(
         validation_status='pending'
@@ -1172,6 +1203,10 @@ def collection_summary(request):
 @login_required
 def validate_collection(request, collection_id):
     """Validate a specific collection."""
+    denied_response = _require_repayment_approver(request)
+    if denied_response:
+        return denied_response
+
     collection = get_object_or_404(DailyCollection, id=collection_id)
 
     if request.method == 'POST':
@@ -1195,6 +1230,10 @@ def validate_collection(request, collection_id):
 
         elif action == 'approve':
             if collection.validation_status == 'validated':
+                if collection.collector_id == request.user.id:
+                    messages.error(request, 'Self-approval is not allowed. Another approver must review this collection.')
+                    return redirect('repayments:collection_validation')
+
                 collection.validation_status = 'approved'
                 collection.is_verified = True
                 collection.verified_by = request.user
@@ -1725,3 +1764,5 @@ def quick_amount_api(request, loan_id, amount_type):
         return JsonResponse({'amount': f"{amount:.2f}"})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+

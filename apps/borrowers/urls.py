@@ -12,10 +12,14 @@ urlpatterns = [
     path('register/', views.register_borrower, name='register_borrower'),
     path('<int:borrower_id>/view/', views.borrower_detail, name='borrower_detail'),
     path('<int:borrower_id>/edit/', views.borrower_edit, name='borrower_edit'),
+    path('<int:borrower_id>/delete/', views.borrower_delete, name='borrower_delete'),
     path('registration-report/', views.registration_report, name='registration_report'),
     path('without-loans/', views.borrowers_without_loans, name='borrowers_without_loans'),
 
     # Group Management
     path('groups/', views.group_list, name='group_list'),
     path('groups/register/', views.register_group, name='register_group'),
+    path('groups/<int:group_id>/delete/', views.group_delete, name='group_delete'),
 ]
+
+

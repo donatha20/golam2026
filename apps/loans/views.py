@@ -16,6 +16,7 @@ from django_tables2 import RequestConfig
 from django_tables2.views import SingleTableMixin
 # from django_filters.views import FilterView  # Will be enabled after package installation
 from django.views.generic.list import ListView
+from django.views.decorators.http import require_http_methods
 
 
 # Models
@@ -55,6 +56,35 @@ from .forms import (
 # =============================================================================
 # CLASS-BASED VIEWS FOR TABLES AND FILTERING
 # =============================================================================
+
+
+def _require_admin_access(request):
+    """Restrict sensitive loan state changes to elevated roles."""
+    role = getattr(request.user, 'role', None)
+    if role in {'admin', 'manager'}:
+        return None
+
+    if any([
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ]):
+        return None
+
+    messages.error(request, 'Access denied. Admin privileges required.')
+    return redirect('core:dashboard')
+
+
+def _has_elevated_access(user):
+    """Return True for users allowed to view global approval queues."""
+    role = getattr(user, 'role', None)
+    if role in {'admin', 'manager'}:
+        return True
+    return any([
+        getattr(user, 'is_admin', False),
+        getattr(user, 'is_staff', False),
+        getattr(user, 'is_superuser', False),
+    ])
 
 class DisbursedLoanListView(LoginRequiredMixin, SingleTableMixin, ListView):
     """View for listing disbursed loans with filtering and pagination."""
@@ -296,8 +326,8 @@ def add_new_loan(request):
             if not loan.amount_approved:
                 loan.amount_approved = loan.amount_requested
             loan.save()
-            messages.success(request, f'Loan {loan.loan_number} created successfully!')
-            return redirect('loans:disbursed_loans')
+            messages.success(request, f'Loan {loan.loan_number} submitted successfully for approval.')
+            return redirect('loans:loan_list')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -345,8 +375,8 @@ def add_group_loan(request):
                     responsibility_share=Decimal('100.00') / loan_form.cleaned_data['group'].members.count()
                 )
             
-            messages.success(request, f'Group loan {loan.loan_number} created successfully!')
-            return redirect('loans:disbursed_loans')
+            messages.success(request, f'Group loan {loan.loan_number} submitted successfully for approval.')
+            return redirect('loans:loan_list')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -366,71 +396,119 @@ def add_group_loan(request):
 
 
 @login_required
+def edit_loan(request, loan_id):
+    """Edit a pending individual loan application."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
+    loan = get_object_or_404(Loan, pk=loan_id)
+
+    # Group loan editing is handled in its dedicated workflow.
+    try:
+        if hasattr(loan, 'group_loan') and loan.group_loan is not None:
+            messages.error(request, 'Group loans should be updated from the group loan workflow.')
+            return redirect('loans:loan_detail', loan_id=loan.id)
+    except GroupLoan.DoesNotExist:
+        pass
+
+    if loan.status in {LoanStatusChoices.COMPLETED, LoanStatusChoices.WRITTEN_OFF}:
+        messages.error(request, 'Completed or written-off loans cannot be edited.')
+        return redirect('loans:loan_detail', loan_id=loan.id)
+
+    if request.method == 'POST':
+        form = ComprehensiveLoanForm(request.POST, request.FILES, instance=loan)
+        if form.is_valid():
+            updated_loan = form.save(commit=False)
+            updated_loan.updated_by = request.user
+            updated_loan.save()
+            messages.success(request, f'Loan {updated_loan.loan_number} updated successfully.')
+            return redirect('loans:loan_detail', loan_id=updated_loan.id)
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ComprehensiveLoanForm(instance=loan)
+
+    context = {
+        'form': form,
+        'loan': loan,
+        'title': f'Edit Loan {loan.loan_number}',
+        'page_title': 'Edit Loan Application',
+    }
+    return render(request, 'loans/edit_loan.html', context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_loan(request, loan_id):
+    """Soft-delete a loan by rejecting it before disbursement."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
+    loan = get_object_or_404(Loan, pk=loan_id)
+
+    if loan.status not in {LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED}:
+        messages.error(request, 'Only pending or approved loans can be deleted.')
+        return redirect('loans:loan_detail', loan_id=loan.id)
+
+    if request.method == 'POST':
+        reason = request.POST.get('deletion_reason', '').strip() or 'Deleted by admin/manager'
+        loan.status = LoanStatusChoices.REJECTED
+        loan.rejection_reason = reason
+        loan.rejected_by = request.user
+        loan.rejection_date = timezone.now().date()
+        loan.updated_by = request.user
+        loan.save(update_fields=['status', 'rejection_reason', 'rejected_by', 'rejection_date', 'updated_by', 'updated_at'])
+
+        messages.success(request, f'Loan {loan.loan_number} deleted successfully.')
+        return redirect('loans:loan_list')
+
+    return render(request, 'loans/delete_loan.html', {'loan': loan})
+
+
+@login_required
 def loan_approval(request, loan_id):
-    """Approve and automatically disburse a pending loan."""
+    """Approve a pending loan. Disbursement is handled separately."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     loan = get_object_or_404(Loan, pk=loan_id, status=LoanStatusChoices.PENDING)
     
     if request.method == 'POST':
         form = LoanApprovalForm(request.POST, instance=loan)
         if form.is_valid():
             loan = form.save(commit=False)
-            
-            # Step 1: Approve the loan
+
+            # Approval only; disbursement is a separate workflow step.
             loan.status = LoanStatusChoices.APPROVED
             loan.approved_by = request.user
             loan.approval_date = timezone.now().date()
-            
-            # Step 2: Automatically disburse the loan
-            loan.status = LoanStatusChoices.DISBURSED
-            loan.disbursed_by = request.user
-            loan.disbursement_date = timezone.now().date()
-            
             loan.save()
-            
-            # Step 3: Generate repayment schedule
-            _generate_repayment_schedule(loan)
-            
-            # Step 4: Create disbursement record (if needed)
-            try:
-                from .models import LoanDisbursement
-                LoanDisbursement.objects.create(
-                    loan=loan,
-                    disbursement_date=loan.disbursement_date,
-                    amount=loan.amount_approved or loan.amount_requested,
-                    disbursed_by=request.user,
-                    notes=f'Auto-disbursed after approval by {request.user.get_full_name()}'
-                )
-            except Exception as e:
-                # Continue even if disbursement record creation fails
-                print(f"Warning: Could not create disbursement record: {e}")
 
-            # Send SMS notification for approval and disbursement
-            try:
-                from apps.core.sms_service import sms_service
-                sms_result = sms_service.send_loan_disbursement(loan)
-                if sms_result.get('success'):
-                    messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully! SMS notification sent.')
-                else:
-                    messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully!')
-                    messages.warning(request, f'SMS notification failed: {sms_result.get("error", "Unknown error")}')
-            except Exception as e:
-                messages.success(request, f'Loan {loan.loan_number} approved and disbursed successfully!')
-                messages.warning(request, f'SMS notification failed: {str(e)}')
-
-            return redirect('loans:disbursed_loans')
+            messages.success(
+                request,
+                f'Loan {loan.loan_number} approved successfully. Proceed to disbursement when ready.'
+            )
+            return redirect('loans:approved_loans')
     else:
         form = LoanApprovalForm(instance=loan)
 
     return render(request, 'loans/loan_approval.html', {
         'form': form,
         'loan': loan,
-        'title': f'Approve & Disburse Loan {loan.loan_number}'
+        'title': f'Approve Loan {loan.loan_number}'
     })
 
 
 @login_required
+@require_http_methods(["POST"])
 def loan_rejection(request, loan_id):
     """Reject a pending loan."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     loan = get_object_or_404(Loan, pk=loan_id, status=LoanStatusChoices.PENDING)
     
     if request.method == 'POST':
@@ -479,6 +557,10 @@ def loan_rejection(request, loan_id):
 @login_required
 def loan_disbursement(request, loan_id):
     """Disburse an approved loan."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     loan = get_object_or_404(Loan, pk=loan_id, status=LoanStatusChoices.APPROVED)
     
     if request.method == 'POST':
@@ -738,7 +820,7 @@ def loans_arrears(request):
 
     return render(request, "loans/loans_arrears.html", {
         "loans": arrears_loans,
-        "title": "Loans in Arrears (0–5 Days Past Due)",
+        "title": "Loans in Arrears (0â€“5 Days Past Due)",
         "as_of": today,
     })
 
@@ -787,11 +869,11 @@ def loans_ageing(request):
         if d == 0:
             loan.ageing_bucket = "Current"
         elif 1 <= d <= 30:
-            loan.ageing_bucket = "1–30"
+            loan.ageing_bucket = "1â€“30"
         elif 31 <= d <= 60:
-            loan.ageing_bucket = "31–60"
+            loan.ageing_bucket = "31â€“60"
         elif 61 <= d <= 90:
-            loan.ageing_bucket = "61–90"
+            loan.ageing_bucket = "61â€“90"
         else:
             loan.ageing_bucket = "90+"
 
@@ -1014,8 +1096,13 @@ def applied_penalties(request):
 
 
 @login_required
+@require_http_methods(["POST"])
 def clear_penalties(request):
     """Clear all applied penalties."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     penalties = Penalty.objects.filter(status=PenaltyStatusChoices.APPLIED)
     for penalty in penalties:
         penalty.status = PenaltyStatusChoices.CLEARED
@@ -1028,6 +1115,10 @@ def clear_penalties(request):
 @login_required
 def write_off_loan(request, loan_id):
     """Write off a loan."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     loan = get_object_or_404(Loan, pk=loan_id)
     
     if request.method == 'POST':
@@ -1114,7 +1205,7 @@ def portfolio_at_risk(request):
         "total_portfolio": total_portfolio,
         "at_risk_amount": at_risk_amount,
         "risk_percentage": round(risk_percentage, 2),
-        "title": "Portfolio at Risk (6–30 Days)",
+        "title": "Portfolio at Risk (6â€“30 Days)",
         "as_of": today,
     })
 
@@ -1839,6 +1930,10 @@ def loan_list(request):
 @login_required
 def pending_loans_list(request):
     """List all pending loans for approval officers."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     pending_loans = Loan.objects.filter(
         status=LoanStatusChoices.PENDING
     ).select_related('borrower', 'loan_type', 'created_by').order_by('-created_at')
@@ -1856,6 +1951,51 @@ def pending_loans_list(request):
     }
     
     return render(request, 'loans/pending_loans.html', context)
+
+
+@login_required
+def approved_loans_list(request):
+    """List all approved loans awaiting disbursement."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
+    approved_loans = Loan.objects.filter(
+        status=LoanStatusChoices.APPROVED
+    ).select_related('borrower', 'loan_type', 'approved_by').order_by('-approval_date', '-created_at')
+
+    approved_group_loans = GroupLoan.objects.filter(
+        loan__status=LoanStatusChoices.APPROVED
+    ).select_related('group', 'loan__loan_type', 'loan__approved_by').order_by('-loan__approval_date', '-loan__created_at')
+
+    context = {
+        'title': 'Approved Loans Ready for Disbursement',
+        'approved_loans': approved_loans,
+        'approved_group_loans': approved_group_loans,
+        'total_approved': approved_loans.count() + approved_group_loans.count(),
+    }
+
+    return render(request, 'loans/approved_loans.html', context)
+
+
+@login_required
+def rejected_loans_list(request):
+    """List rejected loans; officers see their own submissions, approvers see all."""
+    rejected_loans = Loan.objects.filter(status=LoanStatusChoices.REJECTED).select_related(
+        'borrower', 'loan_type', 'created_by', 'rejected_by'
+    )
+
+    if not _has_elevated_access(request.user):
+        rejected_loans = rejected_loans.filter(created_by=request.user)
+
+    rejected_loans = rejected_loans.order_by('-rejection_date', '-created_at')
+
+    context = {
+        'title': 'Rejected Loan Applications',
+        'rejected_loans': rejected_loans,
+    }
+
+    return render(request, 'loans/rejected_loans.html', context)
 
 
 @login_required
@@ -1909,11 +2049,85 @@ def group_loans(request):
 
 
 @login_required
+def edit_group_loan(request, group_loan_id):
+    """Edit a pending group loan application."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
+    group_loan = get_object_or_404(GroupLoan.objects.select_related('loan', 'group'), id=group_loan_id)
+    loan = group_loan.loan
+
+    if loan.status != LoanStatusChoices.PENDING:
+        messages.error(request, 'Only pending group loan applications can be edited.')
+        return redirect('loans:group_loans')
+
+    if request.method == 'POST':
+        payload = request.POST.copy()
+        payload['group'] = str(group_loan.group.id)
+        form = ComprehensiveGroupLoanForm(payload, request.FILES, instance=loan)
+        if form.is_valid():
+            updated_loan = form.save(commit=False)
+            updated_loan.updated_by = request.user
+            updated_loan.save()
+
+            # Keep group association unchanged for this edit flow.
+            if group_loan.group_id != form.cleaned_data['group'].id:
+                group_loan.group = form.cleaned_data['group']
+                group_loan.save(update_fields=['group'])
+
+            messages.success(request, f'Group loan {updated_loan.loan_number} updated successfully.')
+            return redirect('loans:group_loans')
+        messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ComprehensiveGroupLoanForm(instance=loan, initial={'group': group_loan.group})
+
+    context = {
+        'form': form,
+        'group_loan': group_loan,
+        'loan': loan,
+        'title': f'Edit Group Loan {loan.loan_number}',
+        'page_title': 'Edit Group Loan',
+    }
+    return render(request, 'loans/edit_group_loan.html', context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def delete_group_loan(request, group_loan_id):
+    """Soft-delete a group loan by rejecting it before disbursement."""
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
+    group_loan = get_object_or_404(GroupLoan.objects.select_related('loan', 'group'), id=group_loan_id)
+    loan = group_loan.loan
+
+    if loan.status not in {LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED}:
+        messages.error(request, 'Only pending or approved group loans can be deleted.')
+        return redirect('loans:group_loans')
+
+    if request.method == 'POST':
+        reason = request.POST.get('deletion_reason', '').strip() or 'Deleted by admin/manager'
+        loan.status = LoanStatusChoices.REJECTED
+        loan.rejection_reason = reason
+        loan.rejected_by = request.user
+        loan.rejection_date = timezone.now().date()
+        loan.updated_by = request.user
+        loan.save(update_fields=['status', 'rejection_reason', 'rejected_by', 'rejection_date', 'updated_by', 'updated_at'])
+
+        messages.success(request, f'Group loan {loan.loan_number} deleted successfully.')
+        return redirect('loans:group_loans')
+
+    return render(request, 'loans/delete_group_loan.html', {'group_loan': group_loan, 'loan': loan})
+
+
+@login_required
 def borrowers_api(request):
     """API endpoint to fetch borrowers for autocomplete."""
     from apps.borrowers.models import Borrower
     
-    borrowers = Borrower.objects.all().values(
+    borrowers = Borrower.objects.filter(status=BorrowerStatus.ACTIVE).values(
         'id', 'borrower_id', 'first_name', 'last_name', 'phone_number'
     )
     
@@ -2090,3 +2304,5 @@ def borrower_loans_api(request, borrower_id):
             'message': str(e),
             'error_type': 'server_error'
         })
+
+

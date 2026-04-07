@@ -33,10 +33,10 @@ def create_savings_account_for_borrower(sender, instance, created, **kwargs):
                     created_by=instance.registered_by,
                 )
                 
-                print(f"✅ Savings account {savings_account.account_number} automatically created for borrower {instance.get_full_name()}")
+                print(f"âœ… Savings account {savings_account.account_number} automatically created for borrower {instance.get_full_name()}")
                 
         except Exception as e:
-            print(f"❌ Error creating savings account for borrower {instance.get_full_name()}: {str(e)}")
+            print(f"âŒ Error creating savings account for borrower {instance.get_full_name()}: {str(e)}")
 
 
 def get_default_savings_product():
@@ -66,10 +66,12 @@ def get_default_savings_product():
                 requires_approval=False,
                 allow_overdraft=False,
             )
-            print(f"✅ Default savings product '{default_product.name}' created")
+            print(f"âœ… Default savings product '{default_product.name}' created")
             
         return default_product
         
     except Exception as e:
-        print(f"❌ Error getting/creating default savings product: {str(e)}")
+        print(f"âŒ Error getting/creating default savings product: {str(e)}")
         return None
+
+

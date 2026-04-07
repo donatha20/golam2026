@@ -7,3 +7,5 @@ class FinanceTrackerConfig(AppConfig):
 
     def ready(self):
         import apps.finance_tracker.signals
+
+

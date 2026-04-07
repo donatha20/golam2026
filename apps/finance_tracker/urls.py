@@ -10,6 +10,8 @@ urlpatterns = [
 
     # Income URLs
     path('income/add/', views.add_income, name='add_income'),
+    path('income/<int:income_id>/edit/', views.edit_income, name='edit_income'),
+    path('income/<int:income_id>/delete/', views.delete_income, name='delete_income'),
     path('income/', views.view_income, name='view_income'),
     path('income/approvals/', views.income_approval_queue, name='income_approval_queue'),
     path('income/<int:income_id>/approve/', views.approve_income, name='approve_income'),
@@ -17,6 +19,8 @@ urlpatterns = [
 
     # Expenditure URLs
     path('expenditure/add/', views.add_expenditure, name='add_expenditure'),
+    path('expenditure/<int:expenditure_id>/edit/', views.edit_expenditure, name='edit_expenditure'),
+    path('expenditure/<int:expenditure_id>/delete/', views.delete_expenditure, name='delete_expenditure'),
     path('expenditures/', views.view_expenditures, name='view_expenditures'),
     path('expenditure/approvals/', views.expenditure_approval_queue, name='expenditure_approval_queue'),
     path('expenditure/<int:expenditure_id>/approve/', views.approve_expenditure, name='approve_expenditure'),
@@ -29,9 +33,13 @@ urlpatterns = [
     # Capital Management URLs
     path('shareholders/', views.shareholder_list, name='shareholder_list'),
     path('shareholders/add/', views.add_shareholder, name='add_shareholder'),
+    path('shareholders/<int:shareholder_id>/edit/', views.edit_shareholder, name='edit_shareholder'),
+    path('shareholders/<int:shareholder_id>/deactivate/', views.deactivate_shareholder, name='deactivate_shareholder'),
     path('capital/', views.capital_list, name='capital_list'),
     path('capital/add/', views.add_capital, name='add_capital'),
     path('capital/withdraw/', views.withdraw_capital, name='withdraw_capital'),
+    path('capital/<int:capital_id>/edit/', views.edit_capital, name='edit_capital'),
+    path('capital/<int:capital_id>/delete/', views.delete_capital, name='delete_capital'),
     
     # Capital Approval URLs
     path('capital/approvals/', views.capital_approval_list, name='capital_approval_list'),
@@ -42,3 +50,5 @@ urlpatterns = [
     path('retained-earnings/', views.retained_earnings, name='retained_earnings'),
     path('api/retained-earnings/', views.retained_earnings_api, name='retained_earnings_api'),
 ]
+
+

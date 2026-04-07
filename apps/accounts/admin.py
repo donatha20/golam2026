@@ -56,3 +56,5 @@ class UserActivityAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'action', 'description')
     ordering = ('-timestamp',)
     readonly_fields = ('timestamp',)
+
+

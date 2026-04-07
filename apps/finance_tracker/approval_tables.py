@@ -50,7 +50,7 @@ class IncomeApprovalTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "—"
+        return record.category.name if record.category else "â€”"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
@@ -61,11 +61,11 @@ class IncomeApprovalTable(tables.Table):
 
     def render_received_from(self, value):
         """Render received from or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "—"
+        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
 
     def render_actions(self, record):
         """Render approval actions."""
@@ -129,7 +129,7 @@ class ExpenditureApprovalTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "—"
+        return record.category.name if record.category else "â€”"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
@@ -140,11 +140,11 @@ class ExpenditureApprovalTable(tables.Table):
 
     def render_vendor_name(self, value):
         """Render vendor name or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "—"
+        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
 
     def render_actions(self, record):
         """Render approval actions."""
@@ -161,3 +161,5 @@ class ExpenditureApprovalTable(tables.Table):
             approve_url,
             reject_url
         )
+
+

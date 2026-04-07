@@ -114,12 +114,21 @@
                                            title="Disburse Loan">
                                             <i class="fas fa-hand-holding-usd me-1"></i>Disburse
                                         </a>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-info" 
-                                                title="View Details"
-                                                onclick="viewLoanDetails({{ loan.id }})">
+                                        <a href="{% url 'loans:loan_detail' loan.id %}"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="View Details">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
+                                        <a href="{% url 'loans:edit_loan' loan.id %}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit Loan">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'loans:delete_loan' loan.id %}"
+                                           class="btn btn-sm btn-outline-danger"
+                                           title="Delete Loan">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -207,12 +216,21 @@
                                            title="Disburse Group Loan">
                                             <i class="fas fa-hand-holding-usd me-1"></i>Disburse
                                         </a>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-info" 
-                                                title="View Details"
-                                                onclick="viewGroupLoanDetails({{ group_loan.id }})">
+                                        <a href="{% url 'loans:loan_detail' group_loan.loan.id %}"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="View Details">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
+                                        <a href="{% url 'loans:edit_group_loan' group_loan.id %}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Edit Group Loan">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'loans:delete_group_loan' group_loan.id %}"
+                                           class="btn btn-sm btn-outline-danger"
+                                           title="Delete Group Loan">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -229,12 +247,12 @@
             <div class="card-body p-compact">
                 <h6 class="card-title">Quick Actions</h6>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button onclick="bulkDisburse()" class="btn btn-sm btn-outline-success">
-                        <i class="fas fa-list-check me-1"></i>Bulk Disburse
-                    </button>
-                    <button onclick="generateReport()" class="btn btn-sm btn-outline-info">
-                        <i class="fas fa-file-export me-1"></i>Export Report
-                    </button>
+                    <a href="{% url 'loans:export_loans_excel' %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-file-excel me-1"></i>Export Excel
+                    </a>
+                    <a href="{% url 'loans:export_loans_pdf' %}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </a>
                     <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-eye me-1"></i>View Disbursed Loans
                     </a>
@@ -389,26 +407,6 @@
 </style>
 
 <script>
-function viewLoanDetails(loanId) {
-    // Placeholder for loan details modal or redirect
-    alert('View details for loan ID: ' + loanId + '\n\nThis will be implemented to show loan details in a modal.');
-}
-
-function viewGroupLoanDetails(groupLoanId) {
-    // Placeholder for group loan details modal or redirect
-    alert('View details for group loan ID: ' + groupLoanId + '\n\nThis will be implemented to show group loan details in a modal.');
-}
-
-function bulkDisburse() {
-    // Placeholder for bulk disbursement functionality
-    alert('Bulk disbursement functionality will be implemented here.\n\nThis will allow you to select multiple loans and disburse them at once.');
-}
-
-function generateReport() {
-    // Placeholder for report generation
-    alert('Report generation functionality will be implemented here.\n\nThis will export approved loans data to PDF/Excel.');
-}
-
 // Auto-refresh every 5 minutes to show new approvals
 setTimeout(function() {
     location.reload();

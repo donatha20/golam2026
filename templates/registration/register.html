@@ -70,9 +70,18 @@
         }
 
         @media(max-width: 575px) {
+            body {
+                background: #ffffff;
+            }
+            .wrapper {
+                min-height: 100dvh;
+                padding: 0;
+            }
             .register .container {
                 flex-direction: column;
                 box-shadow: none;
+                max-width: none;
+                min-height: 100dvh;
             }
             .register .col-left,
             .register .col-right {
@@ -84,6 +93,23 @@
                 padding: 30px;
                 max-height: none;
             }
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 36px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
         }
 
         .register .register-text {
@@ -300,10 +326,16 @@
                         <input type="tel" id="id_phone" name="phone_number" placeholder="+255 123 456 789" required>
 
                         <label for="id_password1">Password <span>*</span></label>
-                        <input type="password" id="id_password1" name="password1" placeholder="Create password" required>
+                        <div class="password-wrap">
+                            <input type="password" id="id_password1" name="password1" placeholder="Create password" required>
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('id_password1', this)"></i>
+                        </div>
 
                         <label for="id_password2">Confirm Password <span>*</span></label>
-                        <input type="password" id="id_password2" name="password2" placeholder="Confirm password" required>
+                        <div class="password-wrap">
+                            <input type="password" id="id_password2" name="password2" placeholder="Confirm password" required>
+                            <i class="fas fa-eye password-toggle" onclick="togglePassword('id_password2', this)"></i>
+                        </div>
 
                         <input type="submit" value="Create Account">
                     </form>
@@ -321,6 +353,20 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('id_first_name').focus();
         });
+
+        function togglePassword(fieldId, icon) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
     </script>
 </body>
 </html>

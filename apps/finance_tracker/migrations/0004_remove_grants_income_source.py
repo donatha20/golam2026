@@ -16,3 +16,5 @@ class Migration(migrations.Migration):
             field=models.CharField(choices=[('loan_interest', 'Loan Interest'), ('service_fees', 'Service Fees'), ('membership_fees', 'Membership Fees'), ('investment_returns', 'Investment Returns'), ('donations', 'Donations'), ('other', 'Other Income')], max_length=20),
         ),
     ]
+
+

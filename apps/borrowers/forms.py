@@ -332,3 +332,5 @@ class BorrowerSearchForm(forms.Form):
         empty_label="All Branches",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+

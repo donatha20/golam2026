@@ -475,3 +475,5 @@ def format_currency(amount):
     elif isinstance(amount, (int, float)):
         return f"TSH {amount:,.2f}"
     return str(amount)
+
+

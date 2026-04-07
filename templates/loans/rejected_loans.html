@@ -1,0 +1,81 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<div>
+			<h1 class="h3 mb-0 text-gray-800">
+				<i class="fas fa-times-circle text-danger me-2"></i>
+				{{ title }}
+			</h1>
+			<p class="text-muted mb-0">Review rejected loan applications and reasons.</p>
+		</div>
+		<div>
+			<span class="badge bg-danger fs-6 px-3 py-2">{{ rejected_loans|length }} Rejected</span>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-body p-0">
+			{% if rejected_loans %}
+			<div class="table-responsive">
+				<table class="table table-hover mb-0">
+					<thead class="table-light">
+						<tr>
+							<th>Loan Number</th>
+							<th>Borrower</th>
+							<th>Requested Amount</th>
+							<th>Rejected On</th>
+							<th>Rejected By</th>
+							<th>Reason</th>
+							<th class="text-center">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for loan in rejected_loans %}
+						<tr>
+							<td><strong class="text-primary">{{ loan.loan_number }}</strong></td>
+							<td>{{ loan.borrower.get_full_name }}</td>
+							<td>Tsh {{ loan.amount_requested|floatformat:2 }}</td>
+							<td>
+								{% if loan.rejection_date %}
+									{{ loan.rejection_date|date:"M d, Y" }}
+								{% else %}
+									<span class="text-muted">Not recorded</span>
+								{% endif %}
+							</td>
+							<td>
+								{% if loan.rejected_by %}
+									{{ loan.rejected_by.get_full_name|default:loan.rejected_by.username }}
+								{% else %}
+									<span class="text-muted">Not recorded</span>
+								{% endif %}
+							</td>
+							<td>
+								<span title="{{ loan.rejection_reason|default:'No reason provided' }}">
+									{{ loan.rejection_reason|default:'No reason provided'|truncatechars:60 }}
+								</span>
+							</td>
+							<td class="text-center">
+								<a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-sm btn-outline-info" title="View Details">
+									<i class="fas fa-eye"></i>
+								</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<div class="text-center py-5">
+				<i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+				<h5 class="text-muted">No Rejected Loans Found</h5>
+				<p class="text-muted mb-0">No rejected applications are visible for your account.</p>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% endblock %}

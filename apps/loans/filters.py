@@ -246,3 +246,5 @@ class OutstandingLoansFilter(django_filters.FilterSet):
     class Meta:
         model = Loan
         fields = ['borrower', 'loan_product', 'loan_officer', 'days_overdue', 'outstanding_min', 'outstanding_max']
+
+

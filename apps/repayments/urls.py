@@ -48,3 +48,5 @@ urlpatterns = [
     path('api/recalculate-collection/<int:collection_id>/', views.recalculate_collection, name='recalculate_collection'),
     path('api/generate-summary/', views.generate_daily_summary, name='generate_daily_summary'),
 ]
+
+

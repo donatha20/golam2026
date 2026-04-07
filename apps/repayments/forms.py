@@ -689,6 +689,7 @@ class CollectionSearchForm(forms.Form):
         # Filter collectors who have made collections
         from apps.accounts.models import CustomUser
         self.fields['collector'].queryset = CustomUser.objects.filter(
+            is_active=True,
             daily_collections__isnull=False
         ).distinct().order_by('first_name', 'last_name')
 
@@ -817,3 +818,5 @@ class PaymentSearchForm(forms.Form):
             raise forms.ValidationError('From date cannot be after to date.')
         
         return cleaned_data
+
+

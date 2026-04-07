@@ -423,3 +423,5 @@ class GroupMembership(AuditModel):
         self.is_active = False
         self.leave_date = timezone.now().date()
         self.save()
+
+

@@ -533,3 +533,5 @@ class PayrollReportForm(forms.Form):
         initial='pdf',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+

@@ -4,7 +4,7 @@ Financial statement generation services.
 from django.db.models import Sum, Q
 from django.utils import timezone
 from decimal import Decimal
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from collections import defaultdict, OrderedDict
 
 from apps.accounting.models import Account, JournalEntry, JournalEntryLine
@@ -276,7 +276,10 @@ class FinancialStatementService:
         # Calculate cash balances
         for account in cash_accounts:
             ending_balance = self.get_account_balance(account, as_of_date=self.period.end_date)
-            beginning_balance = self.get_account_balance(account, as_of_date=self.period.start_date)
+            beginning_balance = self.get_account_balance(
+                account,
+                as_of_date=self.period.start_date - timedelta(days=1)
+            )
             
             cash_flow['cash_ending'] += ending_balance
             cash_flow['cash_beginning'] += beginning_balance
@@ -392,3 +395,5 @@ class FinancialStatementGenerator:
         )
         
         return run, complete_data
+
+

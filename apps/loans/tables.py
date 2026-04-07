@@ -60,7 +60,7 @@ class DisbursedLoansTable(tables.Table):
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+        return record.loan_type.name if record.loan_type else "â€”"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -80,7 +80,7 @@ class DisbursedLoansTable(tables.Table):
 
     def render_duration_months(self, value):
         """Render duration with months label."""
-        return f"{value} months" if value else "—"
+        return f"{value} months" if value else "â€”"
 
     def render_status(self, record):
         """Render loan status with badge."""
@@ -105,7 +105,7 @@ class DisbursedLoansTable(tables.Table):
         """Render disbursed by officer."""
         if record.disbursed_by:
             return record.disbursed_by.get_full_name()
-        return "—"
+        return "â€”"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -180,7 +180,7 @@ class RepaidLoansTable(tables.Table):
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+        return record.loan_type.name if record.loan_type else "â€”"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -191,18 +191,18 @@ class RepaidLoansTable(tables.Table):
 
     def render_duration_months(self, value):
         """Render duration with months label."""
-        return f"{value} months" if value else "—"
+        return f"{value} months" if value else "â€”"
 
     def render_completion_date(self, record):
         """Render completion date or calculate from last payment."""
         # You might need to calculate this from the last repayment
         if hasattr(record, 'completion_date') and record.completion_date:
             return record.completion_date
-        return "—"
+        return "â€”"
 
     def render_created_by(self, record):
         """Render created by officer."""
-        return record.created_by.get_full_name() if record.created_by else "—"
+        return record.created_by.get_full_name() if record.created_by else "â€”"
 
     def render_status(self, record):
         """Render completed status."""
@@ -263,7 +263,7 @@ class ExpectedRepaymentsTable(tables.Table):
     def render_avatar(self, record):
         """Render repayment avatar with status indicator."""
         if record.status == 'paid':
-            icon = "✓"
+            icon = "âœ“"
             color = "#16a34a"
         elif record.status == 'missed':
             icon = "!"
@@ -354,7 +354,7 @@ class ExpectedRepaymentsTable(tables.Table):
         """Render group information if applicable."""
         if hasattr(record.loan, 'group_loan') and record.loan.group_loan:
             return record.loan.group_loan.group.name
-        return "—"
+        return "â€”"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -432,12 +432,12 @@ class NonPerformingLoansTable(tables.Table):
             '</div>',
             borrower.get_full_name(),
             borrower.borrower_id,
-            borrower.phone_number or "—"
+            borrower.phone_number or "â€”"
         )
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+        return record.loan_type.name if record.loan_type else "â€”"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -532,3 +532,5 @@ class NonPerformingLoansTable(tables.Table):
             record.id,
             record.borrower.id
         )
+
+

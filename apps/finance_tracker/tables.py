@@ -52,7 +52,7 @@ class IncomeTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "—"
+        return record.category.name if record.category else "â€”"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
@@ -63,15 +63,15 @@ class IncomeTable(tables.Table):
 
     def render_received_from(self, value):
         """Render received from or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_payment_method(self, value):
         """Render payment method or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "—"
+        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -143,7 +143,7 @@ class ExpenditureTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "—"
+        return record.category.name if record.category else "â€”"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
@@ -154,11 +154,11 @@ class ExpenditureTable(tables.Table):
 
     def render_vendor_name(self, value):
         """Render vendor name."""
-        return value or "—"
+        return value or "â€”"
 
     def render_payment_method(self, value):
         """Render payment method or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_status(self, record):
         """Render expenditure status with appropriate styling."""
@@ -178,7 +178,7 @@ class ExpenditureTable(tables.Table):
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "—"
+        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
 
     def render_actions(self, record):
         """Render actions column based on status."""
@@ -230,7 +230,7 @@ class IncomeCategoryTable(tables.Table):
 
     def render_description(self, value):
         """Render description or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_is_active(self, value):
         """Render active status."""
@@ -292,7 +292,7 @@ class ExpenditureCategoryTable(tables.Table):
 
     def render_description(self, value):
         """Render description or dash if empty."""
-        return value or "—"
+        return value or "â€”"
 
     def render_is_active(self, value):
         """Render active status."""
@@ -331,3 +331,5 @@ class ExpenditureCategoryTable(tables.Table):
             record.id,
             'on' if record.is_active else 'off'
         )
+
+

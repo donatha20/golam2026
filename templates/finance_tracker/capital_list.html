@@ -545,9 +545,10 @@
                         <th>Date</th>
                         <th>Status</th>
                         <th>Created By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                                {% if transaction.transaction_type == 'injection' %}+{% else %}-{% endif %}{{ currency_symbol }}{{ transaction.amount|floatformat:2 }}
+                <tbody>
                     {% for transaction in page_obj %}
                         <tr>
                             <td class="transaction-id">{{ transaction.capital_id }}</td>
@@ -579,6 +580,21 @@
                                 {% else %}
                                     <span style="color: #6b7280;">System</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'finance_tracker:capital_approval_detail' transaction.id %}" class="btn btn-outline-primary" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if transaction.status == 'pending' or transaction.status == 'approved' %}
+                                        <a href="{% url 'finance_tracker:edit_capital' transaction.id %}" class="btn btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'finance_tracker:delete_capital' transaction.id %}" class="btn btn-outline-danger" title="Cancel">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

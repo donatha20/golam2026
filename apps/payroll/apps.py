@@ -11,3 +11,5 @@ class PayrollConfig(AppConfig):
     
     def ready(self):
         import apps.payroll.signals
+
+

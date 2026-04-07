@@ -29,6 +29,23 @@ from .forms import (
 )
 
 
+def _require_payroll_approver(request):
+    """Allow only elevated roles for payroll state-changing actions."""
+    role = getattr(request.user, 'role', None)
+    if role in {'admin', 'manager'}:
+        return None
+
+    if any([
+        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_staff', False),
+        getattr(request.user, 'is_superuser', False),
+    ]):
+        return None
+
+    messages.error(request, 'Access denied. Admin or manager privileges required.')
+    return redirect('core:dashboard')
+
+
 @login_required
 def payroll_dashboard(request):
     """Payroll dashboard view."""
@@ -55,7 +72,7 @@ class DepartmentListView(LoginRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        queryset = Department.objects.all()
+        queryset = Department.objects.filter(is_active=True)
         search = self.request.GET.get('search')
         if search:
             queryset = queryset.filter(
@@ -224,6 +241,10 @@ class EmployeeDetailView(LoginRequiredMixin, DetailView):
 @require_http_methods(["POST"])
 def employee_deactivate(request, pk):
     """Deactivate an employee."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     employee = get_object_or_404(Employee, pk=pk)
     termination_date = request.POST.get('termination_date')
     reason = request.POST.get('reason')
@@ -242,6 +263,10 @@ def employee_deactivate(request, pk):
 @require_http_methods(["POST"])
 def employee_reactivate(request, pk):
     """Reactivate an employee."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     employee = get_object_or_404(Employee, pk=pk)
     employee.reactivate()
     messages.success(request, f'Employee {employee.get_full_name()} has been reactivated.')
@@ -303,6 +328,10 @@ def process_payroll_period(request, pk):
 @require_http_methods(["POST"])
 def approve_payroll_period(request, pk):
     """Approve processed payroll for a specific period."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     period = get_object_or_404(PayrollPeriod, pk=pk)
     
     try:
@@ -505,6 +534,10 @@ class OvertimeRecordCreateView(LoginRequiredMixin, CreateView):
 @require_http_methods(["POST"])
 def approve_overtime(request, pk):
     """Approve overtime record."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     overtime = get_object_or_404(OvertimeRecord, pk=pk)
     
     if overtime.status == 'submitted':
@@ -545,6 +578,10 @@ class BonusRecordCreateView(LoginRequiredMixin, CreateView):
 @require_http_methods(["POST"])
 def approve_bonus(request, pk):
     """Approve bonus record."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     bonus = get_object_or_404(BonusRecord, pk=pk)
     
     if bonus.status == 'draft':
@@ -614,6 +651,10 @@ class SalaryAdvanceDetailView(LoginRequiredMixin, DetailView):
 @require_http_methods(["POST"])
 def approve_salary_advance(request, pk):
     """Approve salary advance."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     advance = get_object_or_404(SalaryAdvance, pk=pk)
     
     if advance.status == 'pending':
@@ -632,6 +673,10 @@ def approve_salary_advance(request, pk):
 @require_http_methods(["POST"])
 def reject_salary_advance(request, pk):
     """Reject salary advance."""
+    denied_response = _require_payroll_approver(request)
+    if denied_response:
+        return denied_response
+
     advance = get_object_or_404(SalaryAdvance, pk=pk)
     
     if advance.status == 'pending':
@@ -751,7 +796,7 @@ def generate_report(request):
 
     if report_type == 'employee_summary':
         title = "Employee Summary"
-        employees = Employee.objects.all()
+        employees = Employee.objects.filter(status='active')
         html += f"<h4>Total Employees: {employees.count()}</h4>"
         html += "<ul>"
         for emp in employees:
@@ -819,3 +864,5 @@ def bulk_payroll_actions(request):
         messages.success(request, f'Marked {records.count()} records as paid.')
     
     return redirect('payroll:record_list')
+
+

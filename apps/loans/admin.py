@@ -185,3 +185,5 @@ class LoanPenaltyAdmin(admin.ModelAdmin):
             'fields': ('reason', 'notes')
         }),
     )
+
+
