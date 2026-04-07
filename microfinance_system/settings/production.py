@@ -68,7 +68,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/microfinance/microfinance.log',
+            'filename': '/home/golament/golam_app/logs/microfinance.log',
             'maxBytes': 1024*1024*10,  # 10MB
             'backupCount': 5,
             'formatter': 'verbose',
@@ -76,7 +76,7 @@ LOGGING = {
         'error_file': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/microfinance/error.log',
+            'filename': '/home/golament/golam_app/logs/error.log',
             'maxBytes': 1024*1024*10,  # 10MB
             'backupCount': 5,
             'formatter': 'verbose',
