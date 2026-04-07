@@ -15,7 +15,7 @@ urlpatterns = [
     
     # Main Views - Using Class-Based Views where available
     path('', views.DisbursedLoanListView.as_view(), name='disbursed_loans'),
-    path('<int:loan_id>/', views.loan_detail, name='loan_detail'),
+   
     path('disbursed/', views.DisbursedLoanListView.as_view(), name='disbursed_loans_list'),
     path('expected-repayments/', views.ExpectedRepaymentsView.as_view(), name='expected_repayments'),
     path('repaid/', views.RepaidLoansView.as_view(), name='repaid_loans'),
@@ -37,6 +37,7 @@ urlpatterns = [
     path('interest-summary/', views.interest_summary, name='interest_summary'),
     path('receivables/', views.receivables_view, name='interest_receivables'),
     path('missed-repayments-interest/', views.missed_repayments_interest, name='missed_repayments_interest'),
+    path('<int:loan_id>/', views.loan_detail, name='loan_detail'),
     
     # Views for templates that exist but need implementations
     path('outstanding/', views.outstanding_loans, name='outstanding_loans'),
