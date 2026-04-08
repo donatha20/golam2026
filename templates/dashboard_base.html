@@ -557,6 +557,13 @@
             gap: 1rem;
         }
 
+        .sidebar-footer {
+            border-top: 1px solid #e5e7eb;
+            background: #fff;
+            padding: 0.5rem 0;
+            flex-shrink: 0;
+        }
+
         .search-bar {
             position: relative;
         }
@@ -778,7 +785,47 @@
 
             .header {
                 left: 0 !important;
-                padding: 1rem;
+                padding: 0.75rem;
+            }
+
+            .header-left {
+                min-width: 0;
+            }
+
+            .header-actions {
+                gap: 0.35rem;
+            }
+
+            .search-bar,
+            .notification-btn,
+            .user-info {
+                display: none;
+            }
+
+            .user-menu {
+                gap: 0.35rem;
+                padding: 0.2rem;
+            }
+
+            .user-profile-link {
+                padding: 0.2rem;
+            }
+
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+
+            .edit-profile-btn,
+            .logout-btn {
+                width: 30px;
+                height: 30px;
+                margin-left: 0;
+            }
+
+            .logout-btn {
+                background: rgba(220, 38, 38, 0.16);
             }
 
             .search-bar input {
@@ -791,6 +838,10 @@
 
             .page-title {
                 font-size: 0.85rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 45vw;
             }
 
             /* Make submenus more visible on mobile */
@@ -814,6 +865,20 @@
             .nav-section > .nav-link[onclick*="toggleSubmenu"] {
                 font-weight: 600;
                 background: rgba(43, 122, 118, 0.08);
+            }
+
+            .sidebar-footer {
+                position: sticky;
+                bottom: 0;
+                z-index: 2;
+                box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+            }
+
+            .sidebar-footer .logout-nav {
+                margin-top: 0;
+                border-top: none;
+                padding-top: 0.75rem;
+                padding-bottom: 0.75rem;
             }
         }
 
@@ -1504,13 +1569,13 @@
             </div>
             {% endif %}
                 
-            <!-- Logout Section -->
-            <div class="nav-section">
-                <a href="#" onclick="confirmLogout()" class="nav-link logout-nav" data-tooltip="Logout">
-                    <span><i class="fas fa-sign-out-alt"></i> Logout</span>
-                </a>
-            </div>
         </nav>
+
+        <div class="sidebar-footer">
+            <a href="#" onclick="confirmLogout()" class="nav-link logout-nav" data-tooltip="Logout">
+                <span><i class="fas fa-sign-out-alt"></i> Logout</span>
+            </a>
+        </div>
     </div>
 
     <!-- Main Content -->

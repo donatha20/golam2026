@@ -285,7 +285,7 @@
                         <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>
                         <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
                     </td>
-                    <td class="text-end">${{ loan.amount_approved|floatformat:2 }}</td>
+                    <td class="text-end">Tsh. {{ loan.amount_approved|floatformat:2 }}</td>
                     <td>{{ loan.disbursement_date|date:"M d, Y" }}</td>
                     <td>{{ loan.maturity_date|date:"M d, Y" }}</td>
                     <td>
