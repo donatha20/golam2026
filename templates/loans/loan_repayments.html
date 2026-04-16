@@ -276,11 +276,11 @@
 -->
 <!-- Action Buttons 
 <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus-circle"></i> Record New Payment
+    <a href="{% url 'loans:expected_repayments' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-calendar-alt"></i> Expected Repayments
     </a>
-    <a href="{% url 'loans:record_group_repayment' %}" class="btn btn-secondary btn-sm">
-        <i class="fas fa-users"></i> Record Group Payment
+    <a href="{% url 'loans:expected_repayments' %}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-users"></i> View Schedules
     </a>
     <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary">
         <i class="fas fa-calendar-alt"></i> Expected Repayments
@@ -296,8 +296,8 @@
             <i class="fas fa-credit-card" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
             <h3>No Repayments Found</h3>
             <p>No loan repayments match your criteria. Try adjusting your filters or record a new payment.</p>
-            <a href="{% url 'loans:record_repayment' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
-                <i class="fas fa-plus-circle"></i> Record First Payment
+            <a href="{% url 'loans:expected_repayments' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
+                <i class="fas fa-calendar-alt"></i> View Expected Repayments
             </a>
         </div>
     {% endif %}

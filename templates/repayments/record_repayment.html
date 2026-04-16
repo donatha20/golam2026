@@ -337,11 +337,11 @@
                                 </div>
                                 
                                 <div class="mb-3">
-                                    <label for="payment-method" class="form-label">Pay Method (Cash/Bank/Savings)</label>
+                                    <label for="payment-method" class="form-label">Pay Method (Cash/Bank/Mobile)</label>
                                     <select class="form-select form-select-sm" id="payment-method" name="payment_method">
                                         <option value="cash" selected>Cash</option>
-                                        <option value="bank">Bank</option>
-                                        <option value="savings">Savings</option>
+                                        <option value="bank_transfer">Bank</option>
+                                        <option value="mobile_money">Mobile</option>
                                     </select>
                                 </div>
                                 
@@ -360,11 +360,10 @@
                                     </select>
                                 </div>
                                 
-                                <div class="mb-3">
-                                    <label for="account" class="form-label">Account</label>
-                                    <select class="form-select form-select-sm" id="account" name="account">
-                                        <option value="cash" selected>Cash</option>
-                                    </select>
+                                <div class="mb-3 d-none" id="account-number-group">
+                                    <label for="account-number" class="form-label">Account Number / Mobile Wallet</label>
+                                    <input type="text" class="form-control form-control-sm" id="account-number" name="transaction_id"
+                                           placeholder="Enter bank account or mobile number">
                                 </div>
                                 
                                 <div class="mb-3">
@@ -407,6 +406,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const borrowerSelect = document.getElementById('borrower-select');
     const loanSelect = document.getElementById('loan-select');
     const amountInput = document.getElementById('amount-paid');
+    const paymentMethodSelect = document.getElementById('payment-method');
+    const accountNumberGroup = document.getElementById('account-number-group');
+    const accountNumberInput = document.getElementById('account-number');
     
     let searchTimeout = null;
     
@@ -454,10 +456,30 @@ document.addEventListener('DOMContentLoaded', function() {
             amountInput.removeAttribute('disabled');
         }
     });
+
+    // Show account number field only for bank/mobile payments
+    function toggleAccountNumberField() {
+        const paymentMethod = paymentMethodSelect.value;
+        const needsAccount = paymentMethod === 'bank_transfer' || paymentMethod === 'mobile_money';
+
+        if (needsAccount) {
+            accountNumberGroup.classList.remove('d-none');
+            accountNumberInput.setAttribute('required', 'required');
+            accountNumberInput.placeholder = paymentMethod === 'bank_transfer'
+                ? 'Enter bank account number'
+                : 'Enter mobile wallet number';
+        } else {
+            accountNumberGroup.classList.add('d-none');
+            accountNumberInput.removeAttribute('required');
+            accountNumberInput.value = '';
+        }
+    }
+
+    paymentMethodSelect.addEventListener('change', toggleAccountNumberField);
     
     function searchBorrowers(query) {
-        // Fetch borrowers with active loans from the backend
-        const url = `/loans/api/borrowers/search/?q=${encodeURIComponent(query)}&has_loans=true`;
+        // Fetch all registered borrowers from the backend
+        const url = `/loans/api/borrowers/search/?q=${encodeURIComponent(query)}&has_loans=false`;
         console.log('Searching borrowers with URL:', url);
         
         fetch(url)
@@ -625,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Initialize with default data
+    toggleAccountNumberField();
     showDefaultBorrowers();
 });
 </script>

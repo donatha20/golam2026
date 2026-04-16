@@ -278,10 +278,10 @@
                         <div class="borrower-full-name">{{ balance.loan.borrower.get_full_name }}</div>
                         <div class="borrower-id">ID: {{ balance.loan.borrower.borrower_id }}</div>
                     </td>
-                    <td class="text-end">${{ balance.principal_outstanding|floatformat:2 }}</td>
-                    <td class="text-end">${{ balance.interest_outstanding|floatformat:2 }}</td>
-                    <td class="text-end">${{ balance.penalty_outstanding|floatformat:2 }}</td>
-                    <td class="text-end"><strong>${{ balance.total_outstanding|floatformat:2 }}</strong></td>
+                    <td class="text-end">TZS {{ balance.principal_outstanding|floatformat:2 }}</td>
+                    <td class="text-end">TZS {{ balance.interest_outstanding|floatformat:2 }}</td>
+                    <td class="text-end">TZS {{ balance.penalty_outstanding|floatformat:2 }}</td>
+                    <td class="text-end"><strong>TZS {{ balance.total_outstanding|floatformat:2 }}</strong></td>
                     <td class="text-center">
                         {% if balance.days_overdue > 0 %}
                             {{ balance.days_overdue }} days

@@ -36,7 +36,7 @@ class Command(BaseCommand):
         self.email_test = options['email_test']
         
         self.stdout.write(
-            self.style.SUCCESS('ðŸ¥ Starting System Health Check...\n')
+            self.style.SUCCESS('🏥 Starting System Health Check...\n')
         )
         
         checks = [
@@ -66,21 +66,21 @@ class Command(BaseCommand):
                     failed += 1
             except Exception as e:
                 self.stdout.write(
-                    self.style.ERROR(f'âŒ {check.__name__}: {str(e)}')
+                    self.style.ERROR(f'❌ {check.__name__}: {str(e)}')
                 )
                 failed += 1
         
         self.stdout.write('\n' + '='*50)
         self.stdout.write(
-            self.style.SUCCESS(f'âœ… Passed: {passed}')
+            self.style.SUCCESS(f'✅ Passed: {passed}')
         )
         if failed > 0:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Failed: {failed}')
+                self.style.ERROR(f'❌ Failed: {failed}')
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS('ðŸŽ‰ All health checks passed!')
+                self.style.SUCCESS('🎉 All health checks passed!')
             )
         self.stdout.write('='*50)
 
@@ -92,12 +92,12 @@ class Command(BaseCommand):
                 result = cursor.fetchone()
                 if result[0] == 1:
                     self.stdout.write(
-                        self.style.SUCCESS('âœ… Database: Connection successful')
+                        self.style.SUCCESS('✅ Database: Connection successful')
                     )
                     return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Database: {str(e)}')
+                self.style.ERROR(f'❌ Database: {str(e)}')
             )
             return False
 
@@ -109,17 +109,17 @@ class Command(BaseCommand):
             if value == 'test_value':
                 cache.delete('health_check')
                 self.stdout.write(
-                    self.style.SUCCESS('âœ… Cache: Working correctly')
+                    self.style.SUCCESS('✅ Cache: Working correctly')
                 )
                 return True
             else:
                 self.stdout.write(
-                    self.style.ERROR('âŒ Cache: Value mismatch')
+                    self.style.ERROR('❌ Cache: Value mismatch')
                 )
                 return False
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Cache: {str(e)}')
+                self.style.ERROR(f'❌ Cache: {str(e)}')
             )
             return False
 
@@ -129,17 +129,17 @@ class Command(BaseCommand):
             static_root = Path(settings.STATIC_ROOT)
             if static_root.exists():
                 self.stdout.write(
-                    self.style.SUCCESS('âœ… Static Files: Directory exists')
+                    self.style.SUCCESS('✅ Static Files: Directory exists')
                 )
                 return True
             else:
                 self.stdout.write(
-                    self.style.WARNING('âš ï¸  Static Files: Directory does not exist (run collectstatic)')
+                    self.style.WARNING('⚠️  Static Files: Directory does not exist (run collectstatic)')
                 )
                 return False
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Static Files: {str(e)}')
+                self.style.ERROR(f'❌ Static Files: {str(e)}')
             )
             return False
 
@@ -156,12 +156,12 @@ class Command(BaseCommand):
             test_file.unlink()
             
             self.stdout.write(
-                self.style.SUCCESS('âœ… Media Files: Directory accessible and writable')
+                self.style.SUCCESS('✅ Media Files: Directory accessible and writable')
             )
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Media Files: {str(e)}')
+                self.style.ERROR(f'❌ Media Files: {str(e)}')
             )
             return False
 
@@ -178,12 +178,12 @@ class Command(BaseCommand):
             test_file.unlink()
             
             self.stdout.write(
-                self.style.SUCCESS('âœ… Logs Directory: Accessible and writable')
+                self.style.SUCCESS('✅ Logs Directory: Accessible and writable')
             )
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Logs Directory: {str(e)}')
+                self.style.ERROR(f'❌ Logs Directory: {str(e)}')
             )
             return False
 
@@ -198,12 +198,12 @@ class Command(BaseCommand):
         
         if missing_vars:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Environment: Missing variables: {", ".join(missing_vars)}')
+                self.style.ERROR(f'❌ Environment: Missing variables: {", ".join(missing_vars)}')
             )
             return False
         else:
             self.stdout.write(
-                self.style.SUCCESS('âœ… Environment: All required variables present')
+                self.style.SUCCESS('✅ Environment: All required variables present')
             )
             return True
 
@@ -212,12 +212,12 @@ class Command(BaseCommand):
         try:
             user_count = User.objects.count()
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… User Model: {user_count} users in database')
+                self.style.SUCCESS(f'✅ User Model: {user_count} users in database')
             )
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ User Model: {str(e)}')
+                self.style.ERROR(f'❌ User Model: {str(e)}')
             )
             return False
 
@@ -229,7 +229,7 @@ class Command(BaseCommand):
             local_apps = [app for app in app_configs if app.name.startswith('apps.')]
             
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… Apps: {len(local_apps)} local apps installed')
+                self.style.SUCCESS(f'✅ Apps: {len(local_apps)} local apps installed')
             )
             
             if self.verbose:
@@ -239,7 +239,7 @@ class Command(BaseCommand):
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Apps: {str(e)}')
+                self.style.ERROR(f'❌ Apps: {str(e)}')
             )
             return False
 
@@ -262,17 +262,17 @@ class Command(BaseCommand):
             
             if '[X]' in output and '[ ]' not in output:
                 self.stdout.write(
-                    self.style.SUCCESS('âœ… Migrations: All migrations applied')
+                    self.style.SUCCESS('✅ Migrations: All migrations applied')
                 )
                 return True
             else:
                 self.stdout.write(
-                    self.style.WARNING('âš ï¸  Migrations: Unapplied migrations found')
+                    self.style.WARNING('⚠️  Migrations: Unapplied migrations found')
                 )
                 return False
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Migrations: {str(e)}')
+                self.style.ERROR(f'❌ Migrations: {str(e)}')
             )
             return False
 
@@ -285,12 +285,12 @@ class Command(BaseCommand):
             test_file.unlink()
             
             self.stdout.write(
-                self.style.SUCCESS('âœ… Permissions: File system writable')
+                self.style.SUCCESS('✅ Permissions: File system writable')
             )
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Permissions: {str(e)}')
+                self.style.ERROR(f'❌ Permissions: {str(e)}')
             )
             return False
 
@@ -305,12 +305,12 @@ class Command(BaseCommand):
                 fail_silently=False,
             )
             self.stdout.write(
-                self.style.SUCCESS('âœ… Email: Test email sent successfully')
+                self.style.SUCCESS('✅ Email: Test email sent successfully')
             )
             return True
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'âŒ Email: {str(e)}')
+                self.style.ERROR(f'❌ Email: {str(e)}')
             )
             return False
 

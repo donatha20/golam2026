@@ -62,7 +62,7 @@ class Command(BaseCommand):
 
     def create_backup(self):
         """Create a database backup."""
-        self.stdout.write('ðŸ’¾ Creating database backup...')
+        self.stdout.write('💾 Creating database backup...')
         
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
         db_config = settings.DATABASES['default']
@@ -91,10 +91,10 @@ class Command(BaseCommand):
                 call_command('dumpdata', stdout=f, format='json', indent=2)
             
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… SQLite backup created: {backup_path}')
+                self.style.SUCCESS(f'✅ SQLite backup created: {backup_path}')
             )
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… JSON dump created: {sql_backup_path}')
+                self.style.SUCCESS(f'✅ JSON dump created: {sql_backup_path}')
             )
             
         except Exception as e:
@@ -125,7 +125,7 @@ class Command(BaseCommand):
         try:
             subprocess.run(cmd, check=True, env=env)
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… PostgreSQL backup created: {backup_path}')
+                self.style.SUCCESS(f'✅ PostgreSQL backup created: {backup_path}')
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f'Failed to backup PostgreSQL: {e}')
@@ -154,7 +154,7 @@ class Command(BaseCommand):
                 subprocess.run(cmd, stdout=f, check=True)
             
             self.stdout.write(
-                self.style.SUCCESS(f'âœ… MySQL backup created: {backup_path}')
+                self.style.SUCCESS(f'✅ MySQL backup created: {backup_path}')
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f'Failed to backup MySQL: {e}')
@@ -169,12 +169,12 @@ class Command(BaseCommand):
             if not backup_path.exists():
                 raise CommandError(f'Backup file not found: {backup_file}')
         
-        self.stdout.write(f'ðŸ”„ Restoring from backup: {backup_path}')
+        self.stdout.write(f'🔄 Restoring from backup: {backup_path}')
         
         # Confirm restoration
-        confirm = input('âš ï¸  This will overwrite the current database. Continue? (y/N): ')
+        confirm = input('⚠️  This will overwrite the current database. Continue? (y/N): ')
         if confirm.lower() != 'y':
-            self.stdout.write('âŒ Restoration cancelled')
+            self.stdout.write('❌ Restoration cancelled')
             return
         
         db_config = settings.DATABASES['default']
@@ -203,7 +203,7 @@ class Command(BaseCommand):
                 call_command('loaddata', str(backup_path))
             
             self.stdout.write(
-                self.style.SUCCESS('âœ… SQLite database restored')
+                self.style.SUCCESS('✅ SQLite database restored')
             )
         except Exception as e:
             raise CommandError(f'Failed to restore SQLite: {e}')
@@ -231,7 +231,7 @@ class Command(BaseCommand):
         try:
             subprocess.run(cmd, check=True, env=env)
             self.stdout.write(
-                self.style.SUCCESS('âœ… PostgreSQL database restored')
+                self.style.SUCCESS('✅ PostgreSQL database restored')
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f'Failed to restore PostgreSQL: {e}')
@@ -257,14 +257,14 @@ class Command(BaseCommand):
                 subprocess.run(cmd, stdin=f, check=True)
             
             self.stdout.write(
-                self.style.SUCCESS('âœ… MySQL database restored')
+                self.style.SUCCESS('✅ MySQL database restored')
             )
         except subprocess.CalledProcessError as e:
             raise CommandError(f'Failed to restore MySQL: {e}')
 
     def list_backups(self):
         """List available backups."""
-        self.stdout.write('ðŸ“‹ Available backups:')
+        self.stdout.write('📋 Available backups:')
         
         backup_files = sorted(self.backup_dir.glob('backup_*'), reverse=True)
         
@@ -281,7 +281,7 @@ class Command(BaseCommand):
 
     def cleanup_backups(self):
         """Clean up old backups, keeping the last 10."""
-        self.stdout.write('ðŸ§¹ Cleaning up old backups...')
+        self.stdout.write('🧹 Cleaning up old backups...')
         
         backup_files = sorted(self.backup_dir.glob('backup_*'), reverse=True)
         
@@ -296,7 +296,7 @@ class Command(BaseCommand):
             self.stdout.write(f'  Deleted: {backup_file.name}')
         
         self.stdout.write(
-            self.style.SUCCESS(f'âœ… Cleaned up {len(files_to_delete)} old backups')
+            self.style.SUCCESS(f'✅ Cleaned up {len(files_to_delete)} old backups')
         )
 
 

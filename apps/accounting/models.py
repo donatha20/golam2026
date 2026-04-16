@@ -118,18 +118,18 @@ class JournalEntry(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_entry_number(self):
-        """Generate unique journal entry number."""
+        """Generate unique journal entry number using sequential format: JE-0001."""
         last_entry = JournalEntry.objects.filter(
-            entry_number__startswith='JE'
+            entry_number__startswith='JE-'
         ).order_by('entry_number').last()
 
         if last_entry:
-            last_number = int(last_entry.entry_number[2:])
+            last_number = int(last_entry.entry_number[3:])  # Extract digits after 'JE-'
             new_number = last_number + 1
         else:
             new_number = 1
 
-        return f"JE{new_number:06d}"
+        return f"JE-{new_number:04d}"
 
     @property
     def total_debits(self):

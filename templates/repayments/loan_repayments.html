@@ -13,9 +13,7 @@
         margin-bottom: 2rem;
     }
     
-    .loan-stat                        <a href="{% url 'repayments:payment_list' %}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-list me-2"></i>Payment History
-                        </a>                     <a href="{% url 'repayments:payment_list' %}" class="btn btn-outline-secondary btn-sm"> {
+    .loan-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
@@ -77,7 +75,7 @@
     
     .payment-info {
         display: flex;
-        justify-content: between;
+        justify-content: space-between;
         align-items: center;
     }
     
@@ -218,11 +216,11 @@
                 <div class="stat-label">Principal Amount</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">₹{{ loan.outstanding_balance|floatformat:2 }}</div>
+                <div class="stat-value">TZS{{ loan.outstanding_balance|floatformat:2 }}</div>
                 <div class="stat-label">Outstanding Balance</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">₹{{ total_paid|floatformat:2 }}</div>
+                <div class="stat-value">TZS {{ total_paid|floatformat:2 }}</div>
                 <div class="stat-label">Total Paid</div>
             </div>
             <div class="stat-card">
@@ -257,7 +255,7 @@
                                 <div class="payment-details">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <div class="payment-amount">₹{{ payment.amount|floatformat:2 }}</div>
+                                            <div class="payment-amount">TZS {{ payment.amount|floatformat:2 }}</div>
                                             <div class="payment-date">
                                                 <i class="fas fa-calendar me-1"></i>{{ payment.payment_date|date:"M d, Y" }}
                                                 <span class="mx-2">|</span>
@@ -288,9 +286,9 @@
                                         <small class="text-muted">
                                             Allocation: 
                                             {% for allocation in payment.allocations.all %}
-                                                Principal: ₹{{ allocation.principal_allocated|floatformat:2 }}, 
-                                                Interest: ₹{{ allocation.interest_allocated|floatformat:2 }}
-                                                {% if allocation.penalty_allocated > 0 %}, Penalty: ₹{{ allocation.penalty_allocated|floatformat:2 }}{% endif %}
+                                                Principal: TZS {{ allocation.principal_allocated|floatformat:2 }}, 
+                                                Interest: TZS {{ allocation.interest_allocated|floatformat:2 }}
+                                                {% if allocation.penalty_allocated > 0 %}, Penalty: TZS {{ allocation.penalty_allocated|floatformat:2 }}{% endif %}
                                                 {% if not forloop.last %} | {% endif %}
                                             {% endfor %}
                                         </small>
@@ -350,7 +348,7 @@
                             <tr>
                                 <td>{{ installment.installment_number }}</td>
                                 <td>{{ installment.due_date|date:"M d" }}</td>
-                                <td>₹{{ installment.total_amount|floatformat:0 }}</td>
+                                <td>TZS {{ installment.total_amount|floatformat:0 }}</td>
                                 <td>
                                     <span class="status-badge status-{{ installment.payment_status|lower }}">
                                         {{ installment.get_payment_status_display }}

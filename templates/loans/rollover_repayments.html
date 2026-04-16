@@ -268,7 +268,7 @@
                     </td>
                     <td>{{ repayment.schedule.original_due_date|date:"M d, Y"|default:"N/A" }}</td>
                     <td>{{ repayment.schedule.due_date|date:"M d, Y" }}</td>
-                    <td class="text-end">${{ repayment.amount_paid|floatformat:2 }}</td>
+                    <td class="text-end">TZS{{ repayment.amount_paid|floatformat:2 }}</td>
                     <td>{{ repayment.payment_date|date:"M d, Y" }}</td>
                     <td>
                         <span class="status-badge status-rollover">Rolled Over</span>

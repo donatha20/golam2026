@@ -36,6 +36,7 @@ class Borrower(AuditModel):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True, null=True)
+    nickname = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GenderChoices.choices)
     date_of_birth = models.DateField()
     marital_status = models.CharField(max_length=15, choices=MaritalStatusChoices.choices)
@@ -111,21 +112,18 @@ class Borrower(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_borrower_id(self):
-        """Generate a unique borrower ID."""
-        import random
-        import string
+        """Generate a unique borrower ID using sequential format: BR-0001."""
+        last_borrower = Borrower.objects.filter(
+            borrower_id__startswith='BR-'
+        ).order_by('borrower_id').last()
         
-        # Format: BR + Year + 6 random digits
-        year = timezone.now().year
-        random_part = ''.join(random.choices(string.digits, k=6))
-        borrower_id = f"BR{year}{random_part}"
+        if last_borrower:
+            last_number = int(last_borrower.borrower_id[3:])  # Extract digits after 'BR-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while Borrower.objects.filter(borrower_id=borrower_id).exists():
-            random_part = ''.join(random.choices(string.digits, k=6))
-            borrower_id = f"BR{year}{random_part}"
-        
-        return borrower_id
+        return f"BR-{new_number:04d}"
 
     def get_full_name(self):
         """Return the full name of the borrower."""
@@ -326,21 +324,18 @@ class BorrowerGroup(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_group_id(self):
-        """Generate a unique group ID."""
-        import random
-        import string
-
-        # Format: GR + Year + 4 random digits
-        year = timezone.now().year
-        random_part = ''.join(random.choices(string.digits, k=4))
-        group_id = f"GR{year}{random_part}"
-
-        # Ensure uniqueness
-        while BorrowerGroup.objects.filter(group_id=group_id).exists():
-            random_part = ''.join(random.choices(string.digits, k=4))
-            group_id = f"GR{year}{random_part}"
-
-        return group_id
+        """Generate a unique group ID using sequential format: GR-0001."""
+        last_group = BorrowerGroup.objects.filter(
+            group_id__startswith='GR-'
+        ).order_by('group_id').last()
+        
+        if last_group:
+            last_number = int(last_group.group_id[3:])  # Extract digits after 'GR-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
+        
+        return f"GR-{new_number:04d}"
 
     @property
     def member_count(self):

@@ -1,6 +1,6 @@
 """
 URL configuration for     # Authentication - using registration templates
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('login/', core_views.WorkingHoursLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/?logout=success', http_method_names=['get', 'post']), name='logout'),
     path('register/', core_views.register, name='register'),ofinance_system project.
 
@@ -65,6 +65,7 @@ urlpatterns = [
     path('repayments/', include('apps.repayments.urls')),
     path('savings/', include('apps.savings.urls')),
     path('sms/', include('apps.sms.urls')),
+    path('notifications/', include('apps.notifications.urls')),
 ]
 
 # Serve media files in development

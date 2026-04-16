@@ -624,15 +624,26 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="repayment_type" class="form-label required">Repayment Type</label>
-                    <select name="repayment_type" id="repayment_type" class="form-select form-select-sm" required>
+                    <label for="repayment_frequency" class="form-label required">Repayment Frequency (Interval)</label>
+                    <select name="repayment_frequency" id="repayment_frequency" class="form-select form-select-sm" required>
                         <option value="">Select Repayment Frequency</option>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
-                        <option value="biweekly">Bi-weekly (Every 2 weeks)</option>
+                        <option value="biweekly">Bi-weekly</option>
                         <option value="monthly">Monthly</option>
-                        <option value="bimonthly">Every 2 Months</option>
-                        <option value="quarterly">Every 3 Months (Quarterly)</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="annually">Annually</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="repayment_type" class="form-label required">Repayment Type</label>
+                    <select name="repayment_type" id="repayment_type" class="form-select form-select-sm" required>
+                        <option value="">Select Repayment Type</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
                     </select>
                 </div>
             </div>

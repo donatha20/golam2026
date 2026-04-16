@@ -330,6 +330,22 @@
             overflow-x: hidden;
         }
 
+        /* Nested submenu styling - prevent collapsing */
+        .nav-submenu .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: rgba(43, 122, 118, 0.05);
+            border-left: 2px solid #2b7a76;
+            margin-left: 1rem;
+        }
+
+        .nav-submenu .nav-submenu.show {
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
         /* Custom scrollbar for submenu */
         .nav-submenu::-webkit-scrollbar {
             width: 6px;
@@ -920,7 +936,7 @@
             
             {% if user.role == 'admin' %}
             <div class="nav-section" data-section="users" data-url-prefix="/users/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('users-submenu');" data-tooltip="Users">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('users-submenu', event);" data-tooltip="Users">
                     <span><i class="fas fa-users-cog"></i> Users</span>
                     <i class="fas fa-chevron-down nav-toggle" id="users-toggle"></i>
                 </a>
@@ -939,7 +955,7 @@
             {% endif %}
             
             <div class="nav-section" data-section="clients" data-url-prefix="/borrowers/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('clients-submenu');" data-tooltip="Clients">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('clients-submenu', event);" data-tooltip="Clients">
                     <span><i class="fas fa-user"></i> Clients</span>
                     <i class="fas fa-chevron-down nav-toggle" id="clients-toggle"></i>
                 </a>
@@ -960,7 +976,7 @@
             </div>
             
             <div class="nav-section" data-section="groups" data-url-prefix="/borrowers/groups/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('groups-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('groups-submenu', event);">
                     <span><i class="fas fa-users"></i> Groups</span>
                     <i class="fas fa-chevron-down nav-toggle" id="groups-toggle"></i>
                 </a>
@@ -976,7 +992,7 @@
             
             {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section" data-section="capital" data-url-prefix="/finance/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('capital-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('capital-submenu', event);">
                     <span><i class="fas fa-university"></i> Capital</span>
                     <i class="fas fa-chevron-down nav-toggle" id="capital-toggle"></i>
                 </a>
@@ -1004,7 +1020,7 @@
             {% endif %}
 
             <div class="nav-section" data-section="loans" data-url-prefix="/loans/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('loans-submenu');" data-tooltip="Loans">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('loans-submenu', event);" data-tooltip="Loans">
                     <span><i class="fas fa-money-bill-wave"></i> Loans</span>
                     <i class="fas fa-chevron-down nav-toggle" id="loans-toggle"></i>
                 </a>
@@ -1100,7 +1116,7 @@
             </div>
 
             <div class="nav-section" data-section="repayments" data-url-prefix="/repayments/">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('repayments-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('repayments-submenu', event);">
                     <span><i class="fas fa-credit-card"></i> Repayments</span>
                     <i class="fas fa-chevron-down nav-toggle" id="repayments-toggle"></i>
                 </a>
@@ -1127,13 +1143,13 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('savings-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('savings-submenu', event);">
                     <span><i class="fas fa-sack-dollar"></i> Saving Accounts</span>
                     <i class="fas fa-chevron-down nav-toggle" id="savings-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="savings-submenu">
                     <!-- Saving Account Management Section -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('saving-account-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('saving-account-submenu', event);">
                         <span><i class="fas fa-university"></i> Saving Account</span>
                         <i class="fas fa-chevron-down nav-toggle" id="saving-account-toggle"></i>
                     </a>
@@ -1195,7 +1211,7 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('assets-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('assets-submenu', event);">
                     <span><i class="fas fa-boxes"></i> Assets</span>
                     <i class="fas fa-chevron-down nav-toggle" id="assets-toggle"></i>
                 </a>
@@ -1210,7 +1226,7 @@
             </div>
 
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('collaterals-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('collaterals-submenu', event);">
                     <span><i class="fas fa-shield-alt"></i> Collaterals</span>
                     <i class="fas fa-chevron-down nav-toggle" id="collaterals-toggle"></i>
                 </a>
@@ -1226,7 +1242,7 @@
 
             {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-submenu', event);">
                     <span><i class="fas fa-calculator"></i> Employee Payroll</span>
                     <i class="fas fa-chevron-down nav-toggle" id="payroll-toggle"></i>
                 </a>
@@ -1236,7 +1252,7 @@
                     </a>
                     
                     <!-- Employee Management -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('employee-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('employee-submenu', event);">
                         <span><i class="fas fa-users"></i> Employee Management</span>
                         <i class="fas fa-chevron-down nav-toggle" id="employee-toggle"></i>
                     </a>
@@ -1256,7 +1272,7 @@
                     </div>
                     
                     <!-- Payroll Processing -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-processing-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-processing-submenu', event);">
                         <span><i class="fas fa-calculator"></i> Generate Payroll</span>
                         <i class="fas fa-chevron-down nav-toggle" id="payroll-processing-toggle"></i>
                     </a>
@@ -1278,7 +1294,7 @@
                     </a>
                     
                     <!-- Deductions & Allowances -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('deductions-allowances-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('deductions-allowances-submenu', event);">
                         <span><i class="fas fa-cogs"></i> Deductions & Allowances</span>
                         <i class="fas fa-chevron-down nav-toggle" id="deductions-allowances-toggle"></i>
                     </a>
@@ -1316,13 +1332,13 @@
 
             {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser or user.role == 'loan_officer' %}
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('income-expenditure-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('income-expenditure-submenu', event);">
                     <span><i class="fas fa-chart-pie"></i> Income & Expenditure</span>
                     <i class="fas fa-chevron-down nav-toggle" id="income-expenditure-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="income-expenditure-submenu">
                     {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sub-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sub-submenu', event);">
                         <span><i class="fas fa-plus-circle"></i> Income</span>
                         <i class="fas fa-chevron-down nav-toggle" id="income-sub-toggle"></i>
                     </a>
@@ -1337,7 +1353,7 @@
                             <span><i class="fas fa-check-circle text-warning"></i> Approval Queue</span>
                         </a>
                     </div>
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('expenditure-sub-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('expenditure-sub-submenu', event);">
                         <span><i class="fas fa-minus-circle"></i> Expenditure</span>
                         <i class="fas fa-chevron-down nav-toggle" id="expenditure-sub-toggle"></i>
                     </a>
@@ -1366,7 +1382,7 @@
 
             {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
             <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('reports-submenu');">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('reports-submenu', event);">
                     <span><i class="fas fa-chart-bar"></i> Reports</span>
                     <i class="fas fa-chevron-down nav-toggle" id="reports-toggle"></i>
                 </a>
@@ -1398,7 +1414,7 @@
 
                         {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
               <div class="nav-section">
-                <a href="#" class="nav-link" onclick="return toggleSubmenu('settings-submenu');" data-tooltip="Settings">
+                <a href="#" class="nav-link" onclick="return toggleSubmenu('settings-submenu', event);" data-tooltip="Settings">
                     <span><i class="fas fa-cog"></i> Settings</span>
                     <i class="fas fa-chevron-down nav-toggle" id="settings-toggle"></i>
                 </a>
@@ -1408,7 +1424,7 @@
                     </a>
                     
                     <!-- Company Info Section -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('company-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('company-submenu', event);">
                         <span><i class="fas fa-building"></i> Company Info</span>
                         <i class="fas fa-chevron-down nav-toggle" id="company-toggle"></i>
                     </a>
@@ -1422,7 +1438,7 @@
                     </div>
                     
                     <!-- Working Mode Section -->
-                    <a href="#" class="nav-link" onclick="return toggleSubmenu('working-mode-submenu');">
+                    <a href="#" class="nav-link" onclick="return toggleSubmenu('working-mode-submenu', event);">
                         <span><i class="fas fa-clock"></i> Working Mode</span>
                         <i class="fas fa-chevron-down nav-toggle" id="working-mode-toggle"></i>
                     </a>
@@ -1595,10 +1611,12 @@
                     <input type="text" placeholder="Search...">
                 </div>
                 
-                <button class="notification-btn">
+                <a href="{% url 'notifications:list' %}" class="notification-btn" title="Notifications">
                     <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </button>
+                    {% if notifications_count %}
+                        <span class="notification-badge">{{ notifications_count }}</span>
+                    {% endif %}
+                </a>
                 
                 <div class="user-menu">
                     <a href="{% url 'accounts:profile' %}" class="user-profile-link" title="Edit Profile">
@@ -1658,15 +1676,26 @@
         });
 
         // Enhanced toggleSubmenu function that handles mobile behavior
-        function toggleSubmenu(submenuId) {
+        function toggleSubmenu(submenuId, event) {
+            // Prevent event propagation to parent menus
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
             const submenu = document.getElementById(submenuId);
+            if (!submenu) return false;
+            
             const toggle = document.getElementById(submenuId.replace('-submenu', '-toggle'));
             const isOpen = submenu.classList.contains('show');
 
-            // Close other open submenus only on mobile
+            // Close other open submenus only on mobile and only if they're not nested/parent
             if (window.innerWidth <= 768) {
                 document.querySelectorAll('.nav-submenu.show').forEach(openSubmenu => {
-                    if (openSubmenu.id !== submenuId) {
+                    // Don't close if this is a parent of the submenu we're opening, or if submenu is a parent
+                    if (openSubmenu.id !== submenuId && 
+                        !openSubmenu.contains(submenu) && 
+                        !submenu.contains(openSubmenu)) {
                         openSubmenu.classList.remove('show');
                         const openToggle = document.getElementById(openSubmenu.id.replace('-submenu', '-toggle'));
                         if (openToggle) {
@@ -1678,16 +1707,13 @@
 
             if (isOpen) {
                 submenu.classList.remove('show');
-                toggle.classList.remove('rotated');
+                if (toggle) toggle.classList.remove('rotated');
             } else {
                 submenu.classList.add('show');
-                toggle.classList.add('rotated');
+                if (toggle) toggle.classList.add('rotated');
             }
             
-            // On mobile, prevent the click from bubbling up to close the sidebar
-            if (window.innerWidth <= 768) {
-                return false;
-            }
+            return false;
         }
 
         // Handle click events on navigation links for mobile

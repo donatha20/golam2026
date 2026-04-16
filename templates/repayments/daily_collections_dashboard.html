@@ -506,7 +506,7 @@
                         
                         <div class="collection-metrics">
                             <div class="metric">
-                                <div class="metric-value">₹{{ collection.total_amount|floatformat:0 }}</div>
+                                <div class="metric-value">TZS {{ collection.total_amount|floatformat:0 }}</div>
                                 <div class="metric-label">Collected</div>
                             </div>
                             <div class="metric">
@@ -521,14 +521,14 @@
                                      style="width: {{ collection.collection_efficiency|floatformat:0 }}%"></div>
                             </div>
                             <div class="progress-text">
-                                {{ collection.collection_efficiency|floatformat:1 }}% of target (₹{{ collection.target_amount|floatformat:0 }})
+                                {{ collection.collection_efficiency|floatformat:1 }}% of target (TZS {{ collection.target_amount|floatformat:0 }})
                             </div>
                         </div>
                         
                         {% if collection.has_discrepancy %}
                             <div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.8rem;">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                Discrepancy: ₹{{ collection.discrepancy_amount|floatformat:2 }}
+                                Discrepancy: TZS {{ collection.discrepancy_amount|floatformat:2 }}
                             </div>
                         {% endif %}
                         
@@ -565,7 +565,7 @@
             {% for method, amount in method_breakdown.items %}
                 <div class="breakdown-item">
                     <div class="breakdown-label">{{ method|title }}</div>
-                    <div class="breakdown-value">₹{{ amount|floatformat:0 }}</div>
+                    <div class="breakdown-value">TZS {{ amount|floatformat:0 }}</div>
                 </div>
             {% endfor %}
         </div>
@@ -580,7 +580,7 @@
             {% for type, amount in type_breakdown.items %}
                 <div class="breakdown-item">
                     <div class="breakdown-label">{{ type|title }}</div>
-                    <div class="breakdown-value">₹{{ amount|floatformat:0 }}</div>
+                    <div class="breakdown-value">TZS {{ amount|floatformat:0 }}</div>
                 </div>
             {% endfor %}
         </div>

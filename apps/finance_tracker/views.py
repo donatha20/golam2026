@@ -18,10 +18,16 @@ from .approval_tables import IncomeApprovalTable, ExpenditureApprovalTable
 from .filters import IncomeFilter, ExpenditureFilter, CategoryFilter
 from .services import get_account_balances, AccountingService
 from apps.accounts.models import UserActivity, UserRole
+from apps.core.models import IncomeSource, ExpenseCategory
 
 
 def _deny_loan_officer(request, message='You do not have permission to access this page.'):
-    if request.user.role in {UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT}:
+    # Superusers should always be able to access protected finance workflows.
+    if request.user.is_superuser:
+        return None
+
+    # Loan officers are restricted from sensitive approval/reporting actions.
+    if request.user.role == UserRole.LOAN_OFFICER:
         messages.error(request, message)
         return redirect('core:dashboard')
     return None
@@ -35,7 +41,7 @@ def add_income(request):
         if form.is_valid():
             income = form.save(commit=False)
             income.recorded_by = request.user
-            income.status = 'pending'
+            income.status = 'PENDING'
             income.save()
 
             # Log activity
@@ -96,9 +102,20 @@ def view_income(request):
     # Get only approved income records
     income_queryset = Income.objects.filter(status__iexact='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-income_date', '-created_at')
 
+    # Support both legacy template params and django-filter param names.
+    income_params = request.GET.copy()
+    if income_params.get('date_from') and not income_params.get('income_date_from'):
+        income_params['income_date_from'] = income_params.get('date_from')
+    if income_params.get('date_to') and not income_params.get('income_date_to'):
+        income_params['income_date_to'] = income_params.get('date_to')
+
     # Apply filters using django-filter
-    income_filter = IncomeFilter(request.GET, queryset=income_queryset)
+    income_filter = IncomeFilter(income_params, queryset=income_queryset)
     income_records = income_filter.qs
+
+    # Legacy template expects page_obj.
+    paginator = Paginator(income_records, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     # Create data table
     table = IncomeTable(income_records)
@@ -127,9 +144,21 @@ def view_income(request):
         count=Count('id')
     ).order_by('-total')[:5]
 
+    configured_income_sources = list(
+        IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+    )
+
     context = {
         'table': table,
         'filter': income_filter,
+        'page_obj': page_obj,
+        'income_sources': configured_income_sources or Income.INCOME_SOURCES,
+        'filters': {
+            'source': income_params.get('source', ''),
+            'status': income_params.get('status', ''),
+            'date_from': income_params.get('date_from', income_params.get('income_date_from', '')),
+            'date_to': income_params.get('date_to', income_params.get('income_date_to', '')),
+        },
         'stats': stats,
         'category_stats': category_stats,
         'title': 'Income Records',
@@ -349,10 +378,15 @@ def view_expenditures(request):
         return denied_response
 
     # Get only approved expenditure records
-    expenditure_queryset = Expenditure.objects.filter(status='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-expenditure_date', '-created_at')
+    expenditure_queryset = Expenditure.objects.filter(status__iexact='approved').select_related('category', 'recorded_by', 'approved_by').order_by('-expenditure_date', '-created_at')
+
+    # Support both legacy template params and django-filter names.
+    expenditure_params = request.GET.copy()
+    if expenditure_params.get('type') and not expenditure_params.get('expenditure_type'):
+        expenditure_params['expenditure_type'] = expenditure_params.get('type')
 
     # Apply filters using django-filter
-    expenditure_filter = ExpenditureFilter(request.GET, queryset=expenditure_queryset)
+    expenditure_filter = ExpenditureFilter(expenditure_params, queryset=expenditure_queryset)
     expenditures = expenditure_filter.qs
 
     # Create data table
@@ -388,15 +422,29 @@ def view_expenditures(request):
         count=Count('id')
     ).order_by('-total')
 
+    configured_expense_types = list(
+        ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+    )
+
     context = {
         'table': table,
         'filter': expenditure_filter,
+        'expenditures': expenditures,
+        'search_query': expenditure_params.get('search', ''),
+        'type_filter': expenditure_params.get('type', expenditure_params.get('expenditure_type', '')),
+        'status_filter': expenditure_params.get('status', ''),
+        'expenditure_types': configured_expense_types or Expenditure.EXPENDITURE_TYPES,
+        'approval_statuses': Expenditure.STATUS_CHOICES,
         'stats': stats,
+        'stats_total_expenditures': expenditure_queryset.count(),
         'category_stats': category_stats,
         'status_stats': status_stats,
         'title': 'Expenditure Records',
         'page_title': 'View Expenditure Records',
     }
+
+    # Backward-compatible stats key expected by the current template.
+    context['stats']['total_expenditures'] = expenditure_queryset.count()
 
     return render(request, 'finance_tracker/view_expenditures.html', context)
 
@@ -468,14 +516,17 @@ def approve_income(request, income_id):
     if denied_response:
         return denied_response
 
-    income = get_object_or_404(Income, id=income_id, status__iexact='pending')
+    income = get_object_or_404(Income, id=income_id)
+    if (income.status or '').upper() != 'PENDING':
+        messages.warning(request, f'Income {income.income_id} is already processed ({income.status}).')
+        return redirect('finance_tracker:income_approval_queue')
     
     if request.method == 'POST':
-        if income.recorded_by_id == request.user.id:
+        if income.recorded_by_id == request.user.id and not request.user.is_superuser:
             messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
             return redirect('finance_tracker:income_approval_queue')
 
-        income.status = 'approved'
+        income.status = 'APPROVED'
         income.approved_by = request.user
         income.approval_date = timezone.now()
         income.save()
@@ -485,7 +536,7 @@ def approve_income(request, income_id):
             user=request.user,
             action='APPROVE',
             object_id=income.id,
-            description=f'Approved income: {income.get_income_type_display()} - Tsh {income.amount:,.2f}',
+            description=f'Approved income: {income.get_source_display()} - Tsh {income.amount:,.2f}',
             content_type='Income',
             ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
         )
@@ -503,15 +554,18 @@ def reject_income(request, income_id):
     if denied_response:
         return denied_response
 
-    income = get_object_or_404(Income, id=income_id, status__iexact='pending')
+    income = get_object_or_404(Income, id=income_id)
+    if (income.status or '').upper() != 'PENDING':
+        messages.warning(request, f'Income {income.income_id} is already processed ({income.status}).')
+        return redirect('finance_tracker:income_approval_queue')
     
     if request.method == 'POST':
-        if income.recorded_by_id == request.user.id:
+        if income.recorded_by_id == request.user.id and not request.user.is_superuser:
             messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
             return redirect('finance_tracker:income_approval_queue')
 
         rejection_reason = request.POST.get('rejection_reason', '')
-        income.status = 'rejected'
+        income.status = 'REJECTED'
         income.approved_by = request.user
         income.approval_date = timezone.now()
         income.rejection_reason = rejection_reason
@@ -522,7 +576,7 @@ def reject_income(request, income_id):
             user=request.user,
             action='REJECT',
             object_id=income.id,
-            description=f'Rejected income: {income.get_income_type_display()} - Tsh {income.amount:,.2f}',
+            description=f'Rejected income: {income.get_source_display()} - Tsh {income.amount:,.2f}',
             content_type='Income',
             ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1')
         )
@@ -540,10 +594,13 @@ def approve_expenditure(request, expenditure_id):
     if denied_response:
         return denied_response
 
-    expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id)
+    if (expenditure.status or '').lower() != 'pending':
+        messages.warning(request, f'Expenditure {expenditure.expenditure_id} is already processed ({expenditure.status}).')
+        return redirect('finance_tracker:expenditure_approval_queue')
     
     if request.method == 'POST':
-        if expenditure.recorded_by_id == request.user.id:
+        if expenditure.recorded_by_id == request.user.id and not request.user.is_superuser:
             messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
             return redirect('finance_tracker:expenditure_approval_queue')
 
@@ -575,10 +632,13 @@ def reject_expenditure(request, expenditure_id):
     if denied_response:
         return denied_response
 
-    expenditure = get_object_or_404(Expenditure, id=expenditure_id, status='pending')
+    expenditure = get_object_or_404(Expenditure, id=expenditure_id)
+    if (expenditure.status or '').lower() != 'pending':
+        messages.warning(request, f'Expenditure {expenditure.expenditure_id} is already processed ({expenditure.status}).')
+        return redirect('finance_tracker:expenditure_approval_queue')
     
     if request.method == 'POST':
-        if expenditure.recorded_by_id == request.user.id:
+        if expenditure.recorded_by_id == request.user.id and not request.user.is_superuser:
             messages.error(request, 'Self-approval is not allowed. Another approver must review this record.')
             return redirect('finance_tracker:expenditure_approval_queue')
 

@@ -21,7 +21,7 @@ class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         fields = [
-            'loan', 'amount', 'payment_method', 'payment_date', 'payment_type',
+            'loan', 'amount', 'payment_method', 'payment_date',
             'receipt_number', 'transaction_id', 'external_reference', 'notes'
         ]
         
@@ -47,9 +47,6 @@ class PaymentForm(forms.ModelForm):
                 'class': 'form-input',
                 'type': 'date',
                 'required': True
-            }),
-            'payment_type': forms.Select(attrs={
-                'class': 'form-select'
             }),
             'receipt_number': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -78,7 +75,6 @@ class PaymentForm(forms.ModelForm):
         self.fields['amount'].label = 'Payment Amount (Tsh)'
         self.fields['payment_method'].label = 'Payment Method'
         self.fields['payment_date'].label = 'Payment Date'
-        self.fields['payment_type'].label = 'Payment Type'
         self.fields['receipt_number'].label = 'Receipt Number'
         self.fields['transaction_id'].label = 'Transaction ID'
         self.fields['external_reference'].label = 'External Reference'
@@ -88,9 +84,9 @@ class PaymentForm(forms.ModelForm):
         if not self.instance.pk:
             self.fields['payment_date'].initial = timezone.now().date()
         
-        # Filter active loans
+        # Allow loans in repayment lifecycle states.
         self.fields['loan'].queryset = Loan.objects.filter(
-            status__in=['active', 'overdue']
+            status__in=['approved', 'disbursed', 'active', 'defaulted'],
         ).select_related('borrower').order_by('loan_number')
     
     def clean_amount(self):
@@ -106,13 +102,8 @@ class PaymentForm(forms.ModelForm):
         payment_date = cleaned_data.get('payment_date')
         
         if loan and amount:
-            # Check if loan has outstanding balance
-            if loan.outstanding_balance <= 0:
-                raise forms.ValidationError('This loan has no outstanding balance.')
-            
-            # Warn if payment exceeds outstanding balance
-            if amount > loan.outstanding_balance:
-                # This is allowed (advance payment) but we'll show a warning
+            # Advance/adjustment payments are allowed even when outstanding balance fields are stale.
+            if loan.outstanding_balance and amount > loan.outstanding_balance:
                 pass
         
         if payment_date and payment_date > timezone.now().date():

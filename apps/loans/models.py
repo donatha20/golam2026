@@ -1,11 +1,13 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.conf import settings
 from decimal import Decimal
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
+from functools import cached_property
 from apps.core.models import AuditModel, LoanStatusChoices, FrequencyChoices
 from apps.accounts.models import CustomUser
 from apps.borrowers.models import Borrower
@@ -17,6 +19,37 @@ class InterestTypeChoices(models.TextChoices):
     FLAT = 'flat', 'Flat'
     REDUCING = 'reducing', 'Reducing Balance'
     OTHER = 'other', 'Other'
+
+
+class RepaymentStatusChoices(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    DUE = 'due', 'Due'
+    PAID = 'paid', 'Paid'
+    PARTIAL = 'partial', 'Partially Paid'
+    MISSED = 'missed', 'Missed'
+    ROLLED_OVER = 'rolled_over', 'Rolled Over'
+    DEFAULTED = 'defaulted', 'Defaulted'
+
+
+# Constants for loan calculations and thresholds
+class LoanConstants:
+    """Constants used in loan calculations and status determination."""
+    # Frequency to installment multiplier (days per period)
+    DAYS_PER_MONTH = 30  # Used for daily frequency: duration_months * 30
+    WEEKS_PER_MONTH = 4.29  # Average weeks per month
+    INSTALLMENTS_PER_QUARTER = 1  # One payment per quarter
+    
+    # NPL thresholds (days overdue)
+    NPL_WATCH_DAYS = 90        # Watch category threshold
+    NPL_SUBSTANDARD_DAYS = 180 # Substandard category threshold
+    NPL_DOUBTFUL_DAYS = 270    # Doubtful category threshold
+    NPL_LOSS_DAYS = 365        # Loss category threshold
+    
+    # Repayment schedule thresholds
+    DEFAULTED_DAYS = 30  # Days overdue before marking as defaulted
+    
+    # Penalty calculations
+    MISSED_PAYMENT_PENALTY_DEFAULT = Decimal('500.00')
 
 
 class RepaymentStatusChoices(models.TextChoices):
@@ -200,15 +233,27 @@ class Loan(AuditModel):
     # Basic loan information
     loan_category = models.CharField(max_length=50, blank=True, null=True)
     amount_requested = models.DecimalField(max_digits=12, decimal_places=2)
-    amount_approved = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    amount_approved = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.01'))],  # Must be positive if set
+        help_text="Approved loan amount must be greater than zero"
+    )
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
     duration_months = models.PositiveIntegerField()
     proposed_project = models.CharField(max_length=255, blank=True, null=True)
     
     # Collateral information
     collateral_name = models.CharField(max_length=255, blank=True, null=True)
-    collateral_worth = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    collateral_withheld = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    collateral_worth = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Collateral value must be non-negative"
+    )
+    collateral_withheld = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Withheld collateral amount must be non-negative"
+    )
     
     # Payment and disbursement
     repayment_frequency = models.CharField(
@@ -221,7 +266,11 @@ class Loan(AuditModel):
         choices=RepaymentTypeChoices.choices, 
         default=RepaymentTypeChoices.MONTHLY
     )
-    processing_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    processing_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Processing fee must be non-negative"
+    )
     loan_fees_applied = models.BooleanField(default=False)
     
     # Disbursement information
@@ -268,10 +317,26 @@ class Loan(AuditModel):
     supporting_document = models.FileField(upload_to='loan_documents/', blank=True, null=True)
 
     # Financial calculations
-    total_interest = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    outstanding_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_interest = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Total interest amount must be non-negative"
+    )
+    total_amount = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],  # Must be >= 0
+        help_text="Total loan amount must be non-negative"
+    )
+    outstanding_balance = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Outstanding balance must be non-negative"
+    )
+    total_paid = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],  # Cannot be negative
+        help_text="Total paid amount must be non-negative"
+    )
 
     # NPL (Non-Performing Loan) tracking fields
     is_npl = models.BooleanField(default=False, help_text="Whether this loan is classified as non-performing")
@@ -333,7 +398,9 @@ class Loan(AuditModel):
     def __str__(self):
         return f"{self.loan_number} - {self.borrower.get_full_name()}"
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
+        """Save loan with atomic transaction to ensure consistency across all calculations."""
         if not self.loan_number:
             self.loan_number = self.generate_loan_number()
         
@@ -343,17 +410,26 @@ class Loan(AuditModel):
         if self.status == LoanStatusChoices.APPROVED and not self.amount_approved:
             self.amount_approved = self.amount_requested
 
-        manual_interest_amount = getattr(self, '_manual_interest_amount', None)
-        if manual_interest_amount is not None and self.amount_approved:
-            principal = Decimal(str(self.amount_approved))
-            manual_interest = Decimal(str(manual_interest_amount))
-            self.total_interest = manual_interest
-            self.total_amount = principal + manual_interest
-            total_paid = Decimal(str(self.total_paid or 0))
-            self.outstanding_balance = self.total_amount - total_paid
+        # Check if we're only updating repayment-related fields (don't recalculate in that case)
+        update_fields = kwargs.get('update_fields')
+        is_repayment_only_update = (
+            update_fields and 
+            set(update_fields).issubset({'total_paid', 'outstanding_balance', 'status'})
+        )
         
-        elif self.amount_approved and self.interest_rate and self.duration_months:
-            self.calculate_loan_totals()
+        if not is_repayment_only_update:
+            # Only recalculate loan totals if this is NOT a repayment update
+            manual_interest_amount = getattr(self, '_manual_interest_amount', None)
+            if manual_interest_amount is not None and self.amount_approved:
+                principal = Decimal(str(self.amount_approved))
+                manual_interest = Decimal(str(manual_interest_amount))
+                self.total_interest = manual_interest
+                self.total_amount = principal + manual_interest
+                total_paid = Decimal(str(self.total_paid or 0))
+                self.outstanding_balance = self.total_amount - total_paid
+            
+            elif self.amount_approved and self.interest_rate and self.duration_months:
+                self.calculate_loan_totals()
         
         if self.status == LoanStatusChoices.DISBURSED and self.disbursement_date and not self.maturity_date:
             self.calculate_maturity_date()
@@ -361,17 +437,21 @@ class Loan(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_loan_number(self):
-        """Generate unique loan number."""
-        year = timezone.now().year
-        max_attempts = 100
-        for _ in range(max_attempts):
-            number = f"LN{year}{''.join(random.choices(string.digits, k=8))}"
-            if not Loan.objects.filter(loan_number=number).exists():
-                return number
-        raise ValueError("Unable to generate unique loan number after maximum attempts")
+        """Generate unique loan number using sequential format: LN-0001."""
+        last_loan = Loan.objects.filter(
+            loan_number__startswith='LN-'
+        ).order_by('loan_number').last()
+        
+        if last_loan:
+            last_number = int(last_loan.loan_number[3:])  # Extract digits after 'LN-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
+        
+        return f"LN-{new_number:04d}"
 
     def calculate_loan_totals(self):
-        """Calculate total interest and total amount based on interest type."""
+        """Calculate total interest and total amount based on interest type with division guards."""
         if not all([self.amount_approved, self.interest_rate, self.duration_months]):
             return
         
@@ -388,29 +468,80 @@ class Loan(AuditModel):
             # Reducing balance (EMI calculation)
             monthly_rate = rate / 12
             n = months
-            if monthly_rate > 0:
+            if monthly_rate > 0 and n > 0:  # Guard against division by zero
                 emi = principal * (monthly_rate * (1 + monthly_rate)**n) / ((1 + monthly_rate)**n - 1)
                 self.total_amount = emi * n
                 self.total_interest = self.total_amount - principal
             else:
-                # Zero interest rate
+                # Zero interest rate or zero duration
                 self.total_amount = principal
                 self.total_interest = Decimal('0')
         else:
-            # Flat rate
-            self.total_interest = principal * rate * (months / 12)
+            # Flat rate - guard against zero months
+            if months > 0:
+                self.total_interest = principal * rate * (months / 12)
+            else:
+                self.total_interest = Decimal('0')
             self.total_amount = principal + self.total_interest
 
         self.outstanding_balance = self.total_amount
 
+    def clean(self):
+        """Validate loan data before saving."""
+        from django.core.exceptions import ValidationError
+        errors = {}
+        today = timezone.now().date()
+        
+        # Validate application_date is not in the future
+        if self.application_date:
+            app_date = self.application_date.date() if hasattr(self.application_date, 'date') else self.application_date
+            if app_date > today:
+                errors['application_date'] = "Application date cannot be in the future."
+        
+        # Validate approval_date is after application_date
+        if self.approval_date and self.application_date:
+            app_date = self.application_date.date() if hasattr(self.application_date, 'date') else self.application_date
+            if self.approval_date < app_date:
+                errors['approval_date'] = "Approval date cannot be before application date."
+        
+        # Validate disbursement_date is after or on approval_date
+        if self.disbursement_date and self.approval_date:
+            if self.disbursement_date < self.approval_date:
+                errors['disbursement_date'] = "Disbursement date cannot be before approval date."
+        
+        # Validate start_payment_date is after or on disbursement_date
+        if self.start_payment_date and self.disbursement_date:
+            if self.start_payment_date < self.disbursement_date:
+                errors['start_payment_date'] = "Start payment date cannot be before disbursement date."
+        
+        # Validate maturity_date is after disbursement_date
+        if self.maturity_date and self.disbursement_date:
+            if self.maturity_date <= self.disbursement_date:
+                errors['maturity_date'] = "Maturity date must be after disbursement date."
+        
+        # Validate duration_months is positive
+        if self.duration_months and self.duration_months <= 0:
+            errors['duration_months'] = "Duration must be a positive number of months."
+        
+        # Validate interest_rate is not negative
+        if self.interest_rate is not None and self.interest_rate < 0:
+            errors['interest_rate'] = "Interest rate cannot be negative."
+        
+        if errors:
+            raise ValidationError(errors)
+    
     def calculate_maturity_date(self):
         """Calculate loan maturity date."""
         if self.disbursement_date and self.duration_months:
             self.maturity_date = self.disbursement_date + relativedelta(months=self.duration_months)
 
-    @property
+    @cached_property
     def oldest_overdue_due_date(self):
-        """Returns the due_date of the oldest unpaid overdue installment."""
+        """Returns the due_date of the oldest unpaid overdue installment.
+        
+        Uses @cached_property to prevent N+1 queries when accessed multiple times
+        in the same request. Cache valid for instance lifecycle only.
+        """
         today = timezone.localdate()
 
         overdue_statuses = [
@@ -461,15 +592,15 @@ class Loan(AuditModel):
 
     @property
     def calculated_npl_category(self):
-        """Calculate NPL category based on days overdue."""
+        """Calculate NPL category based on days overdue using defined constants."""
         days = self.days_overdue
-        if days >= 365:
+        if days >= LoanConstants.NPL_LOSS_DAYS:
             return NPLCategoryChoices.LOSS
-        elif days >= 270:
+        elif days >= LoanConstants.NPL_DOUBTFUL_DAYS:
             return NPLCategoryChoices.DOUBTFUL
-        elif days >= 180:
+        elif days >= LoanConstants.NPL_SUBSTANDARD_DAYS:
             return NPLCategoryChoices.SUBSTANDARD
-        elif days >= 90:
+        elif days >= LoanConstants.NPL_WATCH_DAYS:
             return NPLCategoryChoices.WATCH
         return NPLCategoryChoices.PERFORMING
 
@@ -522,14 +653,14 @@ class Loan(AuditModel):
         return old_category != new_category
 
     def update_outstanding_balance(self):
-        """Recalculate outstanding balance based on payments."""
+        """Recalculate outstanding balance and update NPL classification accordingly."""
         total_paid = sum(
             repayment.amount_paid 
             for schedule in self.repayment_schedules.all() 
             for repayment in schedule.repayments.all()
         )
-        self.total_paid = total_paid
-        self.outstanding_balance = self.total_amount - total_paid
+        self.total_paid = Decimal(str(total_paid))
+        self.outstanding_balance = self.total_amount - self.total_paid
         
         # Update status to closed if fully paid
         if self.outstanding_balance <= 0 and self.status in [
@@ -539,6 +670,10 @@ class Loan(AuditModel):
             self.status = LoanStatusChoices.CLOSED
         
         self.save(update_fields=['outstanding_balance', 'total_paid', 'status'])
+        
+        # Update NPL classification based on new outstanding balance
+        # This ensures ratings change when payments reduce days overdue
+        self.update_npl_classification(save_loan=False)  # save already called above
 
     def disburse(self, disbursed_by):
         """Disburse the loan and generate repayment schedule."""
@@ -555,7 +690,7 @@ class Loan(AuditModel):
         self.generate_repayment_schedule()
 
     def generate_repayment_schedule(self):
-        """Generate repayment schedule based on loan parameters."""
+        """Generate repayment schedule based on loan parameters with guards against division by zero."""
         if not self.disbursement_date:
             raise ValueError("Disbursement date is required to generate schedule")
         
@@ -564,13 +699,16 @@ class Loan(AuditModel):
         
         # Determine number of installments based on repayment frequency
         frequency_map = {
-            FrequencyChoices.DAILY: self.duration_months * 30,
-            FrequencyChoices.WEEKLY: self.duration_months * 4,
+            FrequencyChoices.DAILY: int(self.duration_months * LoanConstants.DAYS_PER_MONTH),
+            FrequencyChoices.WEEKLY: int(self.duration_months * LoanConstants.WEEKS_PER_MONTH),
             FrequencyChoices.MONTHLY: self.duration_months,
             FrequencyChoices.QUARTERLY: max(1, self.duration_months // 3),
         }
         
         num_installments = frequency_map.get(self.repayment_frequency, self.duration_months)
+        # Guard against zero installments to prevent division by zero error
+        if num_installments <= 0:
+            raise ValueError(f"Invalid number of installments: {num_installments}. Duration months: {self.duration_months}")
         installment_amount = self.total_amount / num_installments
         
         # Calculate interval
@@ -651,8 +789,16 @@ class LoanDisbursement(models.Model):
 class RepaymentSchedule(models.Model):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='repayment_schedules')
     due_date = models.DateField()
-    amount_due = models.DecimalField(max_digits=12, decimal_places=2)
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    amount_due = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0'))],
+        help_text="Amount due for this installment"
+    )
+    amount_paid = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0,
+        validators=[MinValueValidator(Decimal('0'))],
+        help_text="Amount paid towards this installment"
+    )
     status = models.CharField(
         max_length=15, 
         choices=RepaymentStatusChoices.choices, 
@@ -668,6 +814,8 @@ class RepaymentSchedule(models.Model):
         indexes = [
             models.Index(fields=['loan', 'due_date']),
             models.Index(fields=['status', 'due_date']),
+            models.Index(fields=['due_date']),  # Index for queries filtering only by due_date
+            models.Index(fields=['status']),     # Index for queries filtering only by status
         ]
 
     def __str__(self):
@@ -686,7 +834,7 @@ class RepaymentSchedule(models.Model):
         return self.amount_due - self.amount_paid
 
     def update_status(self):
-        """Update schedule status based on payments."""
+        """Update schedule status based on payments and due dates."""
         today = timezone.now().date()
         
         if self.amount_paid >= self.amount_due:
@@ -694,9 +842,9 @@ class RepaymentSchedule(models.Model):
         elif self.amount_paid > 0:
             self.status = RepaymentStatusChoices.PARTIAL
         elif self.due_date < today:
-            # Overdue logic
+            # Overdue logic - use constant threshold
             days_overdue = (today - self.due_date).days
-            if days_overdue > 30:
+            if days_overdue > LoanConstants.DEFAULTED_DAYS:
                 self.status = RepaymentStatusChoices.DEFAULTED
             else:
                 self.status = RepaymentStatusChoices.MISSED
@@ -710,15 +858,71 @@ class RepaymentSchedule(models.Model):
 
 
 class Repayment(models.Model):
-    schedule = models.ForeignKey(RepaymentSchedule, on_delete=models.CASCADE, related_name='repayments')
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_date = models.DateField(default=timezone.now)
-    paid_by = models.ForeignKey(Borrower, on_delete=models.PROTECT, null=True, blank=True)
-    group_member = models.ForeignKey(GroupLoanMember, on_delete=models.PROTECT, null=True, blank=True)
-    received_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
-    status = models.CharField(max_length=15, choices=RepaymentStatusChoices.choices, default=RepaymentStatusChoices.PAID)
-    is_rollover = models.BooleanField(default=False)
-    # history = HistoricalRecords()  # Removed for now
+    """Record of a payment made towards a repayment schedule."""
+    schedule = models.ForeignKey(
+        RepaymentSchedule, on_delete=models.CASCADE, related_name='repayments',
+        help_text="The installment this payment is for"
+    )
+    amount_paid = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],  # Must be positive
+        help_text="Amount paid (must be positive)"
+    )
+    payment_date = models.DateField(
+        default=timezone.now,
+        help_text="Date when payment was received"
+    )
+    paid_by = models.ForeignKey(
+        Borrower, on_delete=models.PROTECT, null=True, blank=True,
+        help_text="Borrower who made the payment"
+    )
+    group_member = models.ForeignKey(
+        GroupLoanMember, on_delete=models.PROTECT, null=True, blank=True,
+        help_text="Group member if this is for a group loan"
+    )
+    received_by = models.ForeignKey(
+        CustomUser, on_delete=models.PROTECT,
+        help_text="Staff member who received the payment"
+    )
+    status = models.CharField(
+        max_length=15, choices=RepaymentStatusChoices.choices, default=RepaymentStatusChoices.PAID,
+        help_text="Status of this payment record"
+    )
+    is_rollover = models.BooleanField(
+        default=False,
+        help_text="Whether this payment was rolled over from previous period"
+    )
+    
+    class Meta:
+        ordering = ['-payment_date']
+        verbose_name = "Repayment"
+        verbose_name_plural = "Repayments"
+    
+    def __str__(self):
+        return f"Payment of {self.amount_paid} on {self.payment_date}"
+    
+    def clean(self):
+        """Validate repayment data before saving."""
+        from django.core.exceptions import ValidationError
+        errors = {}
+        
+        # Validate amount_paid does not exceed amount_due
+        if self.schedule and self.amount_paid > (self.schedule.amount_due - self.schedule.amount_paid + self.amount_paid):
+            # Check overpayment against remaining balance
+            remaining = self.schedule.amount_due - self.schedule.amount_paid
+            if self.amount_paid > remaining:
+                errors['amount_paid'] = f"Payment amount ({self.amount_paid}) cannot exceed remaining balance ({remaining})"
+        
+        # Validate payment_date is not in the future
+        if self.payment_date and self.payment_date > timezone.now().date():
+            errors['payment_date'] = "Payment date cannot be in the future"
+        
+        # Validate amount_paid is positive
+        if self.amount_paid and self.amount_paid <= 0:
+            errors['amount_paid'] = "Payment amount must be greater than zero"
+        
+        if errors:
+            raise ValidationError(errors)
 
 
 class LoanPenalty(models.Model):
@@ -787,14 +991,18 @@ class OldLoan(models.Model):
 
 @receiver(post_save, sender=RepaymentSchedule)
 def apply_penalty_if_missed(sender, instance, **kwargs):
+    """Apply penalty for missed payments using atomic get_or_create to prevent duplicate penalties under concurrency."""
     if instance.status == RepaymentStatusChoices.MISSED:
-        if not LoanPenalty.objects.filter(schedule=instance).exists():
-            LoanPenalty.objects.create(
-                loan=instance.loan,
-                schedule=instance,
-                penalty_type='missed_payment',
-                amount=Decimal('500.00'),  # You can use a dynamic logic
-                reason="Auto penalty for missed schedule"
-            )
+        # Use get_or_create to atomically check and create, preventing duplicate penalties under high concurrency
+        penalty_amount = Decimal(str(getattr(settings, 'DEFAULT_MISSED_PAYMENT_PENALTY', '500.00')))
+        LoanPenalty.objects.get_or_create(
+            schedule=instance,
+            defaults={
+                'loan': instance.loan,
+                'penalty_type': 'missed_payment',
+                'amount': penalty_amount,
+                'reason': "Auto penalty for missed schedule"
+            }
+        )
 
 

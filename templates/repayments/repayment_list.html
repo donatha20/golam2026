@@ -188,11 +188,11 @@
             <div class="stat-label">Total Payments</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₹{{ stats.total_amount|floatformat:2 }}</div>
+            <div class="stat-value">TZS {{ stats.total_amount|floatformat:2 }}</div>
             <div class="stat-label">Total Amount</div>
         </div>
         <div class="stat-card">
-            <div class="stat-value">₹{{ stats.today_collections|floatformat:2 }}</div>
+            <div class="stat-value">TZS {{ stats.today_collections|floatformat:2 }}</div>
             <div class="stat-label">Today's Collections</div>
         </div>
         <div class="stat-card">
@@ -264,7 +264,7 @@
                 </div>
                 
                 <div class="payment-amount mb-3">
-                    ₹{{ payment.amount|floatformat:2 }}
+                    Tsh. {{ payment.amount|floatformat:2 }}
                 </div>
                 
                 <div class="payment-meta mb-3">
@@ -279,7 +279,7 @@
                     {% for allocation in payment.allocation_set.all %}
                     <div class="allocation-item">
                         <span class="allocation-label">{{ allocation.get_allocation_type_display }}</span>
-                        <span class="allocation-amount">₹{{ allocation.amount|floatformat:2 }}</span>
+                        <span class="allocation-amount">TZS {{ allocation.amount|floatformat:2 }}</span>
                     </div>
                     {% endfor %}
                 </div>

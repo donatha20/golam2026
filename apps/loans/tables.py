@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
-from .models import Loan, RepaymentSchedule
+from .models import Loan, RepaymentSchedule, Penalty, Repayment
 
 
 class DisbursedLoansTable(tables.Table):
@@ -60,27 +60,37 @@ class DisbursedLoansTable(tables.Table):
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "â€”"
+        return record.loan_type.name if record.loan_type else "—"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
         return format_html(
-            '<span class="amount-cell">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell">Tsh {}</span>',
+            formatted
         )
 
     def render_outstanding_balance(self, value):
         """Render outstanding balance with formatting."""
-        if value and value > 0:
+        try:
+            amount = float(value) if value else 0
+        except (ValueError, TypeError):
+            amount = 0
+        if amount > 0:
+            formatted = "{:,.2f}".format(amount)
             return format_html(
-                '<span class="amount-outstanding">Tsh {:,.2f}</span>',
-                value
+                '<span class="amount-outstanding">Tsh {}</span>',
+                formatted
             )
         return format_html('<span class="amount-paid">Tsh 0.00</span>')
 
     def render_duration_months(self, value):
         """Render duration with months label."""
-        return f"{value} months" if value else "â€”"
+        return f"{value} months" if value else "—"
 
     def render_status(self, record):
         """Render loan status with badge."""
@@ -105,7 +115,7 @@ class DisbursedLoansTable(tables.Table):
         """Render disbursed by officer."""
         if record.disbursed_by:
             return record.disbursed_by.get_full_name()
-        return "â€”"
+        return "—"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -180,29 +190,34 @@ class RepaidLoansTable(tables.Table):
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "â€”"
+        return record.loan_type.name if record.loan_type else "—"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
         return format_html(
-            '<span class="amount-cell">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell">Tsh {}</span>',
+            formatted
         )
 
     def render_duration_months(self, value):
         """Render duration with months label."""
-        return f"{value} months" if value else "â€”"
+        return f"{value} months" if value else "—"
 
     def render_completion_date(self, record):
         """Render completion date or calculate from last payment."""
         # You might need to calculate this from the last repayment
         if hasattr(record, 'completion_date') and record.completion_date:
             return record.completion_date
-        return "â€”"
+        return "—"
 
     def render_created_by(self, record):
         """Render created by officer."""
-        return record.created_by.get_full_name() if record.created_by else "â€”"
+        return record.created_by.get_full_name() if record.created_by else "—"
 
     def render_status(self, record):
         """Render completed status."""
@@ -263,7 +278,7 @@ class ExpectedRepaymentsTable(tables.Table):
     def render_avatar(self, record):
         """Render repayment avatar with status indicator."""
         if record.status == 'paid':
-            icon = "âœ“"
+            icon = "✓"
             color = "#16a34a"
         elif record.status == 'missed':
             icon = "!"
@@ -295,9 +310,14 @@ class ExpectedRepaymentsTable(tables.Table):
 
     def render_amount_due(self, value):
         """Render amount due with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
         return format_html(
-            '<span class="amount-cell">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell">Tsh {}</span>',
+            formatted
         )
 
     def render_status(self, record):
@@ -342,11 +362,15 @@ class ExpectedRepaymentsTable(tables.Table):
 
     def render_loan_balance(self, record):
         """Render loan outstanding balance."""
-        balance = record.loan.outstanding_balance or 0
+        try:
+            balance = float(record.loan.outstanding_balance or 0)
+        except (ValueError, TypeError):
+            balance = 0
         if balance > 0:
+            formatted = "{:,.2f}".format(balance)
             return format_html(
-                '<span class="amount-outstanding">Tsh {:,.2f}</span>',
-                balance
+                '<span class="amount-outstanding">Tsh {}</span>',
+                formatted
             )
         return format_html('<span class="amount-paid">Tsh 0.00</span>')
 
@@ -354,7 +378,7 @@ class ExpectedRepaymentsTable(tables.Table):
         """Render group information if applicable."""
         if hasattr(record.loan, 'group_loan') and record.loan.group_loan:
             return record.loan.group_loan.group.name
-        return "â€”"
+        return "—"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -432,18 +456,23 @@ class NonPerformingLoansTable(tables.Table):
             '</div>',
             borrower.get_full_name(),
             borrower.borrower_id,
-            borrower.phone_number or "â€”"
+            borrower.phone_number or "—"
         )
 
     def render_loan_type(self, record):
         """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "â€”"
+        return record.loan_type.name if record.loan_type else "—"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
         return format_html(
-            '<span class="amount-cell">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell">Tsh {}</span>',
+            formatted
         )
 
     def render_outstanding_balance(self, value):
@@ -534,3 +563,391 @@ class NonPerformingLoansTable(tables.Table):
         )
 
 
+class OutstandingLoansTable(tables.Table):
+    """Table for displaying outstanding loans."""
+
+    # Avatar column for visual consistency
+    avatar = tables.Column(empty_values=(), orderable=False, verbose_name="")
+
+    # Borrower information
+    borrower = tables.Column(empty_values=(), verbose_name="Borrower")
+
+    # Loan details
+    loan_number = tables.Column(verbose_name="Loan #")
+    amount_approved = tables.Column(verbose_name="Approved Amount")
+    outstanding_balance = tables.Column(verbose_name="Outstanding")
+    total_paid = tables.Column(verbose_name="Paid")
+    disbursement_date = tables.DateColumn(format="M d, Y", verbose_name="Disbursed")
+
+    # Status and tracking
+    status = tables.Column(empty_values=(), verbose_name="Status")
+    loan_type = tables.Column(empty_values=(), verbose_name="Product")
+
+    # Actions
+    actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
+
+    class Meta:
+        model = Loan
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("avatar", "borrower", "loan_number", "amount_approved", "outstanding_balance",
+                  "total_paid", "disbursement_date", "status", "loan_type", "actions")
+        attrs = {
+            "class": "table table-hover loan-table outstanding-table",
+            "id": "outstanding-loans-table"
+        }
+
+    def render_avatar(self, record):
+        """Render loan avatar with loan type initial."""
+        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        return format_html(
+            '<div class="table-avatar">{}</div>',
+            initial
+        )
+
+    def render_borrower(self, record):
+        """Render borrower full name + ID."""
+        borrower = record.borrower
+        return format_html(
+            '<div class="borrower-name-cell">'
+            '<div class="borrower-full-name">{}</div>'
+            '<div class="borrower-id">{}</div>'
+            '</div>',
+            borrower.get_full_name(),
+            borrower.borrower_id
+        )
+
+    def render_amount_approved(self, value):
+        """Render amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html(
+            '<span class="amount-cell">Tsh {}</span>',
+            formatted
+        )
+
+    def render_outstanding_balance(self, value):
+        """Render outstanding balance."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html(
+            '<span class="amount-outstanding">Tsh {}</span>',
+            formatted
+        )
+
+    def render_total_paid(self, value):
+        """Render total paid amount."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html(
+            '<span class="amount-paid">Tsh {}</span>',
+            formatted
+        )
+
+    def render_status(self, record):
+        """Render loan status with badge."""
+        status_classes = {
+            'pending': 'status-pending',
+            'approved': 'status-approved',
+            'disbursed': 'status-active',
+            'active': 'status-active',
+            'completed': 'status-completed',
+            'defaulted': 'status-defaulted',
+        }
+        status_class = status_classes.get(record.status, 'status-inactive')
+        return format_html(
+            '<span class="status-badge {}">{}</span>',
+            status_class,
+            record.get_status_display()
+        )
+
+    def render_actions(self, record):
+        """Render actions column."""
+        return format_html(
+            '<div class="action-buttons">'
+            '<a href="/loans/{}/" class="btn-action btn-view" title="View Details">'
+            '<i class="fas fa-eye"></i></a>'
+            '<a href="/loans/repayments/{}/" class="btn-action btn-payment" title="View Repayments">'
+            '<i class="fas fa-money-bill-wave"></i></a>'
+            '</div>',
+            record.id,
+            record.id
+        )
+
+
+class LoanRepaymentsTable(tables.Table):
+    """Table for displaying individual repayments for a loan."""
+    
+    # Schedule info
+    installment_number = tables.Column(empty_values=(), verbose_name="Installment")
+    due_date = tables.DateColumn(format="M d, Y", verbose_name="Due Date")
+    amount_due = tables.Column(verbose_name="Amount Due")
+    
+    # Repayment details
+    amount_paid = tables.Column(verbose_name="Amount Paid")
+    payment_date = tables.DateColumn(format="M d, Y", verbose_name="Payment Date", empty_values=())
+    received_by = tables.Column(empty_values=(), verbose_name="Received By")
+    
+    # Status
+    status = tables.Column(empty_values=(), verbose_name="Status")
+    actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
+
+    class Meta:
+        model = Repayment
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("installment_number", "due_date", "amount_due", "amount_paid", 
+                  "payment_date", "received_by", "status", "actions")
+        attrs = {
+            "class": "table table-hover repayment-table",
+            "id": "loan-repayments-table"
+        }
+
+    def render_amount_due(self, value):
+        """Render amount due with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html('<span class="amount-cell">Tsh {}</span>', formatted)
+
+    def render_amount_paid(self, value):
+        """Render amount paid with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        if value and value > 0:
+            return format_html('<span class="amount-paid">Tsh {}</span>', formatted)
+        return format_html('<span class="amount-zero">Tsh 0.00</span>')
+
+    def render_received_by(self, record):
+        """Render officer who received payment."""
+        if record.received_by:
+            return record.received_by.get_full_name()
+        return ""
+
+    def render_status(self, record):
+        """Render repayment status."""
+        status_classes = {
+            'pending': 'status-pending',
+            'paid': 'status-completed',
+            'missed': 'status-overdue',
+            'defaulted': 'status-defaulted',
+        }
+        status_class = status_classes.get(record.status, 'status-inactive')
+        return format_html(
+            '<span class="status-badge {}">{}</span>',
+            status_class,
+            record.get_status_display() if hasattr(record, 'get_status_display') else record.status
+        )
+
+    def render_actions(self, record):
+        """Render actions column."""
+        return format_html(
+            '<div class="action-buttons">'
+            '<button class="btn-action btn-view" title="View Schedule" data-id="{}">'
+            '<i class="fas fa-eye"></i></button>'
+            '</div>',
+            record.schedule.id if record.schedule else 0
+        )
+
+
+class PenaltiesTable(tables.Table):
+    """Table for displaying penalties applied to loans."""
+    
+    # Loan and borrower info
+    loan_number = tables.Column(empty_values=(), verbose_name="Loan #")
+    borrower = tables.Column(empty_values=(), verbose_name="Borrower")
+    
+    # Penalty details
+    penalty_type = tables.Column(verbose_name="Type")
+    amount = tables.Column(verbose_name="Amount")
+    reason = tables.Column(verbose_name="Reason")
+    
+    # Dates and status
+    created_date = tables.DateColumn(format="M d, Y", verbose_name="Applied Date")
+    status = tables.Column(empty_values=(), verbose_name="Status")
+    
+    # Actions
+    actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
+
+    class Meta:
+        model = Penalty
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("loan_number", "borrower", "penalty_type", "amount", "reason", 
+                  "created_date", "status", "actions")
+        attrs = {
+            "class": "table table-hover penalty-table",
+            "id": "penalties-table"
+        }
+
+    def render_loan_number(self, record):
+        """Render loan number."""
+        return record.loan.loan_number if record.loan else ""
+
+    def render_borrower(self, record):
+        """Render borrower information."""
+        if record.loan and record.loan.borrower:
+            borrower = record.loan.borrower
+            return format_html(
+                '<div class="borrower-name-cell">'
+                '<div class="borrower-full-name">{}</div>'
+                '<div class="borrower-id">{}</div>'
+                '</div>',
+                borrower.get_full_name(),
+                borrower.borrower_id
+            )
+        return ""
+
+    def render_amount(self, value):
+        """Render penalty amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html('<span class="amount-penalty">Tsh {}</span>', formatted)
+
+    def render_status(self, record):
+        """Render penalty status."""
+        status_classes = {
+            'applied': 'status-applied',
+            'waived': 'status-waived',
+            'collected': 'status-collected',
+        }
+        status_class = status_classes.get(record.status, 'status-inactive')
+        return format_html(
+            '<span class="status-badge {}">{}</span>',
+            status_class,
+            record.get_status_display() if hasattr(record, 'get_status_display') else record.status
+        )
+
+    def render_actions(self, record):
+        """Render actions column."""
+        return format_html(
+            '<div class="action-buttons">'
+            '<button class="btn-action btn-view" title="View Loan" data-id="{}">'
+            '<i class="fas fa-eye"></i></button>'
+            '</div>',
+            record.loan.id if record.loan else 0
+        )
+
+
+class PortfolioAtRiskTable(tables.Table):
+    """Table for displaying loans at risk (6-30 days overdue)."""
+    
+    # Avatar column
+    avatar = tables.Column(empty_values=(), orderable=False, verbose_name="")
+    
+    # Borrower information
+    borrower = tables.Column(empty_values=(), verbose_name="Borrower")
+    
+    # Loan details
+    loan_number = tables.Column(verbose_name="Loan #")
+    loan_type = tables.Column(empty_values=(), verbose_name="Product")
+    amount_approved = tables.Column(verbose_name="Principal")
+    outstanding_balance = tables.Column(verbose_name="Outstanding")
+    
+    # Risk details
+    disbursement_date = tables.DateColumn(format="M d, Y", verbose_name="Disbursed")
+    days_overdue = tables.Column(empty_values=(), verbose_name="Days Overdue")
+    
+    # Status
+    status = tables.Column(empty_values=(), verbose_name="Status")
+    actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
+
+    class Meta:
+        model = Loan
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("avatar", "borrower", "loan_number", "loan_type", "amount_approved",
+                  "outstanding_balance", "disbursement_date", "days_overdue", "status", "actions")
+        attrs = {
+            "class": "table table-hover loan-table par-table",
+            "id": "portfolio-at-risk-table"
+        }
+
+    def render_avatar(self, record):
+        """Render loan avatar with warning indicator."""
+        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        return format_html(
+            '<div class="table-avatar par-avatar">{}</div>',
+            initial
+        )
+
+    def render_borrower(self, record):
+        """Render borrower full name + ID."""
+        borrower = record.borrower
+        return format_html(
+            '<div class="borrower-name-cell">'
+            '<div class="borrower-full-name">{}</div>'
+            '<div class="borrower-id">{}</div>'
+            '</div>',
+            borrower.get_full_name(),
+            borrower.borrower_id
+        )
+
+    def render_loan_type(self, record):
+        """Render loan type name."""
+        return record.loan_type.name if record.loan_type else ""
+
+    def render_amount_approved(self, value):
+        """Render amount with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html('<span class="amount-cell">Tsh {}</span>', formatted)
+
+    def render_outstanding_balance(self, value):
+        """Render outstanding balance."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html('<span class="amount-outstanding">Tsh {}</span>', formatted)
+
+    def render_days_overdue(self, record):
+        """Render days overdue."""
+        days = record.days_overdue if hasattr(record, 'days_overdue') and record.days_overdue else 0
+        return format_html(
+            '<span class="days-overdue-badge warning">{} days</span>',
+            days
+        )
+
+    def render_status(self, record):
+        """Render loan status."""
+        status_classes = {
+            'active': 'status-active',
+            'disbursed': 'status-disbursed',
+        }
+        status_class = status_classes.get(record.status, 'status-inactive')
+        return format_html(
+            '<span class="status-badge {}">{}</span>',
+            status_class,
+            record.get_status_display()
+        )
+
+    def render_actions(self, record):
+        """Render actions column."""
+        return format_html(
+            '<div class="action-buttons">'
+            '<a href="/loans/{}/" class="btn-action btn-view" title="View Details">'
+            '<i class="fas fa-eye"></i></a>'
+            '<a href="/loans/repayments/{}/" class="btn-action btn-payment" title="View Repayments">'
+            '<i class="fas fa-money-bill-wave"></i></a>'
+            '</div>',
+            record.id,
+            record.id
+        )

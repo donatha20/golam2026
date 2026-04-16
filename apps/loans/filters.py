@@ -3,6 +3,7 @@
 import django_filters
 from django import forms
 from django.db.models import Q
+from django.utils import timezone
 from datetime import date, timedelta
 from apps.loans.models import Loan, RepaymentSchedule, LoanType
 from apps.borrowers.models import Borrower
@@ -209,7 +210,7 @@ class OutstandingLoansFilter(django_filters.FilterSet):
         if not value:
             return queryset
             
-        today = date.today()
+        today = timezone.now().date()
         
         if value == 'current':
             # Current loans (no overdue payments)

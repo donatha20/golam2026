@@ -15,7 +15,7 @@ class BorrowerRegistrationForm(forms.ModelForm):
     class Meta:
         model = Borrower
         fields = [
-            'first_name', 'last_name', 'middle_name', 'gender', 'date_of_birth',
+            'first_name', 'last_name', 'middle_name', 'nickname', 'gender', 'date_of_birth',
             'marital_status', 'occupation', 'phone_number', 'email', 'photo',
             'id_type', 'id_number', 'id_issue_date', 'id_expiry_date',
             'house_number', 'street', 'ward', 'district', 'region',
@@ -34,6 +34,10 @@ class BorrowerRegistrationForm(forms.ModelForm):
             'middle_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter middle name (optional)'
+            }),
+            'nickname': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter nickname (optional)'
             }),
             'gender': forms.Select(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={

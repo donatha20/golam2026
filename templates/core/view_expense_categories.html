@@ -39,8 +39,8 @@
                                     <tr>
                                         <th>Name</th>
                                         <th>Type</th>
-                                        <th>Account Code</th>
-                                        <th>Budget Limit</th>
+                                        <th>Code</th>
+                                        <th>Monthly Budget Limit</th>
                                         <th>Status</th>
                                         <th>Description</th>
                                         <th>Actions</th>
@@ -55,20 +55,16 @@
                                                 <span class="badge badge-primary">Operational</span>
                                             {% elif category.category_type == 'administrative' %}
                                                 <span class="badge badge-info">Administrative</span>
-                                            {% elif category.category_type == 'marketing' %}
-                                                <span class="badge badge-success">Marketing</span>
-                                            {% elif category.category_type == 'maintenance' %}
-                                                <span class="badge badge-warning">Maintenance</span>
-                                            {% elif category.category_type == 'travel' %}
-                                                <span class="badge badge-secondary">Travel</span>
+                                            {% elif category.category_type == 'financial' %}
+                                                <span class="badge badge-success">Financial</span>
                                             {% else %}
                                                 <span class="badge badge-dark">Other</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ category.account_code|default:"—" }}</td>
+                                        <td>{{ category.code|default:"—" }}</td>
                                         <td>
-                                            {% if category.budget_limit %}
-                                                Tsh {{ category.budget_limit }}
+                                            {% if category.monthly_budget_limit %}
+                                                Tsh {{ category.monthly_budget_limit }}
                                             {% else %}
                                                 —
                                             {% endif %}

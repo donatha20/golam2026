@@ -196,22 +196,18 @@ class Employee(AuditModel):
         super().save(*args, **kwargs)
     
     def generate_employee_id(self):
-        """Generate unique employee ID."""
-        import random
-        import string
+        """Generate unique employee ID using sequential format: EM-0001."""
+        last_employee = Employee.objects.filter(
+            employee_id__startswith='EM-'
+        ).order_by('employee_id').last()
         
-        # Format: EMP + Year + Department Code + 4 random digits
-        current_year = timezone.now().year
-        dept_code = self.department.code.upper()
-        random_part = ''.join(random.choices(string.digits, k=4))
-        employee_id = f"EMP{current_year}{dept_code}{random_part}"
+        if last_employee:
+            last_number = int(last_employee.employee_id[3:])  # Extract digits after 'EM-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while Employee.objects.filter(employee_id=employee_id).exists():
-            random_part = ''.join(random.choices(string.digits, k=4))
-            employee_id = f"EMP{current_year}{dept_code}{random_part}"
-        
-        return employee_id
+        return f"EM-{new_number:04d}"
     
     def get_full_name(self):
         """Get employee's full name."""
@@ -946,17 +942,18 @@ class PayrollRecord(AuditModel):
         return payslip
     
     def generate_payslip_number(self):
-        """Generate unique payslip number."""
-        import random
-        import string
+        """Generate unique payslip number using sequential format: PS-0001."""
+        last_payslip = PayrollRecord.objects.filter(
+            payslip_number__startswith='PS-'
+        ).order_by('payslip_number').last()
         
-        # Format: PS + Year + Month + Employee ID + 3 random digits
-        period_start = self.payroll_period.start_date
-        year_month = f"{period_start.year}{period_start.month:02d}"
-        emp_id = self.employee.employee_id[-4:]  # Last 4 digits of employee ID
-        random_part = ''.join(random.choices(string.digits, k=3))
+        if last_payslip:
+            last_number = int(last_payslip.payslip_number[3:])  # Extract digits after 'PS-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        return f"PS{year_month}{emp_id}{random_part}"
+        return f"PS-{new_number:04d}"
 
 
 class PayrollAllowance(models.Model):
@@ -1244,22 +1241,18 @@ class SalaryAdvance(AuditModel):
         super().save(*args, **kwargs)
     
     def generate_advance_number(self):
-        """Generate unique advance number."""
-        import random
-        import string
+        """Generate unique advance number using sequential format: ADV-0001."""
+        last_advance = SalaryAdvance.objects.filter(
+            advance_number__startswith='ADV-'
+        ).order_by('advance_number').last()
         
-        # Format: ADV + Year + Month + 6 random digits
-        now = timezone.now()
-        year_month = f"{now.year}{now.month:02d}"
-        random_part = ''.join(random.choices(string.digits, k=6))
-        advance_number = f"ADV{year_month}{random_part}"
+        if last_advance:
+            last_number = int(last_advance.advance_number[4:])  # Extract digits after 'ADV-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while SalaryAdvance.objects.filter(advance_number=advance_number).exists():
-            random_part = ''.join(random.choices(string.digits, k=6))
-            advance_number = f"ADV{year_month}{random_part}"
-        
-        return advance_number
+        return f"ADV-{new_number:04d}"
 
 
 class AdvanceDeduction(models.Model):

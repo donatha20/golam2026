@@ -139,6 +139,62 @@
                         </div>
                     </div>
 
+                    <!-- Income Sources -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-funnel-dollar fa-3x text-success mb-3"></i>
+                                <h6 class="card-title">Income Sources</h6>
+                                <p class="card-text">Add and maintain approved income sources for finance forms</p>
+                                <a href="{% url 'core:view_income_sources' %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-list me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Categories (Type Source) -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-layer-group fa-3x text-primary mb-3"></i>
+                                <h6 class="card-title">Expense Categories</h6>
+                                <p class="card-text">Maintain expenditure types used in finance transaction forms</p>
+                                <a href="{% url 'core:view_expense_categories' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-list me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Income Categories -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tags fa-3x text-info mb-3"></i>
+                                <h6 class="card-title">Income Categories</h6>
+                                <p class="card-text">Manage income categories used for finance reporting and forms</p>
+                                <a href="{% url 'finance_tracker:manage_income_categories' %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-list me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expenditure Categories -->
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-sitemap fa-3x text-secondary mb-3"></i>
+                                <h6 class="card-title">Expenditure Categories</h6>
+                                <p class="card-text">Manage expenditure categories used for finance reporting and forms</p>
+                                <a href="{% url 'finance_tracker:manage_expenditure_categories' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-list me-1"></i>Manage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- User Management -->
                     <div class="col-md-6 mb-3">
                         <div class="card h-100">
@@ -202,22 +258,32 @@
             </div>
             <div class="card-body p-compact">
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <a href="{% url 'core:system_settings' %}" class="btn btn-outline-primary w-100 mb-2">
                             <i class="fas fa-cog me-1"></i>System Settings
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <a href="{% url 'core:company_profile' %}" class="btn btn-outline-success w-100 mb-2">
                             <i class="fas fa-building me-1"></i>Company Info
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <a href="{% url 'core:view_income_sources' %}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-funnel-dollar me-1"></i>Income Sources
+                        </a>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'core:view_expense_categories' %}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-layer-group me-1"></i>Expense Types
+                        </a>
+                    </div>
+                    <div class="col-md-2">
                         <a href="{% url 'core:user_list' %}" class="btn btn-outline-info w-100 mb-2">
                             <i class="fas fa-users me-1"></i>User Management
                         </a>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <a href="{% url 'financial_statements:dashboard' %}" class="btn btn-outline-warning w-100 mb-2">
                             <i class="fas fa-chart-bar me-1"></i>Reports
                         </a>

@@ -271,7 +271,7 @@
                     <td class="text-center">{{ schedule.installment_number }}</td>
                     <td class="text-center">{{ schedule.loan.duration_months|default:"N/A" }}</td>
                     <td>{{ schedule.due_date|date:"M d, Y" }}</td>
-                    <td class="text-end">${{ schedule.amount_due|default:0|floatformat:2 }}</td>
+                    <td class="text-end">TZS{{ schedule.amount_due|default:0|floatformat:2 }}</td>
                     <td>
                         {% if schedule.installment_number == schedule.loan.duration_months %}
                             <span class="progress-badge progress-final">Final Payment</span>

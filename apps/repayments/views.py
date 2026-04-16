@@ -224,23 +224,8 @@ def payment_detail(request, payment_id):
 
 @login_required
 def process_payment(request):
-    """Process new payment."""
-    if request.method == 'POST':
-        # This will be implemented with forms
-        pass
-    
-    # Get active loans for payment
-    active_loans = Loan.objects.filter(
-        status__in=['active', 'overdue']
-    ).select_related('borrower').order_by('loan_number')
-    
-    context = {
-        'active_loans': active_loans,
-        'title': 'Process Payment',
-        'page_title': 'New Payment',
-    }
-    
-    return render(request, 'repayments/process_payment.html', context)
+    """Process new payment by reusing the record repayment workflow."""
+    return redirect('repayments:record_repayment')
 
 
 @login_required
@@ -414,9 +399,9 @@ def collection_report(request):
 
         # Calculate totals
         total_collections = collections.aggregate(
-            total_amount=Sum('total_amount'),
+            total_collected_amount=Sum('total_amount'),
             total_payments=Sum('payment_count'),
-            avg_amount=Avg('total_amount')
+            average_collection_amount=Avg('total_amount')
         )
 
         report_data = {
@@ -724,13 +709,33 @@ def daily_collections_dashboard(request):
 @login_required
 def record_payment(request):
     """Record a new payment."""
+    from apps.accounts.models import CustomUser, UserRole
+
+    # Include users who can practically collect repayments.
+    loan_officers = CustomUser.objects.filter(
+        Q(role__in=[UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT, UserRole.MANAGER, UserRole.ADMIN]) |
+        Q(is_staff=True) |
+        Q(is_superuser=True),
+        is_active=True,
+    ).order_by('first_name', 'last_name', 'username')
+
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
             try:
                 with transaction.atomic():
                     payment = form.save(commit=False)
-                    payment.collected_by = request.user
+
+                    # Keep borrower consistent with the selected loan.
+                    payment.borrower = payment.loan.borrower
+
+                    selected_collector_id = request.POST.get('collected_by')
+                    if selected_collector_id:
+                        selected_collector = loan_officers.filter(pk=selected_collector_id).first()
+                        payment.collected_by = selected_collector or request.user
+                    else:
+                        payment.collected_by = request.user
+
                     payment.status = PaymentStatus.COMPLETED
                     payment.save()
 
@@ -774,6 +779,13 @@ def record_payment(request):
 
             except Exception as e:
                 messages.error(request, f'Error recording payment: {str(e)}')
+        else:
+            error_messages = []
+            for field_name, field_errors in form.errors.items():
+                label = form.fields[field_name].label if field_name in form.fields else field_name
+                for err in field_errors:
+                    error_messages.append(f'{label}: {err}')
+            messages.error(request, 'Please correct the form errors: ' + ' | '.join(error_messages))
     else:
         form = PaymentForm()
 
@@ -788,7 +800,9 @@ def record_payment(request):
 
     return render(request, 'repayments/record_repayment.html', {
         'form': form,
-        'title': 'Record Payment'
+        'title': 'Record Payment',
+        'loan_officers': loan_officers,
+        'user': request.user,
     })
 
 
@@ -811,8 +825,8 @@ def loan_repayments(request, loan_id):
     )['total'] or Decimal('0.00')
 
     payment_progress = 0
-    if loan.principal_amount > 0:
-        payment_progress = (total_paid / loan.principal_amount) * 100
+    if loan.total_amount > 0:
+        payment_progress = (total_paid / loan.total_amount) * 100
 
     paid_installments = schedule.filter(payment_status='paid').count()
     pending_installments = schedule.filter(payment_status__in=['pending', 'overdue']).count()
@@ -991,36 +1005,29 @@ def reverse_payment_allocations(payment):
 def update_loan_balances(loan):
     """Update loan outstanding balances."""
     # Calculate total paid amounts
-    total_principal_paid = loan.repayment_schedule.aggregate(
-        total=Sum('principal_paid')
-    )['total'] or Decimal('0.00')
-
-    total_interest_paid = loan.repayment_schedule.aggregate(
-        total=Sum('interest_paid')
-    )['total'] or Decimal('0.00')
-
-    total_penalty_paid = loan.repayment_schedule.aggregate(
-        total=Sum('penalty_paid')
-    )['total'] or Decimal('0.00')
+    from apps.loans.models import Repayment
+    from django.db.models import Sum
+    
+    total_paid = Repayment.objects.filter(
+        schedule__loan=loan
+    ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
 
     # Update loan balances
-    loan.principal_paid = total_principal_paid
-    loan.interest_paid = total_interest_paid
-    loan.penalty_paid = total_penalty_paid
-
-    loan.outstanding_balance = (
-        loan.principal_amount + loan.total_interest + loan.penalty_amount -
-        total_principal_paid - total_interest_paid - total_penalty_paid
-    )
+    loan.total_paid = total_paid
+    loan.outstanding_balance = loan.total_amount - total_paid
+    
+    # Ensure outstanding balance doesn't go negative
+    if loan.outstanding_balance < 0:
+        loan.outstanding_balance = Decimal('0.00')
 
     # Update loan status
+    from apps.loans.models import LoanStatusChoices
     if loan.outstanding_balance <= 0:
-        loan.status = 'completed'
-        loan.completion_date = timezone.now().date()
-    elif loan.outstanding_balance < loan.principal_amount + loan.total_interest:
-        loan.status = 'active'
+        loan.status = LoanStatusChoices.COMPLETED
+    elif loan.status in [LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED]:
+        loan.status = LoanStatusChoices.ACTIVE
 
-    loan.save()
+    loan.save(update_fields=['total_paid', 'outstanding_balance', 'status'])
 
 
 @login_required

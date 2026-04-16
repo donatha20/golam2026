@@ -462,7 +462,7 @@
             <div class="balance-title">
                 <i class="fas fa-university"></i> Available Balance
             </div>
-            <div class="balance-amount">Tsh {{ account_balances.total_liquid_assets|floatformat:2 }}</div>
+            <div class="balance-amount">TZS {{ account_balances.total_liquid_assets|floatformat:2 }}</div>
         </div>
 
         <!-- Capital Statistics -->
@@ -474,15 +474,15 @@
             
             <div class="stats-grid">
                 <div class="stat-card capital">
-                    <div class="stat-value capital">Tsh {{ capital_stats.total_capital|floatformat:0 }}</div>
+                    <div class="stat-value capital">TZS {{ capital_stats.total_capital|floatformat:0 }}</div>
                     <div class="stat-label capital">Total Capital</div>
                 </div>
                 <div class="stat-card withdrawal">
-                    <div class="stat-value withdrawal">Tsh {{ capital_stats.total_withdrawals|floatformat:0 }}</div>
+                    <div class="stat-value withdrawal">TZS {{ capital_stats.total_withdrawals|floatformat:0 }}</div>
                     <div class="stat-label withdrawal">Total Withdrawals</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value info">{{ capital_stats.pending_capital }}</div>
+                    <div class="stat-value info">TZS {{ capital_stats.pending_capital|floatformat:0  }}</div>
                     <div class="stat-label info">Pending Approval</div>
                 </div>
                 <div class="stat-card">

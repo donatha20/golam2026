@@ -50,22 +50,27 @@ class IncomeApprovalTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "â€”"
+        return record.category.name if record.category else "—"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
+        try:
+            amount_display = f"{float(value or 0):,.2f}"
+        except (TypeError, ValueError):
+            amount_display = str(value or 0)
+
         return format_html(
-            '<span class="amount-cell income-amount">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell income-amount">Tsh {}</span>',
+            amount_display
         )
 
     def render_received_from(self, value):
         """Render received from or dash if empty."""
-        return value or "â€”"
+        return value or "—"
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
+        return record.recorded_by.get_full_name() if record.recorded_by else "—"
 
     def render_actions(self, record):
         """Render approval actions."""
@@ -129,22 +134,27 @@ class ExpenditureApprovalTable(tables.Table):
 
     def render_category(self, record):
         """Render category name or dash if none."""
-        return record.category.name if record.category else "â€”"
+        return record.category.name if record.category else "—"
 
     def render_amount(self, value):
         """Render amount with currency formatting."""
+        try:
+            amount_display = f"{float(value or 0):,.2f}"
+        except (TypeError, ValueError):
+            amount_display = str(value or 0)
+
         return format_html(
-            '<span class="amount-cell expenditure-amount">Tsh {:,.2f}</span>',
-            value or 0
+            '<span class="amount-cell expenditure-amount">Tsh {}</span>',
+            amount_display
         )
 
     def render_vendor_name(self, value):
         """Render vendor name or dash if empty."""
-        return value or "â€”"
+        return value or "—"
 
     def render_recorded_by(self, record):
         """Render recorded by user."""
-        return record.recorded_by.get_full_name() if record.recorded_by else "â€”"
+        return record.recorded_by.get_full_name() if record.recorded_by else "—"
 
     def render_actions(self, record):
         """Render approval actions."""

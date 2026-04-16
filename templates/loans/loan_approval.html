@@ -342,7 +342,7 @@
             </div>
             <div class="info-item">
                 <div class="info-label">Interest Amount</div>
-                <div class="info-value">Tsh {{ loan.total_interest|floatformat:2 }}</div>
+                <div class="info-value">TZS {{ loan.total_interest|floatformat:2 }}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Repayment Frequency</div>
@@ -372,15 +372,15 @@
             </div>
             <div class="calculation-row">
                 <span>Processing Fee:</span>
-                <span>Tsh {{ loan.processing_fee|floatformat:2 }}</span>
+                <span>TZS {{ loan.processing_fee|floatformat:2 }}</span>
             </div>
             <div class="calculation-row">
                 <span>Total Interest Amount:</span>
-                <span>Tsh {{ loan.total_interest|floatformat:2 }}</span>
+                <span>TZS {{ loan.total_interest|floatformat:2 }}</span>
             </div>
             <div class="calculation-row total">
                 <span>Total Repayment Amount:</span>
-                <span>Tsh {{ loan.total_amount|floatformat:2 }}</span>
+                <span>TZS {{ loan.total_amount|floatformat:2 }}</span>
             </div>
         </div>
     </div>

@@ -72,6 +72,7 @@ def register_borrower(request):
             first_name = request.POST.get('first_name', '').strip()
             last_name = request.POST.get('last_name', '').strip()
             middle_name = request.POST.get('middle_name', '').strip()
+            nickname = request.POST.get('nickname', '').strip()
             gender = request.POST.get('gender')
             date_of_birth = request.POST.get('date_of_birth')
             marital_status = request.POST.get('marital_status')
@@ -153,6 +154,7 @@ def register_borrower(request):
                 first_name=first_name,
                 last_name=last_name,
                 middle_name=middle_name or None,
+                nickname=nickname or None,
                 gender=gender,
                 date_of_birth=date_of_birth,
                 marital_status=marital_status,
@@ -184,6 +186,29 @@ def register_borrower(request):
                 content_type='Borrower',
                 object_id=borrower.id
             )
+
+            # Create in-app notifications for approval/elevated users.
+            try:
+                from apps.accounts.models import CustomUser
+                from apps.notifications.models import NotificationType
+                from apps.notifications.utils import create_notifications_for_users
+
+                recipients = CustomUser.objects.filter(
+                    role__in=['admin', 'manager'],
+                    is_active=True,
+                ).exclude(id=request.user.id)
+
+                create_notifications_for_users(
+                    recipients=recipients,
+                    actor=request.user,
+                    title='New Borrower Registered',
+                    message=f'{borrower.get_full_name()} ({borrower.borrower_id}) was registered at {borrower.branch.name}.',
+                    notification_type=NotificationType.INFO,
+                    target_url=f'/borrowers/{borrower.id}/view/',
+                )
+            except Exception:
+                # Do not block borrower registration if notifications fail.
+                pass
             
             messages.success(request, f'Borrower {borrower.get_full_name()} registered successfully! ID: {borrower.borrower_id}')
             return redirect('borrowers:borrower_list')
@@ -210,42 +235,101 @@ def register_borrower(request):
 @login_required
 def registration_report(request):
     """Display borrower registration report."""
-    # Get date range from request
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    # Get filters from request
+    start_date_param = request.GET.get('start_date')
+    end_date_param = request.GET.get('end_date')
+    branch_id = request.GET.get('branch')
+    officer_id = request.GET.get('officer')
     
-    # Default to current month if no dates provided
-    if not start_date or not end_date:
-        today = timezone.now().date()
-        start_date = today.replace(day=1)
-        end_date = today
-    else:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-    
-    # Get borrowers in date range
-    borrowers = Borrower.objects.filter(
-        registration_date__range=[start_date, end_date]
-    ).select_related('branch', 'registered_by').order_by('-registration_date')
+    start_date = None
+    end_date = None
+
+    if start_date_param:
+        try:
+            start_date = datetime.strptime(start_date_param, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            messages.warning(request, 'Invalid start date format ignored.')
+
+    if end_date_param:
+        try:
+            end_date = datetime.strptime(end_date_param, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            messages.warning(request, 'Invalid end date format ignored.')
+
+    # Ensure range order is always valid when both bounds are present.
+    if start_date and end_date and start_date > end_date:
+        start_date, end_date = end_date, start_date
+
+    borrowers = Borrower.objects.select_related('branch', 'registered_by').order_by('-registration_date')
+
+    if start_date:
+        borrowers = borrowers.filter(registration_date__gte=start_date)
+    if end_date:
+        borrowers = borrowers.filter(registration_date__lte=end_date)
+    if branch_id:
+        borrowers = borrowers.filter(branch_id=branch_id)
+    if officer_id:
+        borrowers = borrowers.filter(registered_by_id=officer_id)
     
     # Create data table
     table = RegistrationReportTable(borrowers)
     RequestConfig(request, paginate={"per_page": 50}).configure(table)
+
+    total_registered = borrowers.count()
+    male_borrowers = borrowers.filter(gender='male').count()
+    female_borrowers = borrowers.filter(gender='female').count()
+    other_borrowers = max(total_registered - male_borrowers - female_borrowers, 0)
+
+    male_percentage = round((male_borrowers / total_registered) * 100, 1) if total_registered else 0
+    female_percentage = round((female_borrowers / total_registered) * 100, 1) if total_registered else 0
+    other_percentage = round((other_borrowers / total_registered) * 100, 1) if total_registered else 0
+
+    by_branch = list(
+        borrowers.values('branch_id', 'branch__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    for item in by_branch:
+        item['percentage'] = round((item['count'] / total_registered) * 100, 1) if total_registered else 0
+
+    by_officer = list(
+        borrowers.values('registered_by_id', 'registered_by__first_name', 'registered_by__last_name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    for item in by_officer:
+        item['percentage'] = round((item['count'] / total_registered) * 100, 1) if total_registered else 0
     
     # Statistics
     stats = {
-        'total_registered': borrowers.count(),
-        'male_borrowers': borrowers.filter(gender='male').count(),
-        'female_borrowers': borrowers.filter(gender='female').count(),
-        'by_branch': borrowers.values('branch__name').annotate(count=Count('id')).order_by('-count'),
-        'by_officer': borrowers.values('registered_by__first_name', 'registered_by__last_name').annotate(count=Count('id')).order_by('-count'),
+        'total_registered': total_registered,
+        'male_borrowers': male_borrowers,
+        'female_borrowers': female_borrowers,
+        'other_borrowers': other_borrowers,
+        'male_percentage': male_percentage,
+        'female_percentage': female_percentage,
+        'other_percentage': other_percentage,
+        'by_branch': by_branch,
+        'by_officer': by_officer,
     }
+
+    branches = Branch.objects.filter(is_active=True).order_by('name')
+    officers = (
+        Borrower.objects.select_related('registered_by')
+        .values('registered_by_id', 'registered_by__first_name', 'registered_by__last_name')
+        .distinct()
+        .order_by('registered_by__first_name', 'registered_by__last_name')
+    )
     
     context = {
         'table': table,
         'stats': stats,
         'start_date': start_date,
         'end_date': end_date,
+        'branches': branches,
+        'officers': officers,
+        'selected_branch_id': branch_id,
+        'selected_officer_id': officer_id,
     }
     return render(request, 'borrowers/registration_report.html', context)
 

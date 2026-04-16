@@ -254,33 +254,33 @@
     {% endif %}
 
     <!-- Loan Details (if available) -->
-    {% if loan %}
+    {% if schedule %}
     <div class="loan-details-card">
-        <h3 class="loan-details-title">Loan Information</h3>
+        <h3 class="loan-details-title">Loan & Repayment Information</h3>
         <div class="loan-details-grid">
             <div class="loan-detail-item">
                 <span class="loan-detail-label">Loan Number:</span>
-                <span class="loan-detail-value">{{ loan.loan_number }}</span>
+                <span class="loan-detail-value">{{ schedule.loan.loan_number }}</span>
             </div>
             <div class="loan-detail-item">
                 <span class="loan-detail-label">Borrower:</span>
-                <span class="loan-detail-value">{{ loan.borrower.get_full_name }}</span>
+                <span class="loan-detail-value">{{ schedule.loan.borrower.get_full_name }}</span>
             </div>
             <div class="loan-detail-item">
-                <span class="loan-detail-label">Loan Product:</span>
-                <span class="loan-detail-value">{{ loan.loan_product.name }}</span>
+                <span class="loan-detail-label">Installment #:</span>
+                <span class="loan-detail-value">{{ schedule.installment_number }}</span>
             </div>
             <div class="loan-detail-item">
                 <span class="loan-detail-label">Outstanding Balance:</span>
-                <span class="loan-detail-value">₹{{ loan.outstanding_balance|floatformat:2 }}</span>
+                <span class="loan-detail-value">TZS{{ schedule.loan.outstanding_balance|floatformat:2 }}</span>
             </div>
             <div class="loan-detail-item">
-                <span class="loan-detail-label">Next Due Date:</span>
-                <span class="loan-detail-value">{{ loan.next_due_date|date:"d M Y" }}</span>
+                <span class="loan-detail-label">Amount Due:</span>
+                <span class="loan-detail-value">TZS{{ schedule.amount_due|floatformat:2 }}</span>
             </div>
             <div class="loan-detail-item">
                 <span class="loan-detail-label">Status:</span>
-                <span class="loan-detail-value">{{ loan.get_status_display }}</span>
+                <span class="loan-detail-value">{{ schedule.get_status_display }}</span>
             </div>
         </div>
     </div>
@@ -292,24 +292,24 @@
         <h3 class="calculator-title">Payment Breakdown</h3>
         <div class="calculator-row">
             <span class="calculator-label">Principal Due:</span>
-            <span class="calculator-value">₹{{ payment_breakdown.principal_due|floatformat:2 }}</span>
+            <span class="calculator-value">TZS{{ payment_breakdown.principal_due|floatformat:2 }}</span>
         </div>
         <div class="calculator-row">
             <span class="calculator-label">Interest Due:</span>
-            <span class="calculator-value">₹{{ payment_breakdown.interest_due|floatformat:2 }}</span>
+            <span class="calculator-value">TZS{{ payment_breakdown.interest_due|floatformat:2 }}</span>
         </div>
         <div class="calculator-row">
             <span class="calculator-label">Penalty/Fees:</span>
-            <span class="calculator-value">₹{{ payment_breakdown.penalty_due|floatformat:2 }}</span>
+            <span class="calculator-value">TZS{{ payment_breakdown.penalty_due|floatformat:2 }}</span>
         </div>
         <div class="calculator-row total-due">
             <span class="calculator-label">Total Due:</span>
-            <span class="calculator-value">₹{{ payment_breakdown.total_due|floatformat:2 }}</span>
+            <span class="calculator-value">TZS{{ payment_breakdown.total_due|floatformat:2 }}</span>
         </div>
     </div>
     {% endif %}
 
-    <form method="post" action="{% url 'loans:record_repayment' %}">
+    <form method="post" action="{% url 'loans:record_repayment' schedule.id %}">
         {% csrf_token %}
 
         <!-- Payment Information -->
@@ -317,17 +317,6 @@
             <h3 class="section-title">Payment Information</h3>
             
             <div class="form-row">
-                <div class="form-group">
-                    <label for="{{ form.loan.id_for_label }}" class="form-label required">Loan</label>
-                    {{ form.loan }}
-                    {% if form.loan.help_text %}
-                        <div class="form-help">{{ form.loan.help_text }}</div>
-                    {% endif %}
-                    {% if form.loan.errors %}
-                        <div class="error-message">{{ form.loan.errors.0 }}</div>
-                    {% endif %}
-                </div>
-
                 <div class="form-group">
                     <label for="{{ form.payment_date.id_for_label }}" class="form-label required">Payment Date</label>
                     {{ form.payment_date }}
@@ -338,11 +327,9 @@
                         <div class="error-message">{{ form.payment_date.errors.0 }}</div>
                     {% endif %}
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
-                    <label for="{{ form.amount_paid.id_for_label }}" class="form-label required">Amount Paid</label>
+                    <label for="{{ form.amount_paid.id_for_label }}" class="form-label required">Amount Paid (Tsh)</label>
                     {{ form.amount_paid }}
                     {% if form.amount_paid.help_text %}
                         <div class="form-help">{{ form.amount_paid.help_text }}</div>
@@ -351,87 +338,8 @@
                         <div class="error-message">{{ form.amount_paid.errors.0 }}</div>
                     {% endif %}
                 </div>
-
-                <div class="form-group">
-                    <label for="{{ form.payment_method.id_for_label }}" class="form-label required">Payment Method</label>
-                    {{ form.payment_method }}
-                    {% if form.payment_method.help_text %}
-                        <div class="form-help">{{ form.payment_method.help_text }}</div>
-                    {% endif %}
-                    {% if form.payment_method.errors %}
-                        <div class="error-message">{{ form.payment_method.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="{{ form.receipt_number.id_for_label }}" class="form-label">Receipt Number</label>
-                    {{ form.receipt_number }}
-                    {% if form.receipt_number.help_text %}
-                        <div class="form-help">{{ form.receipt_number.help_text }}</div>
-                    {% endif %}
-                    {% if form.receipt_number.errors %}
-                        <div class="error-message">{{ form.receipt_number.errors.0 }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ form.paid_by.id_for_label }}" class="form-label">Paid By</label>
-                    {{ form.paid_by }}
-                    {% if form.paid_by.help_text %}
-                        <div class="form-help">{{ form.paid_by.help_text }}</div>
-                    {% endif %}
-                    {% if form.paid_by.errors %}
-                        <div class="error-message">{{ form.paid_by.errors.0 }}</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if form.notes %}
-            <div class="form-group">
-                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
-                {{ form.notes }}
-                {% if form.notes.help_text %}
-                    <div class="form-help">{{ form.notes.help_text }}</div>
-                {% endif %}
-                {% if form.notes.errors %}
-                    <div class="error-message">{{ form.notes.errors.0 }}</div>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Advanced Options -->
-        {% if form.is_penalty_payment or form.is_partial_payment %}
-        <div class="form-section">
-            <h3 class="section-title">Payment Options</h3>
-            
-            <div class="form-row">
-                {% if form.is_penalty_payment %}
-                <div class="form-group">
-                    <label class="form-label">
-                        {{ form.is_penalty_payment }} {{ form.is_penalty_payment.label }}
-                    </label>
-                    {% if form.is_penalty_payment.help_text %}
-                        <div class="form-help">{{ form.is_penalty_payment.help_text }}</div>
-                    {% endif %}
-                </div>
-                {% endif %}
-
-                {% if form.is_partial_payment %}
-                <div class="form-group">
-                    <label class="form-label">
-                        {{ form.is_partial_payment }} {{ form.is_partial_payment.label }}
-                    </label>
-                    {% if form.is_partial_payment.help_text %}
-                        <div class="form-help">{{ form.is_partial_payment.help_text }}</div>
-                    {% endif %}
-                </div>
-                {% endif %}
             </div>
         </div>
-        {% endif %}
 
         <!-- Form Errors -->
         {% if form.non_field_errors %}
@@ -445,7 +353,7 @@
             <button type="submit" class="btn-primary">
                 <i class="fas fa-save"></i> Record Payment
             </button>
-            <a href="{% url 'loans:loan_repayments' schedule.loan.id %}" class="btn-secondary">
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn-secondary">
                 <i class="fas fa-times"></i> Cancel
             </a>
         </div>

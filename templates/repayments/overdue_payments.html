@@ -330,11 +330,11 @@
                 
                 <div class="row mb-compact">
                     <div class="col-6">
-                        <div class="overdue-amount">₹{{ loan.overdue_amount|floatformat:2 }}</div>
+                        <div class="overdue-amount">TZS {{ loan.overdue_amount|floatformat:2 }}</div>
                         <small class="text-muted">Overdue Amount</small>
                     </div>
                     <div class="col-6 text-end">
-                        <div class="fs-5 fw-bold text-dark">₹{{ loan.outstanding_balance|floatformat:2 }}</div>
+                        <div class="fs-5 fw-bold text-dark">TZS {{ loan.outstanding_balance|floatformat:2 }}</div>
                         <small class="text-muted">Total Outstanding</small>
                     </div>
                 </div>
@@ -345,7 +345,7 @@
                             <strong>Due Date:</strong> {{ loan.next_due_date|date:"M d, Y" }}
                         </div>
                         <div class="col-6">
-                            <strong>Installment:</strong> ₹{{ loan.installment_amount|floatformat:2 }}
+                            <strong>Installment:</strong> TZS {{ loan.installment_amount|floatformat:2 }}
                         </div>
                     </div>
                 </div>
@@ -374,7 +374,7 @@
                     {% for payment in loan.recent_payments %}
                     <div class="history-item">
                         <span class="history-date">{{ payment.payment_date|date:"M d" }}</span>
-                        <span class="history-amount">₹{{ payment.amount|floatformat:2 }}</span>
+                        <span class="history-amount">TZS {{ payment.amount|floatformat:2 }}</span>
                     </div>
                     {% endfor %}
                 </div>

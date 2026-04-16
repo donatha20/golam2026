@@ -1,0 +1,134 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Collection Reports{% endblock %}
+{% block page_title %}Collection Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Collection Report</h4>
+        <a href="{% url 'repayments:dashboard' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select form-select-sm" name="report_type">
+                        <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="collector" {% if report_type == 'collector' %}selected{% endif %}>Collector</option>
+                        <option value="method" {% if report_type == 'method' %}selected{% endif %}>Method</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From</label>
+                    <input type="date" class="form-control form-control-sm" name="date_from" value="{{ report_data.date_from|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To</label>
+                    <input type="date" class="form-control form-control-sm" name="date_to" value="{{ report_data.date_to|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-3 d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if report_type == 'daily' %}
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><small class="text-muted">Total Amount</small><div class="h5 mb-0">{{ report_data.total_collections.total_collected_amount|default:0 }}</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><small class="text-muted">Total Payments</small><div class="h5 mb-0">{{ report_data.total_collections.total_payments|default:0 }}</div></div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card"><div class="card-body"><small class="text-muted">Average Collection</small><div class="h5 mb-0">{{ report_data.total_collections.average_collection_amount|default:0 }}</div></div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Collector</th>
+                        <th>Total Amount</th>
+                        <th>Payments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data.collections %}
+                    <tr>
+                        <td>{{ row.collection_date }}</td>
+                        <td>{{ row.collector.get_full_name }}</td>
+                        <td>{{ row.total_amount }}</td>
+                        <td>{{ row.payment_count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted">No data found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif report_type == 'collector' %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Collector</th>
+                        <th>Total Collected</th>
+                        <th>Payment Count</th>
+                        <th>Average Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data.collectors %}
+                    <tr>
+                        <td>{{ row.get_full_name }}</td>
+                        <td>{{ row.total_collected|default:0 }}</td>
+                        <td>{{ row.payment_count|default:0 }}</td>
+                        <td>{{ row.avg_payment|default:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted">No data found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th>Payment Method</th>
+                        <th>Total Amount</th>
+                        <th>Payment Count</th>
+                        <th>Average Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data.method_stats %}
+                    <tr>
+                        <td>{{ row.payment_method }}</td>
+                        <td>{{ row.total_amount|default:0 }}</td>
+                        <td>{{ row.payment_count|default:0 }}</td>
+                        <td>{{ row.avg_amount|default:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted">No data found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

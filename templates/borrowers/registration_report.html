@@ -332,6 +332,26 @@
             <label for="end_date">To:</label>
             <input type="date" id="end_date" name="end_date" class="date-input" 
                    value="{{ end_date|date:'Y-m-d' }}">
+
+            <label for="branch">Branch:</label>
+            <select id="branch" name="branch" class="date-input">
+                <option value="">All Branches</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if selected_branch_id == branch.id|stringformat:'s' %}selected{% endif %}>
+                        {{ branch.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="officer">Officer:</label>
+            <select id="officer" name="officer" class="date-input">
+                <option value="">All Officers</option>
+                {% for officer in officers %}
+                    <option value="{{ officer.registered_by_id }}" {% if selected_officer_id == officer.registered_by_id|stringformat:'s' %}selected{% endif %}>
+                        {{ officer.registered_by__first_name }} {{ officer.registered_by__last_name }}
+                    </option>
+                {% endfor %}
+            </select>
             
             <button type="submit" class="btn-filter">
                 <i class="fas fa-filter"></i> Filter
@@ -339,7 +359,14 @@
         </form>
         
         <div style="text-align: center; color: #6b7280; font-size: 0.9rem;">
-            Report Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+            {% if start_date or end_date %}
+                Report Period:
+                {% if start_date %}{{ start_date|date:"M d, Y" }}{% else %}All dates{% endif %}
+                -
+                {% if end_date %}{{ end_date|date:"M d, Y" }}{% else %}All dates{% endif %}
+            {% else %}
+                Report Period: All dates
+            {% endif %}
         </div>
     </div>
     
@@ -347,7 +374,7 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-value">{{ stats.total_registered }}</div>
-            <div class="stat-label">Total Registered</div>
+            <div class="stat-label">Total Registered (Filtered)</div>
         </div>
         <div class="stat-card">
             <div class="stat-value">{{ stats.male_borrowers }}</div>
@@ -360,7 +387,7 @@
         <div class="stat-card">
             <div class="stat-value">
                 {% if stats.total_registered > 0 %}
-                    {{ stats.female_borrowers|floatformat:0 }}%
+                    {{ stats.female_percentage|floatformat:1 }}%
                 {% else %}
                     0%
                 {% endif %}
@@ -378,7 +405,7 @@
                 {% for branch in stats.by_branch %}
                 <li class="chart-item">
                     <span class="chart-label">{{ branch.branch__name|default:"Unknown" }}</span>
-                    <span class="chart-value">{{ branch.count }}</span>
+                    <span class="chart-value">{{ branch.count }} ({{ branch.percentage|floatformat:1 }}%)</span>
                 </li>
                 {% empty %}
                 <li class="chart-item">
@@ -398,7 +425,7 @@
                     <span class="chart-label">
                         {{ officer.registered_by__first_name }} {{ officer.registered_by__last_name }}
                     </span>
-                    <span class="chart-value">{{ officer.count }}</span>
+                    <span class="chart-value">{{ officer.count }} ({{ officer.percentage|floatformat:1 }}%)</span>
                 </li>
                 {% empty %}
                 <li class="chart-item">
@@ -414,7 +441,7 @@
     <div class="table-container">
         <div class="table-controls">
             <div class="table-info">
-                Showing {{ table.paginated_rows|length }} of {{ stats.total_registered }} registrations
+                Showing {{ table.paginated_rows|length }} of {{ stats.total_registered }} filtered registrations
             </div>
             <div class="table-actions">
                 <button class="btn-export" onclick="printReport()">

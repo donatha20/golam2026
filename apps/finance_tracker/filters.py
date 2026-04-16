@@ -4,6 +4,7 @@ Django filters for finance tracker.
 import django_filters
 from django import forms
 from django.db.models import Q
+from apps.core.models import IncomeSource, ExpenseCategory
 from .models import Income, Expenditure, IncomeCategory, ExpenditureCategory
 
 
@@ -107,6 +108,14 @@ class IncomeFilter(django_filters.FilterSet):
     class Meta:
         model = Income
         fields = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        configured_sources = list(
+            IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        )
+        if configured_sources:
+            self.filters['source'].field.choices = [('', 'All Sources')] + configured_sources
     
     def filter_search(self, queryset, name, value):
         """Custom search filter."""
@@ -230,6 +239,14 @@ class ExpenditureFilter(django_filters.FilterSet):
     class Meta:
         model = Expenditure
         fields = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        configured_types = list(
+            ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        )
+        if configured_types:
+            self.filters['expenditure_type'].field.choices = [('', 'All Types')] + configured_types
     
     def filter_search(self, queryset, name, value):
         """Custom search filter."""

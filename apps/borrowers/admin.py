@@ -17,7 +17,7 @@ class BorrowerAdmin(admin.ModelAdmin):
         'registration_date', 'created_at'
     )
     search_fields = (
-        'borrower_id', 'first_name', 'last_name', 'phone_number', 
+        'borrower_id', 'first_name', 'last_name', 'nickname', 'phone_number', 
         'email', 'id_number'
     )
     readonly_fields = ('borrower_id', 'created_at', 'updated_at')
@@ -29,7 +29,7 @@ class BorrowerAdmin(admin.ModelAdmin):
         }),
         ('Personal Information', {
             'fields': (
-                'first_name', 'last_name', 'middle_name', 'gender', 
+                'first_name', 'last_name', 'middle_name', 'nickname', 'gender', 
                 'date_of_birth', 'marital_status', 'occupation'
             )
         }),

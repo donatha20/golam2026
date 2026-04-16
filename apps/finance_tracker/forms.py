@@ -3,6 +3,7 @@ Forms for income and expenditure management.
 """
 from django import forms
 from django.utils import timezone
+from apps.core.models import IncomeSource, ExpenseCategory
 from .models import Income, Expenditure, IncomeCategory, ExpenditureCategory, Capital, Shareholder
 
 
@@ -72,6 +73,18 @@ class IncomeForm(forms.ModelForm):
         # Set category queryset to active categories only
         self.fields['category'].queryset = IncomeCategory.objects.filter(is_active=True)
         self.fields['category'].empty_label = "Select Category (Optional)"
+
+        # Use Settings-managed income sources when available.
+        configured_sources = list(
+            IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        )
+        if configured_sources:
+            self.fields['source'].choices = configured_sources
+
+        # Keep existing source selectable for edits even if now inactive.
+        current_source = getattr(self.instance, 'source', None)
+        if current_source and current_source not in dict(self.fields['source'].choices):
+            self.fields['source'].choices = list(self.fields['source'].choices) + [(current_source, current_source)]
         
         # Set default date to today
         if not self.instance.pk:
@@ -175,6 +188,18 @@ class ExpenditureForm(forms.ModelForm):
         # Set category queryset to active categories only
         self.fields['category'].queryset = ExpenditureCategory.objects.filter(is_active=True)
         self.fields['category'].empty_label = "Select Category (Optional)"
+
+        # Use Settings-managed expense categories as expenditure types when available.
+        configured_types = list(
+            ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        )
+        if configured_types:
+            self.fields['expenditure_type'].choices = configured_types
+
+        # Keep existing type selectable for edits even if now inactive.
+        current_type = getattr(self.instance, 'expenditure_type', None)
+        if current_type and current_type not in dict(self.fields['expenditure_type'].choices):
+            self.fields['expenditure_type'].choices = list(self.fields['expenditure_type'].choices) + [(current_type, current_type)]
         
         # Set default date to today
         if not self.instance.pk:

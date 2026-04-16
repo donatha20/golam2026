@@ -143,16 +143,11 @@
                                 <td>{{ income.recorded_by.get_full_name|default:income.recorded_by.username }}</td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{% url 'finance_tracker:income_detail' income.id %}" class="btn btn-sm btn-outline-primary" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if income.status == 'PENDING' %}
-                                            <a href="{% url 'finance_tracker:confirm_income' income.id %}" class="btn btn-sm btn-outline-success" title="Confirm Receipt">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                        {% endif %}
                                         <a href="{% url 'finance_tracker:edit_income' income.id %}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                             <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'finance_tracker:delete_income' income.id %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
                                         </a>
                                     </div>
                                 </td>

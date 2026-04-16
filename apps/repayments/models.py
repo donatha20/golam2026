@@ -566,22 +566,18 @@ class Payment(AuditModel):
             self.update_loan_balance()
 
     def generate_payment_reference(self):
-        """Generate a unique payment reference."""
-        import random
-        import string
+        """Generate a unique payment reference using sequential format: PY-0001."""
+        last_payment = Payment.objects.filter(
+            payment_reference__startswith='PY-'
+        ).order_by('payment_reference').last()
         
-        # Format: PAY + Year + Month + 6 random digits
-        now = timezone.now()
-        year_month = f"{now.year}{now.month:02d}"
-        random_part = ''.join(random.choices(string.digits, k=6))
-        payment_ref = f"PAY{year_month}{random_part}"
+        if last_payment:
+            last_number = int(last_payment.payment_reference[3:])  # Extract digits after 'PY-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while Payment.objects.filter(payment_reference=payment_ref).exists():
-            random_part = ''.join(random.choices(string.digits, k=6))
-            payment_ref = f"PAY{year_month}{random_part}"
-        
-        return payment_ref
+        return f"PY-{new_number:04d}"
 
     def allocate_payment(self):
         """Allocate payment amount to principal, interest, penalty, and fees."""

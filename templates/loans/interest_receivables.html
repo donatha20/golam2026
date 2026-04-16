@@ -272,7 +272,7 @@
                         <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
                     </td>
                     <td class="amount-cell">
-                        <div class="amount-value">${{ loan.amount_approved|floatformat:2 }}</div>
+                        <div class="amount-value">TZS{{ loan.amount_approved|floatformat:2 }}</div>
                     </td>
                     <td class="text-center">{{ loan.interest_rate|floatformat:1 }}%</td>
                     <td class="amount-cell">

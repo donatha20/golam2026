@@ -33,6 +33,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'apps.core',
     'apps.accounts.apps.AccountsConfig',
+    'apps.notifications.apps.NotificationsConfig',
     'apps.borrowers',
     'apps.loans',
     'apps.repayments',
@@ -77,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'apps.core.context_processors.currency_settings',
+                'apps.notifications.context_processors.unread_notifications_count',
             ],
         },
     },
@@ -157,6 +159,7 @@ SERVER_EMAIL = config('SERVER_EMAIL', default='admin@golamfinancial.co.tz')
 DEFAULT_CURRENCY = config('DEFAULT_CURRENCY', default='TSH')
 DEFAULT_INTEREST_RATE = config('DEFAULT_INTEREST_RATE', default=15.0, cast=float)
 DEFAULT_LOAN_DURATION = config('DEFAULT_LOAN_DURATION', default=12, cast=int)
+DEFAULT_MISSED_PAYMENT_PENALTY = config('DEFAULT_MISSED_PAYMENT_PENALTY', default='500.00')  # Penalty amount for missed payments
 
 # SMS Configuration
 SMS_API_KEY = config('SMS_API_KEY', default='development-key')

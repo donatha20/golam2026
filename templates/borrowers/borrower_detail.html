@@ -140,6 +140,9 @@
                         </div>
                     {% endif %}
                     <h4>{{ borrower.get_full_name }}</h4>
+                    {% if borrower.nickname %}
+                        <p class="text-muted mb-1">Nickname: {{ borrower.nickname }}</p>
+                    {% endif %}
                     <p class="text-muted">{{ borrower.borrower_id }}</p>
                     <span class="badge bg-{{ borrower.status|yesno:'success,warning' }}">{{ borrower.get_status_display }}</span>
                     
@@ -203,6 +206,12 @@
                     <div class="row g-4">
                         <div class="col-md-6">
                             <div class="row g-3">
+                                <div class="col-12">
+                                    <div>
+                                        <small class="text-muted d-block">Nickname</small>
+                                        <span>{{ borrower.nickname|default:"Not provided" }}</span>
+                                    </div>
+                                </div>
                                 <div class="col-12">
                                     <div>
                                         <small class="text-muted d-block">Gender</small>

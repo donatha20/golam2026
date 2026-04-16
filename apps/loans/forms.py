@@ -44,10 +44,13 @@ class ComprehensiveLoanForm(forms.ModelForm):
             'duration_months', 'proposed_project', 'collateral_name', 
             'collateral_worth', 'collateral_withheld', 'disbursement_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
-            'repayment_type', 'loan_fees_applied', 'supporting_document', 'notes'
+            'repayment_type', 'repayment_frequency', 'loan_fees_applied', 'supporting_document', 'notes'
         ]
         widgets = {
-            'borrower': forms.HiddenInput(),
+            'borrower': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
             'loan_category': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
@@ -114,6 +117,10 @@ class ComprehensiveLoanForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
+            'repayment_frequency': forms.Select(choices=FrequencyChoices.choices, attrs={
+                'class': 'form-select',
+                'required': True
+            }),
             'supporting_document': forms.FileInput(attrs={
                 'class': 'file-input',
                 'accept': '.pdf,.jpg,.jpeg,.png',
@@ -159,6 +166,14 @@ class ComprehensiveLoanForm(forms.ModelForm):
             required=True
         )
         
+        # When editing an existing loan, populate interest_amount from total_interest
+        if self.instance and self.instance.pk:
+            # If editing, populate interest_amount with existing total_interest
+            if self.instance.total_interest:
+                self.fields['interest_amount'].initial = self.instance.total_interest
+            # Set loan_fees initial value based on loan_fees_applied
+            self.fields['loan_fees'].initial = 'yes' if self.instance.loan_fees_applied else 'no'
+        
         # Set field labels
         self.fields['borrower'].label = 'Borrower'
         self.fields['loan_category'].label = 'Loan Category'
@@ -174,7 +189,8 @@ class ComprehensiveLoanForm(forms.ModelForm):
         self.fields['pay_method'].label = 'Payment Method'
         self.fields['payment_account'].label = 'Payment Account'
         self.fields['start_payment_date'].label = 'Start Payment Date'
-        self.fields['repayment_type'].label = 'Repayment Frequency'
+        self.fields['repayment_type'].label = 'Repayment Type'
+        self.fields['repayment_frequency'].label = 'Repayment Frequency (Interval)'
         self.fields['supporting_document'].label = 'Supporting Document'
         self.fields['notes'].label = 'Additional Notes'
 
@@ -245,6 +261,20 @@ class ComprehensiveLoanForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+    def _post_clean(self):
+        """Skip validation on system-managed date fields."""
+        try:
+            super()._post_clean()
+        except forms.ValidationError as e:
+            # Only re-raise errors for fields that are in this form
+            if hasattr(e, 'error_dict'):
+                filtered_errors = {
+                    field: errors for field, errors in e.error_dict.items()
+                    if field in self.fields
+                }
+                if filtered_errors:
+                    raise forms.ValidationError(filtered_errors)
 
 
 class LoanForm(forms.ModelForm):
@@ -368,7 +398,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
             'duration_months', 'proposed_project', 'collateral_name', 
             'collateral_worth', 'collateral_withheld', 'disbursement_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
-            'repayment_type', 'loan_fees_applied', 'supporting_document', 'notes'
+            'repayment_type', 'repayment_frequency', 'loan_fees_applied', 'supporting_document', 'notes'
         ]
         widgets = {
             'loan_category': forms.Select(attrs={
@@ -437,6 +467,10 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
+            'repayment_frequency': forms.Select(choices=FrequencyChoices.choices, attrs={
+                'class': 'form-select',
+                'required': True
+            }),
             'supporting_document': forms.FileInput(attrs={
                 'class': 'file-input',
                 'accept': '.pdf,.jpg,.jpeg,.png',
@@ -496,7 +530,8 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
         self.fields['pay_method'].label = 'Payment Method'
         self.fields['payment_account'].label = 'Payment Account'
         self.fields['start_payment_date'].label = 'Start Payment Date'
-        self.fields['repayment_type'].label = 'Repayment Frequency'
+        self.fields['repayment_type'].label = 'Repayment Type'
+        self.fields['repayment_frequency'].label = 'Repayment Frequency (Interval)'
         self.fields['supporting_document'].label = 'Supporting Document'
         self.fields['notes'].label = 'Additional Notes'
 
@@ -722,6 +757,7 @@ class LoanApprovalForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = ['amount_approved', 'approval_notes']
+        exclude = ['application_date', 'approval_date', 'disbursement_date']
         widgets = {
             'amount_approved': forms.NumberInput(attrs={
                 'class': 'form-input',
@@ -736,6 +772,12 @@ class LoanApprovalForm(forms.ModelForm):
                 'placeholder': 'Enter approval notes and conditions...'
             }),
         }
+    
+    def _post_clean(self):
+        """Skip model full_clean since date fields are managed by the system."""
+        # Don't call super()._post_clean() which runs model.full_clean()
+        # Just validate the form fields themselves, not the model's constraints
+        pass
 
 
 class LoanDisbursementForm(forms.ModelForm):

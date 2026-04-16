@@ -86,7 +86,7 @@
                                 <td>
                                     <strong class="text-success">Tsh {{ loan.amount_approved|floatformat:2 }}</strong>
                                     {% if loan.amount_approved != loan.amount_requested %}
-                                        <br><small class="text-muted">Requested: Tsh {{ loan.amount_requested|floatformat:2 }}</small>
+                                        <br><small class="text-muted">Requested: TZS {{ loan.amount_requested|floatformat:2 }}</small>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -186,7 +186,7 @@
                                     <small class="text-muted">{{ group_loan.loan.duration_months }} months</small>
                                 </td>
                                 <td>
-                                    <strong class="text-success">Tsh {{ group_loan.loan.amount_approved|floatformat:2 }}</strong>
+                                    <strong class="text-success">TZS {{ group_loan.loan.amount_approved|floatformat:2 }}</strong>
                                     {% if group_loan.loan.amount_approved != group_loan.loan.amount_requested %}
                                         <br><small class="text-muted">Requested: Tsh {{ group_loan.loan.amount_requested|floatformat:2 }}</small>
                                     {% endif %}

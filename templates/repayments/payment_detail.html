@@ -1,0 +1,614 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load repayment_filters %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}Payment Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-header {
+        background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .payment-header-content {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: start;
+        gap: 2rem;
+    }
+
+    .payment-reference {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    .payment-amount-display {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .payment-date-display {
+        font-size: 0.95rem;
+        opacity: 0.95;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-completed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid #22c55e;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid #fbbf24;
+    }
+
+    .status-failed {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid #ef4444;
+    }
+
+    .status-cancelled {
+        background: rgba(107, 114, 128, 0.2);
+        color: #d1d5db;
+        border: 1px solid #d1d5db;
+    }
+
+    .status-reversed {
+        background: rgba(168, 85, 247, 0.2);
+        color: #d8b4fe;
+        border: 1px solid #d8b4fe;
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .card-header {
+        background: #f8fafc;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 1.25rem;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .detail-item {
+        border-left: 4px solid #2b7a76;
+        padding-left: 1rem;
+    }
+
+    .detail-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 1.125rem;
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .detail-value.amount {
+        color: #2b7a76;
+        font-family: 'Courier New', monospace;
+    }
+
+    .detail-value.link {
+        color: #2b7a76;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .detail-value.link:hover {
+        text-decoration: underline;
+    }
+
+    .allocation-breakdown {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .allocation-box {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .allocation-box:hover {
+        border-color: #2b7a76;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+
+    .allocation-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .allocation-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e7570;
+        font-family: 'Courier New', monospace;
+    }
+
+    .allocation-percentage {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.5rem;
+    }
+
+    .installment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .installment-table thead th {
+        background: #f8fafc;
+        color: #1e293b;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        text-align: left;
+    }
+
+    .installment-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .installment-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .installment-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .table-amount {
+        font-family: 'Courier New', monospace;
+        text-align: right;
+        font-weight: 600;
+        color: #1e7570;
+    }
+
+    .table-center {
+        text-align: center;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: #2b7a76;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1f5d5a;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(43, 122, 118, 0.3);
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .reversal-notice {
+        background: rgba(168, 85, 247, 0.1);
+        border: 2px solid #d8b4fe;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .reversal-notice h4 {
+        margin: 0 0 0.5rem 0;
+        color: #7c3aed;
+        font-size: 0.95rem;
+    }
+
+    .reversal-notice p {
+        margin: 0.25rem 0;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+        .payment-header-content {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-amount-display {
+            font-size: 2rem;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .allocation-breakdown {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Payment Header -->
+<div class="payment-header">
+    <div class="payment-header-content">
+        <div>
+            <div class="payment-reference">
+                <i class="fas fa-receipt"></i> {{ payment.payment_reference }}
+            </div>
+            <div class="payment-amount-display">TZS {{ payment.amount|floatformat:2 }}</div>
+            <div class="payment-date-display">
+                <i class="fas fa-calendar"></i>
+                {{ payment.payment_date|date:"d M Y" }} at {{ payment.processed_date|date:"H:i" }}
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="status-badge status-{{ payment.status }}">
+                {{ payment.get_status_display|default:payment.status }}
+            </div>
+            {% if payment.is_verified %}
+            <div class="verification-badge" style="margin-top: 0.75rem;">
+                <i class="fas fa-check-circle"></i>
+                Verified
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reversal Notice (if applicable) -->
+{% if payment.is_reversed %}
+<div class="reversal-notice">
+    <h4><i class="fas fa-exclamation-circle"></i> Payment Reversed</h4>
+    <p><strong>Reversed By:</strong> {{ payment.reversed_by.get_full_name }}<br>
+    <strong>Reversal Date:</strong> {{ payment.reversal_date|date:"d M Y at H:i" }}<br>
+    <strong>Reason:</strong> {{ payment.reversal_reason|default:"No reason provided" }}</p>
+</div>
+{% endif %}
+
+<!-- Payment Details -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-info-circle"></i> Payment Information</h3>
+    </div>
+    <div class="card-body">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Payment Reference</div>
+                <div class="detail-value">{{ payment.payment_reference }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Payment Method</div>
+                <div class="detail-value">{{ payment.get_payment_method_display|default:payment.payment_method }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Payment Type</div>
+                <div class="detail-value">{{ payment.get_payment_type_display|default:payment.payment_type }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Total Amount</div>
+                <div class="detail-value amount">TZS {{ payment.amount|floatformat:2 }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Borrower</div>
+                <div class="detail-value">{{ payment.borrower.get_full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Loan</div>
+                <a href="{% url 'loans:view_loan' payment.loan.id %}" class="detail-value link">
+                    {{ payment.loan.loan_number }}
+                </a>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Collected By</div>
+                <div class="detail-value">{{ payment.collected_by.get_full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                    <span class="status-badge status-{{ payment.status }}">
+                        {{ payment.get_status_display|default:payment.status }}
+                    </span>
+                </div>
+            </div>
+            {% if payment.receipt_number %}
+            <div class="detail-item">
+                <div class="detail-label">Receipt Number</div>
+                <div class="detail-value">{{ payment.receipt_number }}</div>
+            </div>
+            {% endif %}
+            {% if payment.transaction_id %}
+            <div class="detail-item">
+                <div class="detail-label">Transaction ID</div>
+                <div class="detail-value" style="font-size: 0.9rem;">{{ payment.transaction_id }}</div>
+            </div>
+            {% endif %}
+            {% if payment.is_verified %}
+            <div class="detail-item">
+                <div class="detail-label">Verified By</div>
+                <div class="detail-value">{{ payment.verified_by.get_full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Verification Date</div>
+                <div class="detail-value">{{ payment.verification_date|date:"d M Y at H:i" }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Payment Allocation Breakdown -->
+        <div style="margin-top: 2rem; border-top: 2px solid #e5e7eb; padding-top: 1.5rem;">
+            <h4 style="color: #1e293b; margin-bottom: 1rem;">
+                <i class="fas fa-pie-chart"></i> Payment Allocation
+            </h4>
+            <div class="allocation-breakdown">
+                <div class="allocation-box">
+                    <div class="allocation-label">Principal Paid</div>
+                    <div class="allocation-amount">₹{{ payment.principal_paid|floatformat:2 }}</div>
+                    <div class="allocation-percentage">
+                        {{ payment.principal_paid|percentage:payment.amount|floatformat:1 }}%
+                    </div>
+                </div>
+                <div class="allocation-box">
+                    <div class="allocation-label">Interest Paid</div>
+                    <div class="allocation-amount">₹{{ payment.interest_paid|floatformat:2 }}</div>
+                    <div class="allocation-percentage">
+                        {{ payment.interest_paid|percentage:payment.amount|floatformat:1 }}%
+                    </div>
+                </div>
+                <div class="allocation-box">
+                    <div class="allocation-label">Penalty Paid</div>
+                    <div class="allocation-amount">₹{{ payment.penalty_paid|floatformat:2 }}</div>
+                    <div class="allocation-percentage">
+                        {{ payment.penalty_paid|percentage:payment.amount|floatformat:1 }}%
+                    </div>
+                </div>
+                <div class="allocation-box">
+                    <div class="allocation-label">Fees Paid</div>
+                    <div class="allocation-amount">₹{{ payment.fees_paid|floatformat:2 }}</div>
+                    <div class="allocation-percentage">
+                        {{ payment.fees_paid|percentage:payment.amount|floatformat:1 }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if payment.notes %}
+        <div style="margin-top: 1.5rem; border-top: 2px solid #e5e7eb; padding-top: 1.5rem;">
+            <h4 style="color: #1e293b; margin-bottom: 0.5rem;">
+                <i class="fas fa-sticky-note"></i> Notes
+            </h4>
+            <p style="color: #6b7280; margin: 0;">{{ payment.notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Installment Allocations -->
+{% if allocations %}
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Installment Allocations</h3>
+    </div>
+    <div class="card-body">
+        <table class="installment-table">
+            <thead>
+                <tr>
+                    <th>Installment</th>
+                    <th class="table-center">Principal</th>
+                    <th class="table-center">Interest</th>
+                    <th class="table-center">Penalty</th>
+                    <th class="table-center">Fees</th>
+                    <th class="table-center">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for allocation in allocations %}
+                <tr>
+                    <td>
+                        <a href="{% url 'loans:view_loan' allocation.installment.loan.id %}" style="color: #2b7a76; text-decoration: none;">
+                            Installment #{{ allocation.installment.installment_number }}
+                        </a>
+                        <br>
+                        <small style="color: #9ca3af;">Due: {{ allocation.installment.due_date|date:"d M Y" }}</small>
+                    </td>
+                    <td class="table-amount">₹{{ allocation.principal_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">₹{{ allocation.interest_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">₹{{ allocation.penalty_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">₹{{ allocation.fees_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">₹{{ allocation.total_allocated|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="no-data">
+            <i class="fas fa-info-circle" style="font-size: 2rem; color: #d1d5db; margin-bottom: 0.5rem; display: block;"></i>
+            No installment allocations found for this payment.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="action-buttons">
+    <a href="{% url 'repayments:loan_repayments' payment.loan.id %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left"></i> Back to Loan Repayments
+    </a>
+    {% if not payment.is_reversed and payment.status == 'completed' %}
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#reversalModal">
+        <i class="fas fa-undo"></i> Reverse Payment
+    </button>
+    {% endif %}
+</div>
+
+<!-- Reversal Modal -->
+{% if not payment.is_reversed and payment.status == 'completed' %}
+<div class="modal fade" id="reversalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reverse Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'repayments:reverse_payment' payment.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action will reverse the payment and adjust the loan balance accordingly.
+                    </div>
+                    <div class="mb-3">
+                        <label for="reversalReason" class="form-label">Reason for Reversal</label>
+                        <textarea class="form-control" id="reversalReason" name="reversal_reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reverse Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add custom filters for template calculations
+    document.addEventListener('DOMContentLoaded', function() {
+        // Any additional JavaScript functionality can be added here
+    });
+</script>
+{% endblock %}

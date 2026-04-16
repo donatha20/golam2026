@@ -510,11 +510,11 @@
                             <td>{{ payment.payment_date|date:"M d, Y" }}</td>
                             <td>{{ payment.loan.loan_number }}</td>
                             <td>{{ payment.loan.borrower.get_full_name }}</td>
-                            <td>Tsh {{ payment.amount|floatformat:2 }}</td>
+                            <td>TZS {{ payment.amount|floatformat:2 }}</td>
                             <td>{{ payment.get_payment_method_display }}</td>
-                            <td>Tsh {{ payment.principal_paid|floatformat:2 }}</td>
-                            <td>Tsh {{ payment.interest_paid|floatformat:2 }}</td>
-                            <td>Tsh {{ payment.penalty_paid|floatformat:2 }}</td>
+                            <td>TZS {{ payment.principal_paid|floatformat:2 }}</td>
+                            <td>TZS {{ payment.interest_paid|floatformat:2 }}</td>
+                            <td>TZS {{ payment.penalty_paid|floatformat:2 }}</td>
                             <td>{{ payment.receipt_number|default:"N/A" }}</td>
                         </tr>
                         {% empty %}

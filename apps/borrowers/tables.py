@@ -58,13 +58,22 @@ class BorrowerTable(tables.Table):
     
     def render_full_name(self, record):
         """Render full name with borrower ID."""
+        nickname_html = ''
+        if record.nickname:
+            nickname_html = format_html(
+                '<div class="borrower-id">Nickname: {}</div>',
+                record.nickname,
+            )
+
         return format_html(
             '<div class="borrower-name-cell">'
             '<div class="borrower-full-name">{}</div>'
             '<div class="borrower-id">{}</div>'
+            '{}'
             '</div>',
             record.get_full_name(),
-            record.borrower_id
+            record.borrower_id,
+            nickname_html,
         )
     
     def render_age(self, record):
@@ -173,6 +182,12 @@ class RegistrationReportTable(tables.Table):
     
     def render_full_name(self, record):
         """Render full name."""
+        if record.nickname:
+            return format_html(
+                '{} <small class="text-muted">({})</small>',
+                record.get_full_name(),
+                record.nickname,
+            )
         return record.get_full_name()
     
     def render_gender(self, value):

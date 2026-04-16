@@ -426,7 +426,7 @@
                 <div class="stat-title">Today's Collections</div>
                 <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
             </div>
-            <div class="stat-value">Tsh {{ payment_stats.today_collections|floatformat:0 }}</div>
+            <div class="stat-value">TZS {{ payment_stats.today_collections|floatformat:0 }}</div>
             <div class="stat-description">{{ payment_stats.today_payments_count }} payments received</div>
         </div>
 
@@ -436,7 +436,7 @@
                 <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
             <div class="stat-value">{{ overdue_stats.overdue_installments }}</div>
-            <div class="stat-description">Tsh {{ overdue_stats.overdue_amount|floatformat:0 }} overdue<br>{{ overdue_stats.overdue_borrowers }} borrowers affected</div>
+            <div class="stat-description">TZS {{ overdue_stats.overdue_amount|floatformat:0 }} overdue<br>{{ overdue_stats.overdue_borrowers }} borrowers affected</div>
         </div>
 
         <div class="stat-card outstanding">
@@ -444,7 +444,7 @@
                 <div class="stat-title">Total Outstanding</div>
                 <div class="stat-icon"><i class="fas fa-balance-scale"></i></div>
             </div>
-            <div class="stat-value">Tsh {{ payment_stats.total_outstanding|floatformat:0 }}</div>
+            <div class="stat-value">TZS {{ payment_stats.total_outstanding|floatformat:0 }}</div>
             <div class="stat-description">Across all active loans</div>
         </div>
 
@@ -474,7 +474,7 @@
                                 <div class="recent-details">{{ payment.borrower.get_full_name }} | {{ payment.loan.loan_number }} | {{ payment.payment_date|date:"M d, Y" }}</div>
                             </div>
                             <div>
-                                <div class="recent-amount">Tsh {{ payment.amount|floatformat:2 }}</div>
+                                <div class="recent-amount">TZS {{ payment.amount|floatformat:2 }}</div>
                                 <div class="status-badge status-{{ payment.status }}">{{ payment.get_status_display }}</div>
                             </div>
                         </div>
@@ -502,7 +502,7 @@
                                 </div>
                                 <div class="recent-details">{{ installment.loan.loan_number }} | Installment {{ installment.installment_number }} | {{ installment.days_overdue }} days overdue</div>
                             </div>
-                            <div class="overdue-amount">Tsh {{ installment.outstanding_amount|floatformat:2 }}</div>
+                            <div class="overdue-amount">TZS {{ installment.outstanding_amount|floatformat:2 }}</div>
                         </div>
                     {% endfor %}
                 {% else %}
@@ -523,7 +523,7 @@
                     <div class="chart-item">
                         <div class="chart-date">{{ collection.collection_date|date:"M d, Y" }}</div>
                         <div>
-                            <div class="chart-amount">Tsh {{ collection.total_amount|floatformat:0 }}</div>
+                            <div class="chart-amount">TZS {{ collection.total_amount|floatformat:0 }}</div>
                             <div class="chart-count">{{ collection.payment_count }} payments</div>
                         </div>
                     </div>

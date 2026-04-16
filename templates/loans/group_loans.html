@@ -43,8 +43,8 @@
                                         <strong>{{ group_loan.group.group_name }}</strong><br>
                                         <small class="text-muted">{{ group_loan.group.group_code }}</small>
                                     </td>
-                                    <td>Tsh {{ group_loan.loan.amount_approved|floatformat:0 }}</td>
-                                    <td>Tsh {{ group_loan.loan.outstanding_balance|floatformat:0 }}</td>
+                                    <td>TZS {{ group_loan.loan.amount_approved|floatformat:0 }}</td>
+                                    <td>TZS {{ group_loan.loan.outstanding_balance|floatformat:0 }}</td>
                                     <td>
                                         {% if group_loan.loan.status == 'disbursed' %}
                                             <span class="badge bg-success">{{ group_loan.loan.get_status_display }}</span>

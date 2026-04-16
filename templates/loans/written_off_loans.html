@@ -262,8 +262,8 @@
                         <div class="borrower-full-name">{{ written_off.loan.borrower.get_full_name }}</div>
                         <div class="borrower-id">ID: {{ written_off.loan.borrower.borrower_id }}</div>
                     </td>
-                    <td class="text-end">${{ written_off.loan.amount_approved|floatformat:2 }}</td>
-                    <td class="text-end text-danger">${{ written_off.written_off_amount|floatformat:2 }}</td>
+                    <td class="text-end">TZS{{ written_off.loan.amount_approved|floatformat:2 }}</td>
+                    <td class="text-end text-danger">TZS{{ written_off.written_off_amount|floatformat:2 }}</td>
                     <td>{{ written_off.written_off_date|date:"M d, Y" }}</td>
                     <td>{{ written_off.reason|default:"Not specified" }}</td>
                     <td>{{ written_off.written_off_by.get_full_name|default:"System" }}</td>

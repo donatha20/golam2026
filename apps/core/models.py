@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.utils import timezone
+from datetime import datetime, date, timedelta
 
 
 class TimeStampedModel(models.Model):
@@ -427,10 +428,42 @@ class WorkingMode(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def lunch_duration(self):
+        """Lunch break duration in hours."""
+        start = datetime.combine(date.today(), self.lunch_start)
+        end = datetime.combine(date.today(), self.lunch_end)
+        if end < start:
+            end += timedelta(days=1)
+        return round((end - start).total_seconds() / 3600, 2)
+
+    @property
+    def total_working_hours(self):
+        """Total configured working-window hours (start to end)."""
+        start = datetime.combine(date.today(), self.start_time)
+        end = datetime.combine(date.today(), self.end_time)
+        if end < start:
+            end += timedelta(days=1)
+
+        return round((end - start).total_seconds() / 3600, 2)
+
+    @property
+    def net_working_hours(self):
+        """Net daily working hours after lunch break."""
+        net_hours = self.total_working_hours - self.lunch_duration
+        return round(max(net_hours, 0), 2)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # Keep one active configuration at a time.
+        if self.is_active:
+            WorkingMode.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+
     @classmethod
     def get_active_mode(cls):
         """Get the active working mode."""
-        return cls.objects.filter(is_active=True).first()
+        return cls.objects.filter(is_active=True).order_by('-updated_at', 'name').first()
 
 
 class LoanSector(models.Model):

@@ -13,11 +13,304 @@
         <div class="card-body">
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn btn-primary btn-sm">Update Loan</button>
-                <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-light btn-sm">Cancel</a>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Form Errors:</strong>
+                        <ul class="mb-0">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    <!-- Borrower Section -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.borrower.id_for_label }}" class="form-label">{{ form.borrower.label }}</label>
+                            {{ form.borrower }}
+                            {% if form.borrower.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.borrower.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Loan Category -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.loan_category.id_for_label }}" class="form-label">{{ form.loan_category.label }}</label>
+                            {{ form.loan_category }}
+                            {% if form.loan_category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.loan_category.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Loan Amount -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.amount_requested.id_for_label }}" class="form-label">{{ form.amount_requested.label }}</label>
+                            {{ form.amount_requested }}
+                            {% if form.amount_requested.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.amount_requested.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Interest Amount -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.interest_amount.id_for_label }}" class="form-label">{{ form.interest_amount.label }}</label>
+                            {{ form.interest_amount }}
+                            {% if form.interest_amount.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.interest_amount.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Duration -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.duration_months.id_for_label }}" class="form-label">{{ form.duration_months.label }}</label>
+                            {{ form.duration_months }}
+                            {% if form.duration_months.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.duration_months.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Repayment Type -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.repayment_type.id_for_label }}" class="form-label">{{ form.repayment_type.label }}</label>
+                            {{ form.repayment_type }}
+                            {% if form.repayment_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.repayment_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Repayment Frequency -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.repayment_frequency.id_for_label }}" class="form-label">{{ form.repayment_frequency.label }}</label>
+                            {{ form.repayment_frequency }}
+                            {% if form.repayment_frequency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.repayment_frequency.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.pay_method.id_for_label }}" class="form-label">{{ form.pay_method.label }}</label>
+                            {{ form.pay_method }}
+                            {% if form.pay_method.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.pay_method.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Payment Account -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.payment_account.id_for_label }}" class="form-label">{{ form.payment_account.label }}</label>
+                            {{ form.payment_account }}
+                            {% if form.payment_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.payment_account.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Loan Officer -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.loan_officer.id_for_label }}" class="form-label">{{ form.loan_officer.label }}</label>
+                            {{ form.loan_officer }}
+                            {% if form.loan_officer.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.loan_officer.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Disbursement Date -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.disbursement_date.id_for_label }}" class="form-label">{{ form.disbursement_date.label }}</label>
+                            {{ form.disbursement_date }}
+                            {% if form.disbursement_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.disbursement_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Start Payment Date -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.start_payment_date.id_for_label }}" class="form-label">{{ form.start_payment_date.label }}</label>
+                            {{ form.start_payment_date }}
+                            {% if form.start_payment_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.start_payment_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Purpose of Loan -->
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label for="{{ form.proposed_project.id_for_label }}" class="form-label">{{ form.proposed_project.label }}</label>
+                            {{ form.proposed_project }}
+                            {% if form.proposed_project.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.proposed_project.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Collateral Name -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.collateral_name.id_for_label }}" class="form-label">{{ form.collateral_name.label }}</label>
+                            {{ form.collateral_name }}
+                            {% if form.collateral_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.collateral_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Collateral Worth -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.collateral_worth.id_for_label }}" class="form-label">{{ form.collateral_worth.label }}</label>
+                            {{ form.collateral_worth }}
+                            {% if form.collateral_worth.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.collateral_worth.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Amount Withheld -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.collateral_withheld.id_for_label }}" class="form-label">{{ form.collateral_withheld.label }}</label>
+                            {{ form.collateral_withheld }}
+                            {% if form.collateral_withheld.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.collateral_withheld.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Apply Fees -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">{{ form.loan_fees.label }}</label>
+                            <div>
+                                {{ form.loan_fees }}
+                            </div>
+                            {% if form.loan_fees.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.loan_fees.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Supporting Document -->
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label for="{{ form.supporting_document.id_for_label }}" class="form-label">{{ form.supporting_document.label }}</label>
+                            {{ form.supporting_document }}
+                            {% if form.supporting_document.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.supporting_document.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <!-- Notes -->
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="d-flex gap-2 justify-content-end mt-4">
+                    <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Loan</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+</style>
 {% endblock %}

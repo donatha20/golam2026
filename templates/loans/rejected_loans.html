@@ -38,7 +38,7 @@
 						<tr>
 							<td><strong class="text-primary">{{ loan.loan_number }}</strong></td>
 							<td>{{ loan.borrower.get_full_name }}</td>
-							<td>Tsh {{ loan.amount_requested|floatformat:2 }}</td>
+							<td>TZS {{ loan.amount_requested|floatformat:2 }}</td>
 							<td>
 								{% if loan.rejection_date %}
 									{{ loan.rejection_date|date:"M d, Y" }}

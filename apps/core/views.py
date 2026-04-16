@@ -4,12 +4,14 @@ Core views for the microfinance system.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
+from django.contrib.auth import views as auth_views
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
 from django.conf import settings
 from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import json
 
 from apps.borrowers.models import Borrower
@@ -19,6 +21,63 @@ from apps.savings.models import SavingsAccount
 from apps.accounts.models import CustomUser, UserActivity, UserSession, UserRole
 from django_tables2 import RequestConfig
 from .tables import UserTable, UserActivityTable, UserSessionTable
+
+
+def _is_within_time_window(current_time, start_time, end_time):
+    """Support both normal and overnight time windows."""
+    if start_time <= end_time:
+        return start_time <= current_time <= end_time
+    return current_time >= start_time or current_time <= end_time
+
+
+class WorkingHoursLoginView(auth_views.LoginView):
+    """Restrict login for loan officers outside active working mode."""
+
+    template_name = 'registration/login.html'
+
+    def form_valid(self, form):
+        from .models import WorkingMode
+
+        user = form.get_user()
+        if getattr(user, 'role', None) != UserRole.LOAN_OFFICER:
+            return super().form_valid(form)
+
+        working_mode = WorkingMode.get_active_mode()
+        if not working_mode:
+            return super().form_valid(form)
+
+        now = timezone.now()
+        try:
+            now = timezone.localtime(now, ZoneInfo(working_mode.timezone))
+        except Exception:
+            now = timezone.localtime(now)
+
+        weekday_enabled = [
+            working_mode.monday_enabled,
+            working_mode.tuesday_enabled,
+            working_mode.wednesday_enabled,
+            working_mode.thursday_enabled,
+            working_mode.friday_enabled,
+            working_mode.saturday_enabled,
+            working_mode.sunday_enabled,
+        ][now.weekday()]
+
+        in_working_hours = _is_within_time_window(
+            now.time(),
+            working_mode.start_time,
+            working_mode.end_time,
+        )
+
+        if not weekday_enabled or not in_working_hours:
+            messages.error(
+                self.request,
+                f'Login is allowed for loan officers only during configured working hours '
+                f'({working_mode.start_time.strftime("%H:%M")} - {working_mode.end_time.strftime("%H:%M")}, '
+                f'{working_mode.get_timezone_display()}).'
+            )
+            return self.render_to_response(self.get_context_data(form=form))
+
+        return super().form_valid(form)
 
 
 def _require_admin_access(request):
@@ -488,7 +547,16 @@ def add_user(request):
 @login_required
 def settings_dashboard(request):
     """Settings dashboard."""
-    from .models import SystemSetting, CompanyProfile, Branch, LoanCategory, PenaltyConfiguration
+    from .models import (
+        SystemSetting,
+        CompanyProfile,
+        Branch,
+        LoanCategory,
+        PenaltyConfiguration,
+        IncomeSource,
+        ExpenseCategory,
+    )
+    from apps.finance_tracker.models import IncomeCategory, ExpenditureCategory
 
     # Get settings statistics
     stats = {
@@ -498,6 +566,10 @@ def settings_dashboard(request):
         'branches': Branch.objects.count(),
         'loan_categories': LoanCategory.objects.filter(is_active=True).count(),
         'penalty_configs': PenaltyConfiguration.objects.filter(is_active=True).count(),
+        'income_sources': IncomeSource.objects.filter(is_active=True).count(),
+        'expense_categories': ExpenseCategory.objects.filter(is_active=True).count(),
+        'income_categories': IncomeCategory.objects.filter(is_active=True).count(),
+        'expenditure_categories': ExpenditureCategory.objects.filter(is_active=True).count(),
     }
 
     # Get recent settings changes
@@ -696,6 +768,10 @@ def update_company_info(request):
 def working_mode_settings(request):
     """Manage working mode settings."""
     from .models import WorkingMode
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
 
     working_mode = WorkingMode.get_active_mode()
 
@@ -1267,6 +1343,10 @@ def add_working_mode(request):
     """Add new working mode."""
     from .models import WorkingMode
 
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
+
     if request.method == 'POST':
         name = request.POST.get('name', 'Working Mode')
         monday_enabled = 'monday_enabled' in request.POST
@@ -1315,6 +1395,10 @@ def add_working_mode(request):
 def edit_working_mode(request, mode_id):
     """Edit existing working mode."""
     from .models import WorkingMode
+
+    denied_response = _require_admin_access(request)
+    if denied_response:
+        return denied_response
     
     mode = get_object_or_404(WorkingMode, id=mode_id)
 
@@ -1359,8 +1443,14 @@ def delete_working_mode(request, mode_id):
         return denied_response
     
     mode = get_object_or_404(WorkingMode, id=mode_id)
+    active_modes_count = WorkingMode.objects.filter(is_active=True).count()
+    is_last_active_mode = mode.is_active and active_modes_count <= 1
     
     if request.method == 'POST':
+        if is_last_active_mode:
+            messages.error(request, 'Cannot deactivate the last active working mode. Please activate another mode first.')
+            return redirect('core:view_working_modes')
+
         mode.is_active = False
         mode.save()
         messages.success(request, f'Working mode "{mode.name}" deactivated successfully!')
@@ -1368,6 +1458,8 @@ def delete_working_mode(request, mode_id):
 
     context = {
         'mode': mode,
+        'can_delete': not is_last_active_mode,
+        'is_last_active_mode': is_last_active_mode,
         'title': 'Delete Working Mode',
     }
 

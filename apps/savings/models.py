@@ -506,21 +506,18 @@ class SavingsAccount(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_account_number(self):
-        """Generate a unique account number."""
-        import random
-        import string
+        """Generate a unique account number using sequential format: SV-0001."""
+        last_account = SavingsAccount.objects.filter(
+            account_number__startswith='SV-'
+        ).order_by('account_number').last()
         
-        # Format: SAV + Year + 8 random digits
-        year = timezone.now().year
-        random_part = ''.join(random.choices(string.digits, k=8))
-        account_number = f"SAV{year}{random_part}"
+        if last_account:
+            last_number = int(last_account.account_number[3:])  # Extract digits after 'SV-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while SavingsAccount.objects.filter(account_number=account_number).exists():
-            random_part = ''.join(random.choices(string.digits, k=8))
-            account_number = f"SAV{year}{random_part}"
-        
-        return account_number
+        return f"SV-{new_number:04d}"
 
     @property
     def minimum_balance_required(self):
@@ -774,22 +771,18 @@ class SavingsTransaction(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_reference_number(self):
-        """Generate a unique reference number."""
-        import random
-        import string
+        """Generate a unique reference number using sequential format: TX-0001."""
+        last_transaction = SavingsTransaction.objects.filter(
+            reference_number__startswith='TX-'
+        ).order_by('reference_number').last()
         
-        # Format: STX + Year + Month + 6 random digits
-        now = timezone.now()
-        year_month = f"{now.year}{now.month:02d}"
-        random_part = ''.join(random.choices(string.digits, k=6))
-        reference = f"STX{year_month}{random_part}"
+        if last_transaction:
+            last_number = int(last_transaction.reference_number[3:])  # Extract digits after 'TX-'
+            new_number = last_number + 1
+        else:
+            new_number = 1
         
-        # Ensure uniqueness
-        while SavingsTransaction.objects.filter(reference_number=reference).exists():
-            random_part = ''.join(random.choices(string.digits, k=6))
-            reference = f"STX{year_month}{random_part}"
-        
-        return reference
+        return f"TX-{new_number:04d}"
 
 
 class SavingsInterestCalculation(models.Model):

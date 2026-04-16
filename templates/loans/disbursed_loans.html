@@ -563,7 +563,7 @@
     <div class="table-container">
         <div class="table-controls">
             <div class="table-info">
-                Showing {{ loans|length|default:0 }} disbursed loans
+                Showing {{ object_list|length|default:0 }} disbursed loans
             </div>
             <div class="table-actions">
                 <input type="text" class="search-input" placeholder="Search loans..." id="loanSearch">
@@ -586,7 +586,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for loan in loans %}
+                {% for loan in object_list %}
                 <tr>
                     <td class="loan-number-cell">
                         <div class="loan-number">{{ loan.loan_number }}</div>
@@ -597,7 +597,7 @@
                         <div class="borrower-id">ID: {{ loan.borrower.borrower_id }}</div>
                     </td>
                     <td class="amount-cell">
-                        <div class="amount-value">${{ loan.amount_approved|floatformat:2 }}</div>
+                        <div class="amount-value">TZS{{ loan.amount_approved|floatformat:2 }}</div>
                     </td>
                     <td>{{ loan.disbursement_date|date:"M d, Y" }}</td>
                     <td>{{ loan.maturity_date|date:"M d, Y" }}</td>

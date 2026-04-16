@@ -151,7 +151,7 @@
 <div class="row mb-4">
     <!-- Total Clients -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card dashboard-card">
+        <div class="card dashboard-card hover-shadow" onclick="location.href='{% url 'borrowers:borrower_list' %}'" style="cursor: pointer;">
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
@@ -174,7 +174,7 @@
 
     <!-- Active Loans -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card dashboard-card">
+        <div class="card dashboard-card hover-shadow" onclick="location.href='{% url 'loans:disbursed_loans' %}'" style="cursor: pointer;">
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
@@ -182,7 +182,7 @@
                         <p class="card-label mb-0">Active Loans</p>
                         <small class="text-muted">
                             <i class="fas fa-money-bill-wave me-1"></i>
-                            TSh {{ stats.total_active_amount|floatformat:0|default:0 }}
+                            TZS {{ stats.total_active_amount|floatformat:0|default:0 }}
                         </small>
                     </div>
                     <div class="col-4">
@@ -197,11 +197,11 @@
 
     <!-- Collections Today -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card dashboard-card">
+        <div class="card dashboard-card hover-shadow" onclick="location.href='{% url 'loans:expected_repayments' %}'" style="cursor: pointer;">
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="card-value">TSh {{ stats.collections_today|floatformat:0|default:0 }}</h3>
+                        <h3 class="card-value">TZS {{ stats.collections_today|floatformat:0|default:0 }}</h3>
                         <p class="card-label mb-0">Collections Today</p>
                         <small class="text-success">
                             <i class="fas fa-credit-card me-1"></i>
@@ -220,7 +220,7 @@
 
     <!-- Overdue Loans -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card dashboard-card">
+        <div class="card dashboard-card hover-shadow" onclick="location.href='{% url 'loans:non_performing_loans' %}'" style="cursor: pointer;">
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
@@ -228,7 +228,7 @@
                         <p class="card-label mb-0">Overdue Loans</p>
                         <small class="text-danger">
                             <i class="fas fa-exclamation-triangle me-1"></i>
-                            TSh {{ stats.overdue_amount|floatformat:0|default:0 }}
+                            TZS {{ stats.overdue_amount|floatformat:0|default:0 }}
                         </small>
                     </div>
                     <div class="col-4">
@@ -243,11 +243,11 @@
 
     <!-- Total Savings -->
     <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card dashboard-card">
+        <div class="card dashboard-card hover-shadow" onclick="location.href='{% url 'savings:view_accounts' %}'" style="cursor: pointer;">
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="card-value">TSh {{ stats.total_savings|floatformat:0|default:0 }}</h3>
+                        <h3 class="card-value">TZS {{ stats.total_savings|floatformat:0|default:0 }}</h3>
                         <p class="card-label mb-0">Total Savings</p>
                         <small class="text-info">
                             <i class="fas fa-wallet me-1"></i>
@@ -327,10 +327,10 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="fw-medium">TSh {{ payment.loan_amount|floatformat:0|default:0 }}</span>
+                                    <span class="fw-medium">TZS {{ payment.loan_amount|floatformat:0|default:0 }}</span>
                                 </td>
                                 <td>
-                                    <span class="fw-medium text-primary">TSh {{ payment.amount|floatformat:0 }}</span>
+                                    <span class="fw-medium text-primary">TZS {{ payment.amount|floatformat:0 }}</span>
                                 </td>
                                 <td>
                                     <span class="badge bg-warning text-dark">{{ payment.get_payment_method_display }}</span>
@@ -366,7 +366,7 @@
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="card-value">Tsh {{ stats.monthly_income|floatformat:0|default:0 }}</h3>
+                        <h3 class="card-value">TZS {{ stats.monthly_income|floatformat:0|default:0 }}</h3>
                         <p class="card-label mb-0">Monthly Income</p>
                         <small class="text-success">
                             <i class="fas fa-arrow-up me-1"></i>
@@ -389,7 +389,7 @@
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="card-value">Tsh {{ stats.monthly_expenses|floatformat:0|default:0 }}</h3>
+                        <h3 class="card-value">TZS {{ stats.monthly_expenses|floatformat:0|default:0 }}</h3>
                         <p class="card-label mb-0">Monthly Expenses</p>
                         <small class="text-danger">
                             <i class="fas fa-arrow-down me-1"></i>
@@ -412,7 +412,7 @@
             <div class="card-body p-compact">
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="card-value">Tsh {{ stats.total_capital|floatformat:0|default:0 }}</h3>
+                        <h3 class="card-value">TZS {{ stats.total_capital|floatformat:0|default:0 }}</h3>
                         <p class="card-label mb-0">Total Capital</p>
                         <small class="text-info">
                             <i class="fas fa-users me-1"></i>

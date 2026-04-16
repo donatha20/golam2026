@@ -93,6 +93,16 @@ class Income(models.Model):
     def __str__(self):
         return f"{self.get_source_display()} - TSh {self.amount:,.2f}"
 
+    def get_source_display(self):
+        """Return source label from Settings (core.IncomeSource) with fallback to static choices."""
+        from apps.core.models import IncomeSource
+
+        source = IncomeSource.objects.filter(code=self.source).first()
+        if source:
+            return source.name
+
+        return dict(self.INCOME_SOURCES).get(self.source, self.source)
+
     def save(self, *args, **kwargs):
         if not self.income_id:
             # Generate income ID
@@ -160,6 +170,7 @@ class Expenditure(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_expenditures')
     approval_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
 
     # Audit fields
     created_at = models.DateTimeField(auto_now_add=True)
@@ -171,6 +182,16 @@ class Expenditure(models.Model):
 
     def __str__(self):
         return f"{self.get_expenditure_type_display()} - TSh {self.amount:,.2f}"
+
+    def get_expenditure_type_display(self):
+        """Return expenditure type label from Settings (core.ExpenseCategory) with fallback to static choices."""
+        from apps.core.models import ExpenseCategory
+
+        category = ExpenseCategory.objects.filter(code=self.expenditure_type).first()
+        if category:
+            return category.name
+
+        return dict(self.EXPENDITURE_TYPES).get(self.expenditure_type, self.expenditure_type)
 
     def save(self, *args, **kwargs):
         if not self.expenditure_id:

@@ -176,18 +176,18 @@ class Asset(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_asset_id(self):
-        """Generate unique asset ID."""
+        """Generate unique asset ID using sequential format: AS-0001."""
         last_asset = Asset.objects.filter(
-            asset_id__startswith='AST'
+            asset_id__startswith='AS-'
         ).order_by('asset_id').last()
 
         if last_asset:
-            last_number = int(last_asset.asset_id[3:])
+            last_number = int(last_asset.asset_id[3:])  # Extract digits after 'AS-'
             new_number = last_number + 1
         else:
             new_number = 1
 
-        return f"AST{new_number:06d}"
+        return f"AS-{new_number:04d}"
 
     @property
     def age_in_years(self):
@@ -456,18 +456,18 @@ class Collateral(AuditModel):
         super().save(*args, **kwargs)
 
     def generate_collateral_id(self):
-        """Generate unique collateral ID."""
+        """Generate unique collateral ID using sequential format: CL-0001."""
         last_collateral = Collateral.objects.filter(
-            collateral_id__startswith='COL'
+            collateral_id__startswith='CL-'
         ).order_by('collateral_id').last()
 
         if last_collateral:
-            last_number = int(last_collateral.collateral_id[3:])
+            last_number = int(last_collateral.collateral_id[3:])  # Extract digits after 'CL-'
             new_number = last_number + 1
         else:
             new_number = 1
 
-        return f"COL{new_number:06d}"
+        return f"CL-{new_number:04d}"
 
     @property
     def loan_to_value_ratio(self):

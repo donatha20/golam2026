@@ -38,8 +38,8 @@
                                 <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Category</th>
-                                        <th>Account Code</th>
+                                        <th>Type</th>
+                                        <th>Code</th>
                                         <th>Status</th>
                                         <th>Description</th>
                                         <th>Actions</th>
@@ -50,21 +50,15 @@
                                     <tr>
                                         <td>{{ source.name }}</td>
                                         <td>
-                                            {% if source.category == 'interest' %}
-                                                <span class="badge badge-info">Interest Income</span>
-                                            {% elif source.category == 'fees' %}
-                                                <span class="badge badge-warning">Fee Income</span>
-                                            {% elif source.category == 'penalties' %}
-                                                <span class="badge badge-danger">Penalty Income</span>
-                                            {% elif source.category == 'investment' %}
+                                            {% if source.source_type == 'operational' %}
+                                                <span class="badge badge-info">Operational Income</span>
+                                            {% elif source.source_type == 'investment' %}
                                                 <span class="badge badge-success">Investment Income</span>
-                                            {% elif source.category == 'grant' %}
-                                                <span class="badge badge-primary">Grant Income</span>
                                             {% else %}
                                                 <span class="badge badge-secondary">Other Income</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ source.account_code|default:"—" }}</td>
+                                        <td>{{ source.code|default:"—" }}</td>
                                         <td>
                                             {% if source.is_active %}
                                                 <span class="badge badge-success">Active</span>

@@ -80,7 +80,7 @@
                                     <span class="badge bg-info">{{ loan.loan_type.name }}</span>
                                 </td>
                                 <td>
-                                    <strong class="text-success">${{ loan.amount|floatformat:2 }}</strong>
+                                    <strong class="text-success">TZS{{ loan.amount|floatformat:2 }}</strong>
                                 </td>
                                 <td>
                                     <span class="text-truncate" style="max-width: 150px; display: inline-block;" title="{{ loan.purpose }}">
@@ -174,7 +174,7 @@
                                     <span class="badge bg-info">{{ group_loan.loan.loan_type.name }}</span>
                                 </td>
                                 <td>
-                                    <strong class="text-success">${{ group_loan.loan.amount|floatformat:2 }}</strong>
+                                    <strong class="text-success">TZS{{ group_loan.loan.amount|floatformat:2 }}</strong>
                                 </td>
                                 <td>
                                     <span class="text-truncate" style="max-width: 150px; display: inline-block;" title="{{ group_loan.loan.purpose }}">
