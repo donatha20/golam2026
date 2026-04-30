@@ -4,6 +4,20 @@ from django.utils.safestring import mark_safe
 from .models import Loan, RepaymentSchedule, Penalty, Repayment
 
 
+def format_loan_number_with_category(loan_number, loan_category):
+    """Render loan number with a subtle loan category subtitle."""
+    raw_category = loan_category or "Uncategorized"
+    category = raw_category.replace("_", " ").title()
+    return format_html(
+        '<div>'
+        '<div style="font-weight: 600; color: #2b7a76;">{}</div>'
+        '<div style="font-size: 11px; color: #8a8f98; font-weight: 500; margin-top: 2px;">{}</div>'
+        '</div>',
+        loan_number,
+        category,
+    )
+
+
 class DisbursedLoansTable(tables.Table):
     """Table for displaying disbursed loans with styled columns."""
 
@@ -18,7 +32,7 @@ class DisbursedLoansTable(tables.Table):
     amount_approved = tables.Column(verbose_name="Amount")
     duration_months = tables.Column(verbose_name="Duration")
     disbursement_date = tables.DateColumn(format="M d, Y", verbose_name="Disbursed")
-    loan_type = tables.Column(empty_values=(), verbose_name="Product")
+    loan_category = tables.Column(verbose_name="Category")
 
     # Status and tracking
     status = tables.Column(empty_values=(), verbose_name="Status")
@@ -32,15 +46,17 @@ class DisbursedLoansTable(tables.Table):
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
         fields = ("avatar", "borrower", "loan_number", "amount_approved", "duration_months",
-                 "disbursement_date", "loan_type", "status", "outstanding_balance", "disbursed_by", "actions")
+                 "disbursement_date", "loan_category", "status", "outstanding_balance", "disbursed_by", "actions")
         attrs = {
             "class": "table table-hover loan-table",
             "id": "disbursed-loans-table"
         }
 
     def render_avatar(self, record):
-        """Render loan avatar with loan type initial."""
-        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        """Render loan avatar with borrower initials."""
+        first_initial = (record.borrower.first_name or "")[:1]
+        last_initial = (record.borrower.last_name or "")[:1]
+        initial = (first_initial + last_initial).upper() or "L"
         return format_html(
             '<div class="table-avatar">{}</div>',
             initial
@@ -58,9 +74,20 @@ class DisbursedLoansTable(tables.Table):
             borrower.borrower_id
         )
 
-    def render_loan_type(self, record):
-        """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+    def render_loan_number(self, record):
+        """Render loan number with category subtitle."""
+        return format_loan_number_with_category(record.loan_number, record.loan_category)
+
+    def render_loan_category(self, record):
+        """Render loan category (individual/asset/etc)."""
+        if record.loan_category:
+            # Format category nicely (e.g., "individual" -> "Individual")
+            formatted = record.loan_category.replace('_', ' ').title()
+            return format_html(
+                '<span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.85rem;">{}</span>',
+                formatted
+            )
+        return "—"
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -145,7 +172,6 @@ class RepaidLoansTable(tables.Table):
 
     # Loan details
     loan_number = tables.Column(verbose_name="Loan #")
-    loan_type = tables.Column(empty_values=(), verbose_name="Product")
     amount_approved = tables.Column(verbose_name="Amount")
     duration_months = tables.Column(verbose_name="Duration")
 
@@ -161,7 +187,7 @@ class RepaidLoansTable(tables.Table):
     class Meta:
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
-        fields = ("avatar", "borrower", "loan_number", "loan_type", "amount_approved", "duration_months",
+        fields = ("avatar", "borrower", "loan_number", "amount_approved", "duration_months",
                 "disbursement_date", "completion_date", "created_by", "status", "actions")
         attrs = {
             "class": "table table-hover loan-table",
@@ -169,8 +195,10 @@ class RepaidLoansTable(tables.Table):
         }
 
     def render_avatar(self, record):
-        """Render loan avatar with loan type initial."""
-        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        """Render loan avatar with borrower initials."""
+        first_initial = (record.borrower.first_name or "")[:1]
+        last_initial = (record.borrower.last_name or "")[:1]
+        initial = (first_initial + last_initial).upper() or "L"
         return format_html(
             '<div class="table-avatar">{}</div>',
             initial
@@ -188,9 +216,9 @@ class RepaidLoansTable(tables.Table):
             borrower.borrower_id
         )
 
-    def render_loan_type(self, record):
-        """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+    def render_loan_number(self, record):
+        """Render loan number with category subtitle."""
+        return format_loan_number_with_category(record.loan_number, record.loan_category)
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -293,8 +321,10 @@ class ExpectedRepaymentsTable(tables.Table):
         )
 
     def render_loan_number(self, record):
-        """Render loan number."""
-        return record.loan.loan_number
+        """Render loan number with a subtle category subtitle."""
+        if not record.loan:
+            return ""
+        return format_loan_number_with_category(record.loan.loan_number, record.loan.loan_category)
 
     def render_borrower(self, record):
         """Render borrower information."""
@@ -414,7 +444,6 @@ class NonPerformingLoansTable(tables.Table):
 
     # Loan details
     loan_number = tables.Column(verbose_name="Loan #")
-    loan_type = tables.Column(empty_values=(), verbose_name="Product")
     amount_approved = tables.Column(verbose_name="Principal")
     outstanding_balance = tables.Column(verbose_name="Outstanding")
 
@@ -431,7 +460,7 @@ class NonPerformingLoansTable(tables.Table):
     class Meta:
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
-        fields = ("avatar", "borrower", "loan_number", "loan_type", "amount_approved",
+        fields = ("avatar", "borrower", "loan_number", "amount_approved",
                   "outstanding_balance", "disbursement_date", "maturity_date",
                   "days_overdue", "npl_category", "status", "actions")
         attrs = {
@@ -459,9 +488,9 @@ class NonPerformingLoansTable(tables.Table):
             borrower.phone_number or "—"
         )
 
-    def render_loan_type(self, record):
-        """Render loan type name."""
-        return record.loan_type.name if record.loan_type else "—"
+    def render_loan_number(self, record):
+        """Render loan number with category subtitle."""
+        return format_loan_number_with_category(record.loan_number, record.loan_category)
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
@@ -575,13 +604,13 @@ class OutstandingLoansTable(tables.Table):
     # Loan details
     loan_number = tables.Column(verbose_name="Loan #")
     amount_approved = tables.Column(verbose_name="Approved Amount")
+    total_amount = tables.Column(verbose_name="Total Amount (with Interest)")
+    total_paid = tables.Column(verbose_name="Repayments")
     outstanding_balance = tables.Column(verbose_name="Outstanding")
-    total_paid = tables.Column(verbose_name="Paid")
     disbursement_date = tables.DateColumn(format="M d, Y", verbose_name="Disbursed")
 
     # Status and tracking
     status = tables.Column(empty_values=(), verbose_name="Status")
-    loan_type = tables.Column(empty_values=(), verbose_name="Product")
 
     # Actions
     actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
@@ -589,16 +618,18 @@ class OutstandingLoansTable(tables.Table):
     class Meta:
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
-        fields = ("avatar", "borrower", "loan_number", "amount_approved", "outstanding_balance",
-                  "total_paid", "disbursement_date", "status", "loan_type", "actions")
+        fields = ("avatar", "borrower", "loan_number", "amount_approved", "total_amount",
+                  "total_paid", "outstanding_balance", "disbursement_date", "status", "actions")
         attrs = {
             "class": "table table-hover loan-table outstanding-table",
             "id": "outstanding-loans-table"
         }
 
     def render_avatar(self, record):
-        """Render loan avatar with loan type initial."""
-        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        """Render loan avatar with borrower initials."""
+        first_initial = (record.borrower.first_name or "")[:1]
+        last_initial = (record.borrower.last_name or "")[:1]
+        initial = (first_initial + last_initial).upper() or "L"
         return format_html(
             '<div class="table-avatar">{}</div>',
             initial
@@ -616,6 +647,10 @@ class OutstandingLoansTable(tables.Table):
             borrower.borrower_id
         )
 
+    def render_loan_number(self, record):
+        """Render loan number with category subtitle."""
+        return format_loan_number_with_category(record.loan_number, record.loan_category)
+
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""
         try:
@@ -625,6 +660,18 @@ class OutstandingLoansTable(tables.Table):
             formatted = "0.00"
         return format_html(
             '<span class="amount-cell">Tsh {}</span>',
+            formatted
+        )
+
+    def render_total_amount(self, value):
+        """Render total amount (approved + interest) with currency formatting."""
+        try:
+            amount = float(value) if value else 0
+            formatted = "{:,.2f}".format(amount)
+        except (ValueError, TypeError):
+            formatted = "0.00"
+        return format_html(
+            '<span class="amount-cell" style="color: #2b7a76; font-weight: 700;">Tsh {}</span>',
             formatted
         )
 
@@ -793,7 +840,9 @@ class PenaltiesTable(tables.Table):
 
     def render_loan_number(self, record):
         """Render loan number."""
-        return record.loan.loan_number if record.loan else ""
+        if not record.loan:
+            return ""
+        return format_loan_number_with_category(record.loan.loan_number, record.loan.loan_category)
 
     def render_borrower(self, record):
         """Render borrower information."""
@@ -854,7 +903,6 @@ class PortfolioAtRiskTable(tables.Table):
     
     # Loan details
     loan_number = tables.Column(verbose_name="Loan #")
-    loan_type = tables.Column(empty_values=(), verbose_name="Product")
     amount_approved = tables.Column(verbose_name="Principal")
     outstanding_balance = tables.Column(verbose_name="Outstanding")
     
@@ -869,7 +917,7 @@ class PortfolioAtRiskTable(tables.Table):
     class Meta:
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
-        fields = ("avatar", "borrower", "loan_number", "loan_type", "amount_approved",
+        fields = ("avatar", "borrower", "loan_number", "amount_approved",
                   "outstanding_balance", "disbursement_date", "days_overdue", "status", "actions")
         attrs = {
             "class": "table table-hover loan-table par-table",
@@ -877,8 +925,10 @@ class PortfolioAtRiskTable(tables.Table):
         }
 
     def render_avatar(self, record):
-        """Render loan avatar with warning indicator."""
-        initial = record.loan_type.name[:1].upper() if record.loan_type else "L"
+        """Render loan avatar with borrower initials."""
+        first_initial = (record.borrower.first_name or "")[:1]
+        last_initial = (record.borrower.last_name or "")[:1]
+        initial = (first_initial + last_initial).upper() or "L"
         return format_html(
             '<div class="table-avatar par-avatar">{}</div>',
             initial
@@ -896,9 +946,9 @@ class PortfolioAtRiskTable(tables.Table):
             borrower.borrower_id
         )
 
-    def render_loan_type(self, record):
-        """Render loan type name."""
-        return record.loan_type.name if record.loan_type else ""
+    def render_loan_number(self, record):
+        """Render loan number with category subtitle."""
+        return format_loan_number_with_category(record.loan_number, record.loan_category)
 
     def render_amount_approved(self, value):
         """Render amount with currency formatting."""

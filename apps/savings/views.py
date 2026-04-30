@@ -1533,12 +1533,12 @@ def account_detail(request, account_id):
         )['avg'] or Decimal('0.00'),
     }
     
-    # Check loan eligibility for common loan types
+    # Check loan eligibility for common loan categories
     loan_eligibility = {}
-    common_loan_types = ['personal', 'business', 'emergency', 'agricultural']
-    for loan_type in common_loan_types:
-        is_eligible, message = account.check_loan_eligibility(loan_type, Decimal('10000'))
-        loan_eligibility[loan_type] = {
+    common_loan_categories = ['personal', 'business', 'emergency', 'agricultural']
+    for loan_category in common_loan_categories:
+        is_eligible, message = account.check_loan_eligibility(loan_category, Decimal('10000'))
+        loan_eligibility[loan_category] = {
             'eligible': is_eligible,
             'message': message
         }
@@ -1568,11 +1568,11 @@ def check_loan_eligibility_api(request):
         try:
             data = json.loads(request.body)
             account_id = data.get('account_id')
-            loan_type = data.get('loan_type')
+            loan_category = data.get('loan_category')
             loan_amount = Decimal(str(data.get('loan_amount', '0')))
 
             account = get_object_or_404(SavingsAccount, id=account_id)
-            is_eligible, message = account.check_loan_eligibility(loan_type, loan_amount)
+            is_eligible, message = account.check_loan_eligibility(loan_category, loan_amount)
 
             return JsonResponse({
                 'eligible': is_eligible,
@@ -1690,12 +1690,12 @@ def account_detail(request, account_id):
         )['avg'] or Decimal('0.00'),
     }
     
-    # Check loan eligibility for common loan types
+    # Check loan eligibility for common loan categories
     loan_eligibility = {}
-    common_loan_types = ['personal', 'business', 'emergency', 'agricultural']
-    for loan_type in common_loan_types:
-        is_eligible, message = account.check_loan_eligibility(loan_type, Decimal('10000'))
-        loan_eligibility[loan_type] = {
+    common_loan_categories = ['personal', 'business', 'emergency', 'agricultural']
+    for loan_category in common_loan_categories:
+        is_eligible, message = account.check_loan_eligibility(loan_category, Decimal('10000'))
+        loan_eligibility[loan_category] = {
             'eligible': is_eligible,
             'message': message
         }
@@ -1995,11 +1995,11 @@ def check_loan_eligibility_api(request):
         try:
             data = json.loads(request.body)
             account_id = data.get('account_id')
-            loan_type = data.get('loan_type')
+            loan_category = data.get('loan_category')
             loan_amount = Decimal(str(data.get('loan_amount', '0')))
 
             account = get_object_or_404(SavingsAccount, id=account_id)
-            is_eligible, message = account.check_loan_eligibility(loan_type, loan_amount)
+            is_eligible, message = account.check_loan_eligibility(loan_category, loan_amount)
 
             return JsonResponse({
                 'eligible': is_eligible,

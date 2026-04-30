@@ -21,8 +21,8 @@ from django.db import transaction, IntegrityError
 from apps.borrowers.models import Borrower, BorrowerGroup
 from apps.accounts.models import CustomUser
 from apps.loans.models import (
-    Loan, LoanType, RepaymentSchedule, Repayment, LoanPenalty,
-    LoanStatusChoices, InterestTypeChoices, RepaymentStatusChoices,
+    Loan, RepaymentSchedule, Repayment, LoanPenalty,
+    LoanStatusChoices, RepaymentStatusChoices,
     NPLCategoryChoices, LoanConstants, FrequencyChoices
 )
 
@@ -38,14 +38,6 @@ class RaceConditionTests(TransactionTestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_generate_loan_number_uniqueness_under_concurrency(self):
         """Test that loan numbers are unique even under concurrent generation."""
@@ -56,7 +48,6 @@ class RaceConditionTests(TransactionTestCase):
             try:
                 loan = Loan.objects.create(
                     borrower=self.borrower,
-                    loan_type=self.loan_type,
                     amount_requested=Decimal('1000'),
                     interest_rate=Decimal('15'),
                     duration_months=12,
@@ -98,20 +89,11 @@ class AtomicityTests(TransactionTestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_loan_save_atomicity(self):
         """Test that Loan.save() is atomic and doesn't create partial updates."""
         loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
@@ -132,6 +114,33 @@ class AtomicityTests(TransactionTestCase):
         self.assertIsNotNone(refreshed_loan.total_amount)
         self.assertIsNotNone(refreshed_loan.total_interest)
 
+    def test_approval_default_amount_preserves_manual_totals(self):
+        """Approval should keep exact manual totals when amount_approved defaults to requested amount."""
+        loan = Loan.objects.create(
+            borrower=self.borrower,
+            amount_requested=Decimal('19000.00'),
+            interest_rate=Decimal('72.63'),
+            duration_months=2,
+            repayment_frequency=FrequencyChoices.MONTHLY,
+            status=LoanStatusChoices.PENDING,
+        )
+
+        # Simulate legacy/manual totals saved before approval while amount_approved is empty.
+        Loan.objects.filter(pk=loan.pk).update(
+            total_interest=Decimal('2300.00'),
+            total_amount=Decimal('21300.00'),
+            outstanding_balance=Decimal('21300.00'),
+        )
+
+        loan.refresh_from_db()
+        loan.status = LoanStatusChoices.APPROVED
+        loan.amount_approved = Decimal('19000.00')
+        loan.save()
+
+        loan.refresh_from_db()
+        self.assertEqual(loan.total_interest, Decimal('2300.00'))
+        self.assertEqual(loan.total_amount, Decimal('21300.00'))
+
 
 class DivisionByZeroTests(TestCase):
     """Test division by zero guards."""
@@ -144,20 +153,11 @@ class DivisionByZeroTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('0.00'),  # Zero interest
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_zero_months_flat_interest_guard(self):
         """Test that zero months doesn't cause division error in flat interest calculation."""
         loan = Loan(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             amount_approved=Decimal('1000'),
             interest_rate=Decimal('15'),
@@ -172,20 +172,10 @@ class DivisionByZeroTests(TestCase):
         self.assertEqual(loan.total_interest, Decimal('0'))
         self.assertEqual(loan.total_amount, Decimal('1000'))
     
-    def test_zero_interest_reducing_balance_guard(self):
-        """Test that zero interest doesn't cause division error in EMI calculation."""
-        loan_type = LoanType.objects.create(
-            name="Zero Interest Loan",
-            code="ZERO",
-            default_interest_rate=Decimal('0.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.REDUCING
-        )
-        
+    def test_zero_interest_guard(self):
+        """Test that zero interest safely yields zero interest amount."""
         loan = Loan(
             borrower=self.borrower,
-            loan_type=loan_type,
             amount_requested=Decimal('1000'),
             amount_approved=Decimal('1000'),
             interest_rate=Decimal('0'),  # Zero interest
@@ -212,20 +202,11 @@ class NPLClassificationTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_npl_thresholds_use_constants(self):
         """Test that NPL classification thresholds match LoanConstants."""
         loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
@@ -252,20 +233,11 @@ class DateValidationTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_future_application_date_validation(self):
         """Test that future application date is rejected."""
         loan = Loan(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
@@ -283,7 +255,6 @@ class DateValidationTests(TestCase):
         today = timezone.now().date()
         loan = Loan(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
@@ -311,27 +282,21 @@ class DecimalConsistencyTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_total_paid_is_decimal(self):
         """Test that total_paid is stored as Decimal."""
         loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
             repayment_frequency=FrequencyChoices.MONTHLY
         )
-        
-        loan.approve(Decimal('1000'))
+
+        loan.status = LoanStatusChoices.APPROVED
+        loan.amount_approved = Decimal('1000')
+        loan.approval_date = timezone.now().date()
+        loan.save()
         loan.disburse(None)
         
         # Verify total_paid is Decimal
@@ -341,7 +306,6 @@ class DecimalConsistencyTests(TestCase):
         """Test that outstanding_balance is stored as Decimal."""
         loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
@@ -363,14 +327,6 @@ class RepaymentValidationTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
         self.user = CustomUser.objects.create_user(
             username='test_user',
             email='test@example.com',
@@ -380,13 +336,15 @@ class RepaymentValidationTests(TestCase):
         # Create and setup loan
         self.loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,
             repayment_frequency=FrequencyChoices.MONTHLY
         )
-        self.loan.approve(Decimal('1000'))
+        self.loan.status = LoanStatusChoices.APPROVED
+        self.loan.amount_approved = Decimal('1000')
+        self.loan.approval_date = timezone.now().date()
+        self.loan.save()
         self.loan.disburse(self.user)
         
         # Get first schedule
@@ -444,20 +402,11 @@ class QueryOptimizationTests(TestCase):
             phone_number="255700000000",
             email="test@example.com"
         )
-        self.loan_type = LoanType.objects.create(
-            name="Test Loan",
-            code="TEST",
-            default_interest_rate=Decimal('15.00'),
-            min_amount=Decimal('100'),
-            max_amount=Decimal('10000'),
-            interest_type=InterestTypeChoices.FLAT
-        )
     
     def test_cached_property_oldest_overdue_due_date(self):
         """Test that oldest_overdue_due_date is cached."""
         loan = Loan.objects.create(
             borrower=self.borrower,
-            loan_type=self.loan_type,
             amount_requested=Decimal('1000'),
             interest_rate=Decimal('15'),
             duration_months=12,

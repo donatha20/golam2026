@@ -631,7 +631,7 @@
                     <td>
                         <div class="loan-info">
                             <span class="loan-number">{{ loan.loan_number }}</span>
-                            <span class="loan-type">{{ loan.loan_type.name }}</span>
+                            <span class="loan-type">{{ loan.loan_category|default:"Uncategorized"|title }}</span>
                             <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
                                 Disbursed: {{ loan.disbursement_date|date:"M d, Y" }}
                             </div>

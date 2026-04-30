@@ -49,11 +49,11 @@ class SavingsProductAdmin(admin.ModelAdmin):
 @admin.register(SavingsLoanRule)
 class SavingsLoanRuleAdmin(admin.ModelAdmin):
     list_display = [
-        'name', 'loan_type', 'rule_type', 'is_active', 'is_mandatory', 'created_at'
+        'name', 'loan_category', 'rule_type', 'is_active', 'is_mandatory', 'created_at'
     ]
-    list_filter = ['rule_type', 'is_active', 'is_mandatory', 'loan_type']
-    search_fields = ['name', 'loan_type', 'description']
-    ordering = ['loan_type', 'rule_type']
+    list_filter = ['rule_type', 'is_active', 'is_mandatory', 'loan_category']
+    search_fields = ['name', 'loan_category', 'description']
+    ordering = ['loan_category', 'rule_type']
 
 
 class SavingsTransactionInline(admin.TabularInline):

@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import models, transaction
+from django.db.models import F
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.conf import settings
@@ -100,49 +101,6 @@ class NPLStatusChoices(models.TextChoices):
     WRITTEN_OFF = 'written_off', 'Written Off'
 
 
-class LoanType(AuditModel):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-    code = models.CharField(max_length=10, unique=True)
-    
-    default_interest_rate = models.DecimalField(
-        max_digits=5, decimal_places=2,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    min_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    max_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    min_duration_months = models.PositiveIntegerField(default=1)
-    max_duration_months = models.PositiveIntegerField(default=60)
-
-    interest_type = models.CharField(
-        max_length=20,
-        choices=InterestTypeChoices.choices,
-        default=InterestTypeChoices.FLAT
-    )
-
-    requires_savings = models.BooleanField(default=False)
-    minimum_savings_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    processing_fee_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0,
-        validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    processing_fee_fixed = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-    def calculate_processing_fee(self, loan_amount):
-        percentage_fee = Decimal(str(loan_amount)) * (self.processing_fee_percentage / 100)
-        return percentage_fee + self.processing_fee_fixed
-
-
 class LoanQuerySet(models.QuerySet):
     def overdue(self):
         """Get loans with overdue repayment schedules."""
@@ -228,7 +186,6 @@ class LoanManager(models.Manager):
 class Loan(AuditModel):
     loan_number = models.CharField(max_length=20, unique=True, editable=False)
     borrower = models.ForeignKey(Borrower, on_delete=models.PROTECT, related_name='loans')
-    loan_type = models.ForeignKey(LoanType, on_delete=models.PROTECT, related_name='loans', null=True, blank=True)
     
     # Basic loan information
     loan_category = models.CharField(max_length=50, blank=True, null=True)
@@ -257,7 +214,7 @@ class Loan(AuditModel):
     
     # Payment and disbursement
     repayment_frequency = models.CharField(
-        max_length=15, 
+        max_length=20, 
         choices=FrequencyChoices.choices, 
         default=FrequencyChoices.MONTHLY
     )
@@ -288,6 +245,10 @@ class Loan(AuditModel):
     approval_date = models.DateField(null=True, blank=True)
     disbursement_date = models.DateField(null=True, blank=True)
     maturity_date = models.DateField(null=True, blank=True)
+    completion_date = models.DateField(
+        null=True, blank=True,
+        help_text="Date when loan was fully paid/completed"
+    )
 
     # Status and approval
     status = models.CharField(
@@ -304,6 +265,26 @@ class Loan(AuditModel):
         related_name='rejected_loans'
     )
     rejection_date = models.DateField(null=True, blank=True)
+    
+    # Rejection reversal tracking
+    is_rejection_reversed = models.BooleanField(
+        default=False,
+        help_text="Whether rejection has been reversed"
+    )
+    reversed_rejection_date = models.DateField(
+        null=True, blank=True,
+        help_text="Date when rejection was reversed"
+    )
+    rejection_reversed_by = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reversed_loan_rejections',
+        help_text="User who reversed the rejection"
+    )
+    reversal_reason = models.TextField(
+        blank=True, null=True,
+        help_text="Reason for reversing the rejection"
+    )
+    
     disbursed_by = models.ForeignKey(
         CustomUser, on_delete=models.PROTECT, null=True, blank=True, 
         related_name='disbursed_loans'
@@ -394,6 +375,10 @@ class Loan(AuditModel):
             models.Index(fields=['disbursement_date']),
             models.Index(fields=['is_npl', 'npl_category']),
         ]
+        permissions = [
+            ('can_reject_loan', 'Can reject pending loans'),
+            ('can_reverse_rejection', 'Can reverse rejected loans'),
+        ]
 
     def __str__(self):
         return f"{self.loan_number} - {self.borrower.get_full_name()}"
@@ -403,9 +388,10 @@ class Loan(AuditModel):
         """Save loan with atomic transaction to ensure consistency across all calculations."""
         if not self.loan_number:
             self.loan_number = self.generate_loan_number()
-        
-        if not self.processing_fee and self.amount_requested and self.loan_type:
-            self.processing_fee = self.loan_type.calculate_processing_fee(self.amount_requested)
+
+        # Normalize legacy typo before any downstream calculations.
+        if self.repayment_frequency == FrequencyChoices.EVEY_THREE_DAYS:
+            self.repayment_frequency = FrequencyChoices.EVERY_THREE_DAYS
         
         if self.status == LoanStatusChoices.APPROVED and not self.amount_approved:
             self.amount_approved = self.amount_requested
@@ -416,20 +402,80 @@ class Loan(AuditModel):
             update_fields and 
             set(update_fields).issubset({'total_paid', 'outstanding_balance', 'status'})
         )
+
+        existing_snapshot = None
+        if self.pk:
+            existing_snapshot = Loan.objects.filter(pk=self.pk).values(
+                'amount_approved',
+                'interest_rate',
+                'duration_months',
+                'total_interest',
+                'total_amount',
+            ).first()
         
         if not is_repayment_only_update:
             # Only recalculate loan totals if this is NOT a repayment update
             manual_interest_amount = getattr(self, '_manual_interest_amount', None)
             if manual_interest_amount is not None and self.amount_approved:
-                principal = Decimal(str(self.amount_approved))
-                manual_interest = Decimal(str(manual_interest_amount))
+                principal = Decimal(str(self.amount_approved)).quantize(Decimal('0.01'))
+                manual_interest = Decimal(str(manual_interest_amount)).quantize(Decimal('0.01'))
                 self.total_interest = manual_interest
                 self.total_amount = principal + manual_interest
                 total_paid = Decimal(str(self.total_paid or 0))
                 self.outstanding_balance = self.total_amount - total_paid
             
             elif self.amount_approved and self.interest_rate and self.duration_months:
-                self.calculate_loan_totals()
+                should_recalculate_totals = True
+
+                # Preserve exact stored totals on status/date-only updates to avoid
+                # drift from rounded interest_rate recomputation.
+                if existing_snapshot:
+                    previous_amount_raw = existing_snapshot.get('amount_approved')
+                    previous_amount = Decimal(str(previous_amount_raw or 0))
+                    previous_rate = Decimal(str(existing_snapshot.get('interest_rate') or 0))
+                    previous_duration = int(existing_snapshot.get('duration_months') or 0)
+
+                    current_amount = Decimal(str(self.amount_approved or 0))
+                    current_rate = Decimal(str(self.interest_rate or 0))
+                    current_duration = int(self.duration_months or 0)
+
+                    pricing_inputs_unchanged = (
+                        previous_amount == current_amount
+                        and previous_rate == current_rate
+                        and previous_duration == current_duration
+                    )
+
+                    previous_total_interest = existing_snapshot.get('total_interest')
+                    previous_total_amount = existing_snapshot.get('total_amount')
+
+                    if pricing_inputs_unchanged and previous_total_interest is not None and previous_total_amount is not None:
+                        self.total_interest = Decimal(str(previous_total_interest))
+                        self.total_amount = Decimal(str(previous_total_amount))
+                        total_paid = Decimal(str(self.total_paid or 0))
+                        self.outstanding_balance = self.total_amount - total_paid
+                        should_recalculate_totals = False
+                    else:
+                        # Preserve manually entered totals when approval sets
+                        # amount_approved from empty to the requested amount.
+                        requested_amount = Decimal(str(self.amount_requested or 0))
+                        manual_totals_exist = (
+                            previous_total_interest is not None
+                            and previous_total_amount is not None
+                        )
+                        approval_defaulted_amount = (
+                            previous_amount_raw in (None, '')
+                            and current_amount == requested_amount
+                        )
+                        if manual_totals_exist and approval_defaulted_amount:
+                            preserved_interest = Decimal(str(previous_total_interest)).quantize(Decimal('0.01'))
+                            self.total_interest = preserved_interest
+                            self.total_amount = (current_amount + preserved_interest).quantize(Decimal('0.01'))
+                            total_paid = Decimal(str(self.total_paid or 0))
+                            self.outstanding_balance = self.total_amount - total_paid
+                            should_recalculate_totals = False
+
+                if should_recalculate_totals:
+                    self.calculate_loan_totals()
         
         if self.status == LoanStatusChoices.DISBURSED and self.disbursement_date and not self.maturity_date:
             self.calculate_maturity_date()
@@ -459,10 +505,8 @@ class Loan(AuditModel):
         rate = Decimal(str(self.interest_rate)) / 100
         months = Decimal(str(self.duration_months))
 
-        # Get interest type from loan type
+        # Interest defaults to flat calculation after legacy product-field removal.
         interest_type = InterestTypeChoices.FLAT
-        if self.loan_type and hasattr(self.loan_type, 'interest_type'):
-            interest_type = self.loan_type.interest_type
 
         if interest_type == InterestTypeChoices.REDUCING:
             # Reducing balance (EMI calculation)
@@ -693,6 +737,11 @@ class Loan(AuditModel):
         """Generate repayment schedule based on loan parameters with guards against division by zero."""
         if not self.disbursement_date:
             raise ValueError("Disbursement date is required to generate schedule")
+
+        # Support legacy typo value while keeping the scheduling logic canonical.
+        normalized_frequency = self.repayment_frequency
+        if normalized_frequency == FrequencyChoices.EVEY_THREE_DAYS:
+            normalized_frequency = FrequencyChoices.EVERY_THREE_DAYS
         
         # Clear existing schedules
         self.repayment_schedules.all().delete()
@@ -700,12 +749,15 @@ class Loan(AuditModel):
         # Determine number of installments based on repayment frequency
         frequency_map = {
             FrequencyChoices.DAILY: int(self.duration_months * LoanConstants.DAYS_PER_MONTH),
+            FrequencyChoices.EVERY_THREE_DAYS: max(1, int((self.duration_months * LoanConstants.DAYS_PER_MONTH) / 3)),
             FrequencyChoices.WEEKLY: int(self.duration_months * LoanConstants.WEEKS_PER_MONTH),
+            FrequencyChoices.BIWEEKLY: max(1, int((self.duration_months * LoanConstants.WEEKS_PER_MONTH) / 2)),
             FrequencyChoices.MONTHLY: self.duration_months,
             FrequencyChoices.QUARTERLY: max(1, self.duration_months // 3),
+            FrequencyChoices.ANNUALLY: max(1, self.duration_months // 12),
         }
         
-        num_installments = frequency_map.get(self.repayment_frequency, self.duration_months)
+        num_installments = frequency_map.get(normalized_frequency, self.duration_months)
         # Guard against zero installments to prevent division by zero error
         if num_installments <= 0:
             raise ValueError(f"Invalid number of installments: {num_installments}. Duration months: {self.duration_months}")
@@ -714,20 +766,21 @@ class Loan(AuditModel):
         # Calculate interval
         interval_map = {
             FrequencyChoices.DAILY: timedelta(days=1),
+            FrequencyChoices.EVERY_THREE_DAYS: timedelta(days=3),
             FrequencyChoices.WEEKLY: timedelta(weeks=1),
+            FrequencyChoices.BIWEEKLY: timedelta(weeks=2),
             FrequencyChoices.MONTHLY: relativedelta(months=1),
             FrequencyChoices.QUARTERLY: relativedelta(months=3),
+            FrequencyChoices.ANNUALLY: relativedelta(years=1),
         }
         
         start_date = self.start_payment_date or self.disbursement_date
+        interval = interval_map.get(normalized_frequency, relativedelta(months=1))
         current_date = start_date
         
         # Create installments
         for i in range(1, num_installments + 1):
-            if self.repayment_frequency in [FrequencyChoices.DAILY, FrequencyChoices.WEEKLY]:
-                current_date = start_date + (interval_map[self.repayment_frequency] * i)
-            else:
-                current_date = start_date + (interval_map[self.repayment_frequency] * i)
+            current_date = start_date + (interval * i)
             
             RepaymentSchedule.objects.create(
                 loan=self,
@@ -854,6 +907,45 @@ class RepaymentSchedule(models.Model):
             self.status = RepaymentStatusChoices.PENDING
         
         self.save(update_fields=['status'])
+
+
+def refresh_repayment_schedule_statuses(as_of_date=None):
+    """Refresh repayment schedule statuses based on due dates and payments."""
+    as_of_date = as_of_date or timezone.now().date()
+
+    # Mark fully paid schedules.
+    RepaymentSchedule.objects.exclude(
+        status=RepaymentStatusChoices.ROLLED_OVER
+    ).filter(
+        amount_paid__gte=F("amount_due")
+    ).update(status=RepaymentStatusChoices.PAID)
+
+    # Mark partial payments (not yet fully paid).
+    RepaymentSchedule.objects.exclude(
+        status=RepaymentStatusChoices.ROLLED_OVER
+    ).filter(
+        amount_paid__gt=0,
+        amount_paid__lt=F("amount_due")
+    ).update(status=RepaymentStatusChoices.PARTIAL)
+
+    # Update zero-paid schedules based on due date.
+    zero_paid = RepaymentSchedule.objects.exclude(
+        status=RepaymentStatusChoices.ROLLED_OVER
+    ).filter(
+        amount_paid=0
+    )
+
+    zero_paid.filter(
+        due_date__lt=as_of_date - timedelta(days=LoanConstants.DEFAULTED_DAYS)
+    ).update(status=RepaymentStatusChoices.DEFAULTED)
+
+    zero_paid.filter(
+        due_date__lt=as_of_date,
+        due_date__gte=as_of_date - timedelta(days=LoanConstants.DEFAULTED_DAYS)
+    ).update(status=RepaymentStatusChoices.MISSED)
+
+    zero_paid.filter(due_date=as_of_date).update(status=RepaymentStatusChoices.DUE)
+    zero_paid.filter(due_date__gt=as_of_date).update(status=RepaymentStatusChoices.PENDING)
 
 
 
@@ -1004,5 +1096,41 @@ def apply_penalty_if_missed(sender, instance, **kwargs):
                 'reason': "Auto penalty for missed schedule"
             }
         )
+
+
+@receiver(post_save, sender=RepaymentSchedule)
+def update_loan_npl_classification(sender, instance, created, update_fields, **kwargs):
+    """Automatically update loan NPL classification when repayment schedule changes.
+    
+    Only triggers on meaningful status changes to avoid N+1 updates.
+    Skip if NPL flag is disabled for this environment.
+    """
+    # TEMPORARILY DISABLED - causing 500 errors in arrears view
+    # Re-enable after debugging
+    return
+    
+    try:
+        # Skip NPL updates if disabled
+        if not getattr(settings, 'ENABLE_NPL_AUTO_UPDATE', True):
+            return
+        
+        loan = instance.loan
+        if loan.status not in [LoanStatusChoices.DISBURSED, LoanStatusChoices.ACTIVE]:
+            return
+        
+        # Only update on specific field changes
+        status_fields = {'status', 'due_date'}
+        if update_fields is None:  # If update_fields is None, all fields updated (creation)
+            should_update = True
+        else:
+            should_update = bool(update_fields & status_fields)
+        
+        if should_update:
+            loan.update_npl_classification(save_loan=True)
+    except Exception as e:
+        # Don't crash - NPL is for reporting, not transaction-critical
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f'NPL update error for loan {instance.loan.loan_number}: {str(e)}', exc_info=False)
 
 

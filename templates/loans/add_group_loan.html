@@ -163,6 +163,43 @@
         color: #92400e;
     }
 
+    /* Form error styling - compact display */
+    .form-errors {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-errors h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #991b1b;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        font-size: 0.85rem;
+        color: #7f1d1d;
+        margin: 0.25rem 0;
+    }
+
+    .form-input.is-invalid,
+    .form-select.is-invalid,
+    .form-textarea.is-invalid {
+        border-color: #dc2626 !important;
+        background-color: #fef2f2;
+    }
+
     @media (max-width: 768px) {
         .form-container {
             margin: 1rem;
@@ -198,6 +235,26 @@
         <form method="post" id="groupLoanForm">
             {% csrf_token %}
 
+            <!-- Display form errors -->
+            {% if form.errors %}
+                <div class="form-errors">
+                    <h5><i class="fas fa-exclamation-circle"></i> Please correct the errors:</h5>
+                    <ul class="error-list">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>
+                                    {% if field == '__all__' %}
+                                        {{ error }}
+                                    {% else %}
+                                        <strong>{{ field|title }}:</strong> {{ error }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
             <!-- Loan Information -->
             <div class="form-section">
                 <h3 class="section-title">
@@ -212,14 +269,6 @@
                             <div class="form-error">{{ form.group.errors.0 }}</div>
                         {% endif %}
                         <div class="form-help">Select the borrower group for this loan</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="{{ form.loan_type.id_for_label }}" class="form-label required">{{ form.loan_type.label }}</label>
-                        {{ form.loan_type }}
-                        {% if form.loan_type.errors %}
-                            <div class="form-error">{{ form.loan_type.errors.0 }}</div>
-                        {% endif %}
                     </div>
 
                     <div class="form-group">
@@ -310,7 +359,6 @@
     // Form validation
     document.getElementById('groupLoanForm').addEventListener('submit', function(e) {
         const group = document.getElementById('{{ form.group.id_for_label }}').value;
-        const loanType = document.getElementById('{{ form.loan_type.id_for_label }}').value;
         const amount = document.getElementById('{{ form.amount_requested.id_for_label }}').value;
         const interestRate = document.getElementById('{{ form.interest_rate.id_for_label }}').value;
         const duration = document.getElementById('{{ form.duration_months.id_for_label }}').value;
@@ -319,12 +367,6 @@
         if (!group) {
             e.preventDefault();
             alert('Please select a borrower group');
-            return;
-        }
-
-        if (!loanType) {
-            e.preventDefault();
-            alert('Please select a loan type');
             return;
         }
 
@@ -384,12 +426,37 @@
         }
     });
 
-    // Dynamic loan type information
-    document.getElementById('{{ form.loan_type.id_for_label }}').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-            console.log('Selected loan type:', selectedOption.text);
-            // You can add logic here to show loan type details
+    // Handle form field error highlighting and value preservation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('groupLoanForm');
+        const errorFields = [
+            {% for field_name in form.errors.keys %}
+                "{{ field_name }}",
+            {% endfor %}
+        ];
+        
+        // Add error class to fields with errors
+        errorFields.forEach(fieldName => {
+            const field = form.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.classList.add('is-invalid');
+                // Also add error class to parent group for context
+                const formGroup = field.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.add('has-error');
+                }
+            }
+        });
+        
+        // Scroll to first error field if errors exist
+        if (errorFields.length > 0) {
+            const firstErrorField = form.querySelector('.is-invalid');
+            if (firstErrorField) {
+                setTimeout(() => {
+                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstErrorField.focus();
+                }, 100);
+            }
         }
     });
 </script>

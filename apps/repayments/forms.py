@@ -109,6 +109,19 @@ class PaymentForm(forms.ModelForm):
         if payment_date and payment_date > timezone.now().date():
             raise forms.ValidationError('Payment date cannot be in the future.')
         
+        # Check backdating setting from WorkingMode
+        if payment_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if payment_date < today:
+                    raise forms.ValidationError(
+                        'Backdating is not allowed. Payment date cannot be earlier than today.'
+                    )
+        
         return cleaned_data
 
 
@@ -475,6 +488,19 @@ class DailyCollectionForm(forms.ModelForm):
         # Validate collection date
         if collection_date and collection_date > timezone.now().date():
             raise forms.ValidationError('Collection date cannot be in the future.')
+        
+        # Check backdating setting from WorkingMode
+        if collection_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if collection_date < today:
+                    raise forms.ValidationError(
+                        'Backdating is not allowed. Collection date cannot be earlier than today.'
+                    )
 
         return cleaned_data
 

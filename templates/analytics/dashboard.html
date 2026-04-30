@@ -335,9 +335,9 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label">Product</label>
+                <label class="form-label">Category</label>
                 <select name="product" class="form-select form-select-sm">
-                    <option value="">All Products</option>
+                    <option value="">All Categories</option>
                     {% for product in loan_products %}
                     <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
                         {{ product.name }}
@@ -440,10 +440,10 @@
         </div>
 
         <div class="col-lg-4">
-            <!-- Loan Product Performance -->
+            <!-- Loan Category Performance -->
             <div class="chart-card">
                 <h5 class="chart-title mb-3">
-                    <i class="fas fa-chart-pie me-2"></i>Product Performance
+                    <i class="fas fa-chart-pie me-2"></i>Category Performance
                 </h5>
                 <div class="chart-container" style="height: 250px;">
                     <canvas id="productChart"></canvas>

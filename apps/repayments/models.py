@@ -12,6 +12,11 @@ from apps.borrowers.models import Borrower
 from apps.loans.models import Loan
 
 
+# Guards against accidental re-entrant balance updates during nested saves.
+_PAYMENT_BALANCE_UPDATE_GUARD = set()
+_LOAN_BALANCE_UPDATE_GUARD = set()
+
+
 class PaymentStatus(models.TextChoices):
     """Payment status choices."""
     PENDING = 'pending', 'Pending'
@@ -552,18 +557,39 @@ class Payment(AuditModel):
         return f"{self.payment_reference} - {self.borrower.get_full_name()} - {self.amount}"
 
     def save(self, *args, **kwargs):
+        update_fields = kwargs.get('update_fields')
+        balance_tracking_only = update_fields is not None and set(update_fields).issubset({
+            'loan_balance_before', 'loan_balance_after'
+        })
+
         if not self.payment_reference:
             self.payment_reference = self.generate_payment_reference()
         
         # Allocate payment if not already done
-        if not any([self.principal_paid, self.interest_paid, self.penalty_paid, self.fees_paid]):
+        if not balance_tracking_only and not any([
+            self.principal_paid,
+            self.interest_paid,
+            self.penalty_paid,
+            self.fees_paid,
+        ]):
             self.allocate_payment()
         
         super().save(*args, **kwargs)
         
-        # Update loan balance after payment
-        if self.status == PaymentStatus.COMPLETED:
-            self.update_loan_balance()
+        # Update loan balance after payment is saved
+        # This handles:
+        # 1. New completed payments - adds amount to total_paid
+        # 2. Payment reversals - recalculates total_paid excluding reversed payments
+        if not balance_tracking_only and self.status == PaymentStatus.COMPLETED:
+            guard_key = self.pk or id(self)
+            if guard_key in _PAYMENT_BALANCE_UPDATE_GUARD:
+                return
+
+            _PAYMENT_BALANCE_UPDATE_GUARD.add(guard_key)
+            try:
+                self.update_loan_balance()
+            finally:
+                _PAYMENT_BALANCE_UPDATE_GUARD.discard(guard_key)
 
     def generate_payment_reference(self):
         """Generate a unique payment reference using sequential format: PY-0001."""
@@ -626,12 +652,55 @@ class Payment(AuditModel):
             self.fees_paid = remaining_amount
 
     def update_loan_balance(self):
-        """Update loan outstanding balance after payment."""
+        """Update loan outstanding balance after payment.
+        
+        Properly calculates:
+        - total_paid: accumulated sum of all payments
+        - outstanding_balance: total_amount - total_paid
+        """
         if self.loan:
-            self.loan.outstanding_balance -= self.amount
-            if self.loan.outstanding_balance < 0:
-                self.loan.outstanding_balance = 0
-            self.loan.save()
+            loan_guard_key = self.loan_id
+            if loan_guard_key in _LOAN_BALANCE_UPDATE_GUARD:
+                return
+
+            _LOAN_BALANCE_UPDATE_GUARD.add(loan_guard_key)
+            try:
+            # Capture balance before update
+                self.loan_balance_before = self.loan.outstanding_balance
+            
+            # Calculate total paid from all completed payments for this loan
+                total_paid_from_payments = Payment.objects.filter(
+                    loan=self.loan,
+                    status=PaymentStatus.COMPLETED,
+                    is_reversed=False
+                ).aggregate(
+                    total=models.Sum('amount')
+                )['total'] or Decimal('0.00')
+            
+            # Update loan's total_paid
+                self.loan.total_paid = total_paid_from_payments
+            
+            # Recalculate outstanding balance correctly
+                self.loan.outstanding_balance = self.loan.total_amount - self.loan.total_paid
+            
+            # Ensure balance doesn't go negative due to rounding or overpayment
+                if self.loan.outstanding_balance < 0:
+                    self.loan.outstanding_balance = Decimal('0.00')
+            
+            # Capture balance after update
+                self.loan_balance_after = self.loan.outstanding_balance
+            
+            # Save the loan
+                self.loan.save(update_fields=['total_paid', 'outstanding_balance'])
+            
+            # Persist balance tracking without re-entering Payment.save(), which
+            # would call update_loan_balance() again and recurse.
+                type(self).objects.filter(pk=self.pk).update(
+                    loan_balance_before=self.loan_balance_before,
+                    loan_balance_after=self.loan_balance_after,
+                )
+            finally:
+                _LOAN_BALANCE_UPDATE_GUARD.discard(loan_guard_key)
     
     @property
     def total_allocated(self):

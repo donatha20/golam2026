@@ -5,7 +5,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 from datetime import date, timedelta
-from apps.loans.models import Loan, RepaymentSchedule, LoanType
+from apps.loans.models import Loan, RepaymentSchedule
 from apps.borrowers.models import Borrower
 from apps.core.models import LoanStatusChoices
 
@@ -143,14 +143,6 @@ class OutstandingLoansFilter(django_filters.FilterSet):
             'autocomplete': 'off'
         })
     )
-    loan_product = django_filters.ModelChoiceFilter(
-        field_name='loan_type',
-        queryset=None,  # Will be set in __init__
-        empty_label='All Loan Products',
-        widget=forms.Select(attrs={
-            'class': 'form-select filter-select'
-        })
-    )
     loan_officer = django_filters.CharFilter(
         field_name='loan_officer',
         lookup_expr='icontains',
@@ -190,13 +182,6 @@ class OutstandingLoansFilter(django_filters.FilterSet):
             'step': '1000'
         })
     )
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Set querysets for choice fields
-        from apps.accounts.models import CustomUser
-        
-        self.filters['loan_product'].queryset = LoanType.objects.all()
     
     def filter_borrower_name(self, queryset, name, value):
         """Filter by borrower first name or last name."""
@@ -246,6 +231,6 @@ class OutstandingLoansFilter(django_filters.FilterSet):
 
     class Meta:
         model = Loan
-        fields = ['borrower', 'loan_product', 'loan_officer', 'days_overdue', 'outstanding_min', 'outstanding_max']
+        fields = ['borrower', 'loan_officer', 'days_overdue', 'outstanding_min', 'outstanding_max']
 
 

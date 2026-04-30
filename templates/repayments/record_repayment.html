@@ -248,6 +248,43 @@
     .borrower-item:hover {
         background-color: #f0f9f9;
     }
+
+    /* Form error styling */
+    .form-errors {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-errors h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #991b1b;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        font-size: 0.85rem;
+        color: #7f1d1d;
+        margin: 0.25rem 0;
+    }
+
+    .form-control.is-invalid,
+    .form-select.is-invalid,
+    .form-input.is-invalid {
+        border-color: #dc2626;
+        background-color: #fef2f2;
+    }
 </style>
 {% endblock %}
 
@@ -276,6 +313,26 @@
 
                 <form method="post" id="payment-form">
                     {% csrf_token %}
+                    
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                        <div class="form-errors">
+                            <h5><i class="fas fa-exclamation-circle"></i> Please correct the errors:</h5>
+                            <ul class="error-list">
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>
+                                            {% if field == '__all__' %}
+                                                {{ error }}
+                                            {% else %}
+                                                <strong>{{ field|title }}:</strong> {{ error }}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                     
                     <!-- Borrower Search Section -->
                     <div class="section-card mb-4">
@@ -333,21 +390,21 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="amount-paid" class="form-label">Amount Paid</label>
-                                    <input type="text" class="form-control form-control-sm" id="amount-paid" name="amount" placeholder="amount">
+                                    <input type="text" class="form-control form-control-sm" id="amount-paid" name="amount" placeholder="amount" value="{{ request.POST.amount }}">
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="payment-method" class="form-label">Pay Method (Cash/Bank/Mobile)</label>
                                     <select class="form-select form-select-sm" id="payment-method" name="payment_method">
-                                        <option value="cash" selected>Cash</option>
-                                        <option value="bank_transfer">Bank</option>
-                                        <option value="mobile_money">Mobile</option>
+                                        <option value="cash" {% if request.POST.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+                                        <option value="bank_transfer" {% if request.POST.payment_method == 'bank_transfer' %}selected{% endif %}>Bank</option>
+                                        <option value="mobile_money" {% if request.POST.payment_method == 'mobile_money' %}selected{% endif %}>Mobile</option>
                                     </select>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label for="payment-date" class="form-label">Repayment Date</label>
-                                    <input type="date" class="form-control form-control-sm" id="payment-date" name="payment_date" value="2025-08-25">
+                                    <input type="date" class="form-control form-control-sm" id="payment-date" name="payment_date" value="{% if request.POST.payment_date %}{{ request.POST.payment_date }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}">
                                 </div>
                             </div>
                             
@@ -355,15 +412,15 @@
                                 <div class="mb-3">
                                     <label for="show-balance" class="form-label">Show Loan Balance on Receipt?</label>
                                     <select class="form-select form-select-sm" id="show-balance" name="show_balance">
-                                        <option value="no" selected>No</option>
-                                        <option value="yes">Yes</option>
+                                        <option value="no" {% if request.POST.show_balance == 'no' or not request.POST.show_balance %}selected{% endif %}>No</option>
+                                        <option value="yes" {% if request.POST.show_balance == 'yes' %}selected{% endif %}>Yes</option>
                                     </select>
                                 </div>
                                 
                                 <div class="mb-3 d-none" id="account-number-group">
                                     <label for="account-number" class="form-label">Account Number / Mobile Wallet</label>
                                     <input type="text" class="form-control form-control-sm" id="account-number" name="transaction_id"
-                                           placeholder="Enter bank account or mobile number">
+                                           placeholder="Enter bank account or mobile number" value="{{ request.POST.transaction_id }}">
                                 </div>
                                 
                                 <div class="mb-3">
@@ -371,7 +428,7 @@
                                     <select class="form-select form-select-sm" id="collected-by" name="collected_by">
                                         <option value="">Select loan officer...</option>
                                         {% for officer in loan_officers %}
-                                            <option value="{{ officer.id }}" {% if officer == user %}selected{% endif %}>
+                                            <option value="{{ officer.id }}" {% if officer.id|stringformat:'s' == request.POST.collected_by or officer == user %}selected{% endif %}>
                                                 {{ officer.get_full_name }}
                                             </option>
                                         {% endfor %}
@@ -649,6 +706,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize with default data
     toggleAccountNumberField();
     showDefaultBorrowers();
+    
+    // Handle form field error highlighting and value preservation
+    const form = document.getElementById('payment-form');
+    const errorFields = [
+        {% for field_name in form.errors.keys %}
+            "{{ field_name }}",
+        {% endfor %}
+    ];
+    
+    // Add error class to fields with errors
+    errorFields.forEach(fieldName => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.classList.add('is-invalid');
+            // Also add error class to parent group for context
+            const formGroup = field.closest('.mb-3');
+            if (formGroup) {
+                formGroup.classList.add('has-error');
+            }
+        }
+    });
+    
+    // Scroll to first error field if errors exist
+    if (errorFields.length > 0) {
+        const firstErrorField = form.querySelector('.is-invalid');
+        if (firstErrorField) {
+            setTimeout(() => {
+                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstErrorField.focus();
+            }, 100);
+        }
+    }
 });
 </script>
 {% endblock %}

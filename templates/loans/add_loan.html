@@ -268,14 +268,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="{{ form.loan_type.id_for_label }}" class="form-label required">{{ form.loan_type.label }}</label>
-                        {{ form.loan_type }}
-                        {% if form.loan_type.errors %}
-                            <div class="form-error">{{ form.loan_type.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-
-                    <div class="form-group">
                         <label for="{{ form.amount_requested.id_for_label }}" class="form-label required">{{ form.amount_requested.label }}</label>
                         {{ form.amount_requested }}
                         {% if form.amount_requested.errors %}
@@ -353,7 +345,6 @@
     // Form validation
     document.getElementById('loanForm').addEventListener('submit', function(e) {
         const borrower = document.getElementById('{{ form.borrower.id_for_label }}').value;
-        const loanType = document.getElementById('{{ form.loan_type.id_for_label }}').value;
         const amount = document.getElementById('{{ form.amount_requested.id_for_label }}').value;
         const interestRate = document.getElementById('{{ form.interest_rate.id_for_label }}').value;
         const duration = document.getElementById('{{ form.duration_months.id_for_label }}').value;
@@ -362,12 +353,6 @@
         if (!borrower) {
             e.preventDefault();
             alert('Please select a borrower');
-            return;
-        }
-
-        if (!loanType) {
-            e.preventDefault();
-            alert('Please select a loan type');
             return;
         }
 
@@ -400,13 +385,5 @@
         });
     }
 
-    // Dynamic loan type information
-    document.getElementById('{{ form.loan_type.id_for_label }}').addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-            // You can add logic here to show loan type details
-            console.log('Selected loan type:', selectedOption.text);
-        }
-    });
 </script>
 {% endblock %}

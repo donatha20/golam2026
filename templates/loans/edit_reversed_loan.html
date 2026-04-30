@@ -1,0 +1,253 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mb-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">{{ title }}</h2>
+            <p class="text-muted">Loan ID: {{ loan.loan_number }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Rejection History Card -->
+            {% if is_reversed %}
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Rejection History</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2"><strong>Original Rejection:</strong></p>
+                    <p class="text-muted">{{ original_rejection }}</p>
+                    <hr>
+                    <p class="mb-0">
+                        <small class="text-success">
+                            <i class="fas fa-check-circle"></i> 
+                            This rejection has been reversed. You can now edit the loan details and resubmit.
+                        </small>
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Edit Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Edit Loan Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Loan Amount -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_amount_requested" class="form-label">
+                                        <strong>Loan Amount Requested</strong>
+                                    </label>
+                                    {{ form.amount_requested }}
+                                    {% if form.amount_requested.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.amount_requested.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_duration_months" class="form-label">
+                                        <strong>Loan Duration (Months)</strong>
+                                    </label>
+                                    {{ form.duration_months }}
+                                    {% if form.duration_months.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.duration_months.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Collateral Information -->
+                        <h6 class="mt-4 mb-3 text-primary">Collateral Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_collateral_name" class="form-label">
+                                        <strong>Collateral Name</strong>
+                                    </label>
+                                    {{ form.collateral_name }}
+                                    {% if form.collateral_name.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.collateral_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_collateral_worth" class="form-label">
+                                        <strong>Collateral Worth</strong>
+                                    </label>
+                                    {{ form.collateral_worth }}
+                                    {% if form.collateral_worth.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.collateral_worth.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Repayment Terms -->
+                        <h6 class="mt-4 mb-3 text-primary">Repayment Terms</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_repayment_frequency" class="form-label">
+                                        <strong>Repayment Frequency</strong>
+                                    </label>
+                                    {{ form.repayment_frequency }}
+                                    {% if form.repayment_frequency.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.repayment_frequency.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="id_repayment_type" class="form-label">
+                                        <strong>Repayment Type</strong>
+                                    </label>
+                                    {{ form.repayment_type }}
+                                    {% if form.repayment_type.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ form.repayment_type.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group mb-3">
+                            <label for="id_notes" class="form-label">
+                                <strong>Additional Notes</strong>
+                            </label>
+                            {{ form.notes }}
+                            <small class="form-text text-muted d-block mt-2">
+                                Explain any changes you made to address the rejection concerns
+                            </small>
+                            {% if form.notes.errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {{ form.notes.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Next Step:</strong> After saving these changes, you can resubmit the loan for admin review.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Next Steps</h5>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Review the original rejection reason above</li>
+                        <li>Make necessary changes to your loan application</li>
+                        <li>Save the changes using the button below</li>
+                        <li>Return to the loan detail page to submit for re-review</li>
+                        <li>Admin will review and make a final decision</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Sidebar -->
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0">Loan Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Borrower:</strong></p>
+                    <p>{{ loan.borrower.get_full_name }}</p>
+                    
+                    <p class="mt-3"><strong>Current Amount:</strong></p>
+                    <p class="text-primary fw-bold">{{ loan.amount_requested|floatformat:2 }}</p>
+                    
+                    <p class="mt-3"><strong>Current Duration:</strong></p>
+                    <p>{{ loan.duration_months }} months</p>
+                    
+                    <p class="mt-3"><strong>Status:</strong></p>
+                    <p>
+                        <span class="badge bg-warning">{{ loan.get_status_display }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Important Info -->
+            <div class="card mt-3" style="border-left: 4px solid #dc3545;">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-exclamation-circle"></i> Important</h6>
+                    <p class="small mb-0">
+                        Make sure to address all concerns mentioned in the rejection reason. 
+                        Your edited application will be reviewed by an administrator.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Editable Fields Info -->
+            <div class="card mt-3" style="border-left: 4px solid #28a745;">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-edit"></i> You Can Edit</h6>
+                    <ul class="small mb-0">
+                        <li>Loan amount</li>
+                        <li>Duration</li>
+                        <li>Collateral info</li>
+                        <li>Repayment terms</li>
+                        <li>Additional notes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_notes {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}

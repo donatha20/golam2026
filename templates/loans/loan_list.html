@@ -62,6 +62,18 @@
     .loans-table tbody tr:hover {
         background: rgba(43, 122, 118, 0.05);
     }
+
+    .loan-number {
+        font-weight: 600;
+        color: #2b7a76;
+    }
+
+    .loan-category-meta {
+        font-size: 0.78rem;
+        color: #8a8f98;
+        font-weight: 500;
+        margin-top: 2px;
+    }
     
     /* Status Badge Styling */
     .status-badge {
@@ -280,6 +292,7 @@
                 <tr>
                     <td>
                         <div class="loan-number">{{ loan.loan_number }}</div>
+                        <div class="loan-category-meta">{{ loan.loan_category|default:"Uncategorized"|title }}</div>
                     </td>
                     <td>
                         <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>

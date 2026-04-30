@@ -3,6 +3,7 @@ URL patterns for loan management.
 """
 from django.urls import path
 from . import views
+from . import views_rejection
 
 app_name = 'loans'
 
@@ -12,12 +13,14 @@ urlpatterns = [
     path('api/borrowers/search/', views.borrower_search_api, name='borrower_search_api'),
     path('api/borrowers/with-loans/', views.borrowers_with_loans_api, name='borrowers_with_loans_api'),
     path('api/loans/borrower/<int:borrower_id>/active/', views.borrower_loans_api, name='borrower_loans_api'),
+    path('api/schedules/<int:schedule_id>/mark-paid/', views.mark_schedule_paid, name='mark_schedule_paid'),
     
     # Main Views - Using Class-Based Views where available
     path('', views.DisbursedLoanListView.as_view(), name='disbursed_loans'),
    
     path('disbursed/', views.DisbursedLoanListView.as_view(), name='disbursed_loans_list'),
     path('expected-repayments/', views.ExpectedRepaymentsView.as_view(), name='expected_repayments'),
+    path('expected-repayments/<int:loan_id>/', views.LoanScheduleDetailView.as_view(), name='loan_schedule_detail'),
     path('repaid/', views.RepaidLoansView.as_view(), name='repaid_loans'),
     path('non-performing/', views.NonPerformingLoansView.as_view(), name='non_performing_loans'),
     
@@ -80,7 +83,14 @@ urlpatterns = [
     path('list/', views.loan_list, name='loan_list'),
     path('pending/', views.pending_loans_list, name='pending_loans'),
     path('approved/', views.approved_loans_list, name='approved_loans'),
-    path('rejected/', views.rejected_loans_list, name='rejected_loans'),
+
+    # Rejection and reversal workflow
+    path('<int:loan_id>/reject/', views_rejection.reject_loan, name='reject_loan'),
+    path('<int:loan_id>/reverse-rejection/', views_rejection.reverse_loan_rejection, name='reverse_rejection'),
+    path('<int:loan_id>/edit-reversed/', views_rejection.edit_reversed_loan, name='edit_rejected_loan'),
+    path('<int:loan_id>/resubmit/', views_rejection.resubmit_reversed_loan, name='resubmit_loan'),
+    path('rejected/', views_rejection.rejected_loans_list, name='rejected_loans'),  # Management view
+    path('rejected-simple/', views.rejected_loans_list, name='rejected_loans_simple'),  # Simple view
 
     # Export views
     path('export/loans/pdf/', views.export_loans_pdf, name='export_loans_pdf'),

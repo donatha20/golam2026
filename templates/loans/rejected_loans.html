@@ -36,7 +36,10 @@
 					<tbody>
 						{% for loan in rejected_loans %}
 						<tr>
-							<td><strong class="text-primary">{{ loan.loan_number }}</strong></td>
+							<td>
+								<strong class="text-primary">{{ loan.loan_number }}</strong><br>
+								<small style="font-size: 0.78rem; color: #8a8f98; font-weight: 500;">{{ loan.loan_category|default:"Uncategorized"|title }}</small>
+							</td>
 							<td>{{ loan.borrower.get_full_name }}</td>
 							<td>TZS {{ loan.amount_requested|floatformat:2 }}</td>
 							<td>

@@ -100,32 +100,18 @@ class BorrowerFactory(DjangoModelFactory):
     created_by = factory.SubFactory(UserFactory)
 
 
-class LoanTypeFactory(DjangoModelFactory):
-    class Meta:
-        model = 'loans.LoanType'
-    
-    name = factory.Faker('word')
-    description = factory.Faker('text')
-    interest_rate = Decimal('15.00')
-    max_amount = Decimal('100000.00')
-    min_amount = Decimal('1000.00')
-    max_duration_months = 24
-    min_duration_months = 6
-    created_by = factory.SubFactory(UserFactory)
-
-
 class LoanFactory(DjangoModelFactory):
     class Meta:
         model = 'loans.Loan'
     
-    loan_number = factory.Sequence(lambda n: f'LN{n:08d}')
     borrower = factory.SubFactory(BorrowerFactory)
-    loan_type = factory.SubFactory(LoanTypeFactory)
+    loan_category = factory.Iterator(['individual', 'asset', 'emergency'])
     amount_requested = Decimal('50000.00')
     amount_approved = Decimal('50000.00')
     interest_rate = Decimal('15.00')
     duration_months = 12
-    purpose = factory.Faker('text')
+    proposed_project = factory.Faker('sentence')
+    repayment_frequency = 'monthly'
     status = 'pending'
     created_by = factory.SubFactory(UserFactory)
 
@@ -149,15 +135,9 @@ def borrower(db):
 
 
 @pytest.fixture
-def loan_type(db):
-    """Create test loan type."""
-    return LoanTypeFactory()
-
-
-@pytest.fixture
-def loan(db, borrower, loan_type):
+def loan(db, borrower):
     """Create test loan."""
-    return LoanFactory(borrower=borrower, loan_type=loan_type)
+    return LoanFactory(borrower=borrower)
 
 
 @pytest.fixture
@@ -176,15 +156,11 @@ def sample_data(db):
     # Create borrowers
     borrowers = BorrowerFactory.create_batch(5, created_by=staff)
     
-    # Create loan types
-    loan_types = LoanTypeFactory.create_batch(3, created_by=admin)
-    
     # Create loans
     loans = []
     for borrower in borrowers:
         loan = LoanFactory(
             borrower=borrower,
-            loan_type=loan_types[0],
             created_by=staff
         )
         loans.append(loan)
@@ -202,7 +178,6 @@ def sample_data(db):
         'admin': admin,
         'staff': staff,
         'borrowers': borrowers,
-        'loan_types': loan_types,
         'loans': loans,
         'savings': savings,
     }
@@ -233,16 +208,14 @@ def performance_test_data(db):
     borrowers = BorrowerFactory.create_batch(100)
     
     # Create loans for performance testing
-    loan_type = LoanTypeFactory()
     loans = []
     for borrower in borrowers:
-        loan = LoanFactory(borrower=borrower, loan_type=loan_type)
+        loan = LoanFactory(borrower=borrower)
         loans.append(loan)
     
     return {
         'borrowers': borrowers,
         'loans': loans,
-        'loan_type': loan_type,
     }
 
 

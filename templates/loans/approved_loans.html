@@ -54,7 +54,6 @@
                             <tr>
                                 <th>Loan Number</th>
                                 <th>Borrower</th>
-                                <th>Loan Type</th>
                                 <th>Approved Amount</th>
                                 <th>Approval Date</th>
                                 <th>Approved By</th>
@@ -66,6 +65,7 @@
                             <tr>
                                 <td>
                                     <strong class="text-primary">{{ loan.loan_number }}</strong><br>
+                                    <small style="font-size: 0.78rem; color: #8a8f98; font-weight: 500;">{{ loan.loan_category|default:"Uncategorized"|title }}</small><br>
                                     <small class="text-muted">Applied: {{ loan.application_date|date:"M d, Y" }}</small>
                                 </td>
                                 <td>
@@ -78,10 +78,6 @@
                                             <small class="text-muted">{{ loan.borrower.phone_number }}</small>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ loan.loan_type.name }}</span><br>
-                                    <small class="text-muted">{{ loan.duration_months }} months</small>
                                 </td>
                                 <td>
                                     <strong class="text-success">Tsh {{ loan.amount_approved|floatformat:2 }}</strong>
@@ -156,7 +152,6 @@
                             <tr>
                                 <th>Loan Number</th>
                                 <th>Group</th>
-                                <th>Loan Type</th>
                                 <th>Approved Amount</th>
                                 <th>Approval Date</th>
                                 <th>Approved By</th>
@@ -168,6 +163,7 @@
                             <tr>
                                 <td>
                                     <strong class="text-primary">{{ group_loan.loan.loan_number }}</strong><br>
+                                    <small style="font-size: 0.78rem; color: #8a8f98; font-weight: 500;">{{ group_loan.loan.loan_category|default:"Uncategorized"|title }}</small><br>
                                     <small class="text-muted">Applied: {{ group_loan.loan.application_date|date:"M d, Y" }}</small>
                                 </td>
                                 <td>
@@ -180,10 +176,6 @@
                                             <small class="text-muted">{{ group_loan.group.active_members.count }} members</small>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ group_loan.loan.loan_type.name }}</span><br>
-                                    <small class="text-muted">{{ group_loan.loan.duration_months }} months</small>
                                 </td>
                                 <td>
                                     <strong class="text-success">TZS {{ group_loan.loan.amount_approved|floatformat:2 }}</strong>

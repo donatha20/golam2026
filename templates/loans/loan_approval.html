@@ -325,10 +325,6 @@
                 </div>
             </div>
             <div class="info-item">
-                <div class="info-label">Loan Product</div>
-                <div class="info-value">{{ loan.loan_type.name }}</div>
-            </div>
-            <div class="info-item">
                 <div class="info-label">Application Date</div>
                 <div class="info-value">{{ loan.application_date|date:"M d, Y" }}</div>
             </div>
@@ -394,6 +390,14 @@
         
         <form method="post" id="approvalForm">
             {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="form-group" style="margin-bottom: 1rem;">
+                {% for error in form.non_field_errors %}
+                <div class="form-error" style="display: block; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 0.75rem;">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
             
             <div class="form-section">
                 <h3 class="section-title">
@@ -689,19 +693,6 @@
         setTimeout(() => modal.remove(), 300);
     }
     
-    // Auto-calculate when approved amount changes
-    document.getElementById('{{ form.amount_approved.id_for_label }}').addEventListener('input', function() {
-        const approvedAmount = parseFloat(this.value) || 0;
-        const interestRate = {{ loan.interest_rate }};
-        const duration = {{ loan.duration_months }};
-        
-        // Simple interest calculation for display
-        const totalInterest = (approvedAmount * interestRate * duration) / (12 * 100);
-        const totalAmount = approvedAmount + totalInterest;
-        
-        console.log('Approved Amount:', approvedAmount);
-        console.log('Calculated Total:', totalAmount);
-    });
 </script>
 
 <style>

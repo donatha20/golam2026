@@ -1,0 +1,243 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mb-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{{ title }}</h2>
+            <p class="text-muted">Manage rejected loans and process reversals</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'loans:loan_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Back to Loans
+            </a>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="current-rejected-tab" data-bs-toggle="tab" 
+                    data-bs-target="#current-rejected" type="button" role="tab">
+                <i class="fas fa-ban"></i> Currently Rejected 
+                <span class="badge bg-danger ms-2">{{ current_rejected.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reversed-tab" data-bs-toggle="tab" 
+                    data-bs-target="#reversed" type="button" role="tab">
+                <i class="fas fa-undo-alt"></i> Reversed Rejections
+                <span class="badge bg-success ms-2">{{ reversed_loans.count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Currently Rejected Loans -->
+        <div class="tab-pane fade show active" id="current-rejected" role="tabpanel">
+            {% if current_rejected %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Loan #</th>
+                                <th>Borrower</th>
+                                <th>Amount</th>
+                                <th>Rejected By</th>
+                                <th>Rejection Date</th>
+                                <th>Rejection Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in current_rejected %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'loans:loan_detail' loan.id %}">
+                                        {{ loan.loan_number }}
+                                    </a>
+                                </td>
+                                <td>{{ loan.borrower.get_full_name }}</td>
+                                <td class="text-end">{{ loan.amount_requested|floatformat:2 }}</td>
+                                <td>{{ loan.rejected_by.get_full_name|default:"—" }}</td>
+                                <td>
+                                    {% if loan.rejection_date %}
+                                        {{ loan.rejection_date|date:"M d, Y" }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ loan.rejection_reason|truncatewords:10 }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'loans:loan_detail' loan.id %}" 
+                                           class="btn btn-sm btn-info" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if perms.loans.can_reverse_rejection %}
+                                        <a href="{% url 'loans:reverse_rejection' loan.id %}" 
+                                           class="btn btn-sm btn-success" title="Reverse Rejection">
+                                            <i class="fas fa-undo-alt"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>No currently rejected loans.</strong> All rejected loans have been reversed or processed.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reversed Rejections -->
+        <div class="tab-pane fade" id="reversed" role="tabpanel">
+            {% if reversed_loans %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Loan #</th>
+                                <th>Borrower</th>
+                                <th>Amount</th>
+                                <th>Reversed By</th>
+                                <th>Reversed Date</th>
+                                <th>Reversal Reason</th>
+                                <th>Current Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in reversed_loans %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'loans:loan_detail' loan.id %}">
+                                        {{ loan.loan_number }}
+                                    </a>
+                                </td>
+                                <td>{{ loan.borrower.get_full_name }}</td>
+                                <td class="text-end">{{ loan.amount_requested|floatformat:2 }}</td>
+                                <td>{{ loan.rejection_reversed_by.get_full_name|default:"—" }}</td>
+                                <td>
+                                    {% if loan.reversed_rejection_date %}
+                                        {{ loan.reversed_rejection_date|date:"M d, Y" }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ loan.reversal_reason|truncatewords:10 }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if loan.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif loan.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif loan.status == 'rejected' %}
+                                        <span class="badge bg-danger">Re-rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ loan.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'loans:loan_detail' loan.id %}" 
+                                           class="btn btn-sm btn-info" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if loan.status == 'pending' %}
+                                        <a href="{% url 'loans:edit_rejected_loan' loan.id %}" 
+                                           class="btn btn-sm btn-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>No reversed rejections yet.</strong> Rejections that have been reversed will appear here.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Total Rejections</h5>
+                    <h2 class="text-danger">{{ total_rejections }}</h2>
+                    <small class="text-muted">All time rejected loans</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Active Rejections</h5>
+                    <h2 class="text-danger">{{ current_rejected.count }}</h2>
+                    <small class="text-muted">Still rejected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Reversed</h5>
+                    <h2 class="text-success">{{ reversed_loans.count }}</h2>
+                    <small class="text-muted">Rejections reversed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Reversal Rate</h5>
+                    <h2 class="text-info">{{ reversal_rate }}%</h2>
+                    <small class="text-muted">Of all rejections</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Trail Info -->
+    <div class="alert alert-light mt-4 border">
+        <h6 class="mb-3"><i class="fas fa-audit"></i> Audit Trail</h6>
+        <p class="small mb-2">
+            All loan rejections and reversals are tracked and cannot be deleted. This ensures complete transparency and accountability:
+        </p>
+        <ul class="small mb-0">
+            <li><strong>Original Rejection:</strong> Recorded with rejection reason, date, and admin user</li>
+            <li><strong>Reversal:</strong> Recorded with reversal reason, date, and admin user</li>
+            <li><strong>Edit History:</strong> Any changes made after reversal are logged</li>
+            <li><strong>Re-submission:</strong> New submissions are tracked separately</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+</style>
+{% endblock %}

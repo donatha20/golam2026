@@ -320,15 +320,6 @@
                         <option value="mobile_money" {% if request.GET.payment_method == 'mobile_money' %}selected{% endif %}>Mobile Money</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Loan Type</label>
-                    <select name="loan_type" class="form-select form-select-sm">
-                        <option value="">All Types</option>
-                        <option value="personal" {% if request.GET.loan_type == 'personal' %}selected{% endif %}>Personal</option>
-                        <option value="business" {% if request.GET.loan_type == 'business' %}selected{% endif %}>Business</option>
-                        <option value="agricultural" {% if request.GET.loan_type == 'agricultural' %}selected{% endif %}>Agricultural</option>
-                    </select>
-                </div>
                 <div class="col-md-2 d-grid">
                     <label class="form-label">&nbsp;</label>
                     <button type="submit" class="btn btn-primary btn-sm">

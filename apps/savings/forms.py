@@ -163,6 +163,7 @@ class SavingsTransactionForm(forms.ModelForm):
         savings_account = cleaned_data.get('savings_account')
         transaction_type = cleaned_data.get('transaction_type')
         amount = cleaned_data.get('amount')
+        transaction_date = cleaned_data.get('transaction_date')
         
         if savings_account and transaction_type and amount:
             if transaction_type == 'deposit':
@@ -174,6 +175,19 @@ class SavingsTransactionForm(forms.ModelForm):
                 can_withdraw, message = savings_account.can_withdraw(amount)
                 if not can_withdraw:
                     raise forms.ValidationError(f'Withdrawal not allowed: {message}')
+        
+        # Check backdating setting from WorkingMode
+        if transaction_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if transaction_date < today:
+                    raise forms.ValidationError(
+                        'Backdating is not allowed. Transaction date cannot be earlier than today.'
+                    )
         
         return cleaned_data
 
@@ -334,7 +348,7 @@ class SavingsLoanRuleForm(forms.ModelForm):
     class Meta:
         model = SavingsLoanRule
         fields = [
-            'name', 'description', 'rule_type', 'loan_type', 'minimum_balance_required',
+            'name', 'description', 'rule_type', 'loan_category', 'minimum_balance_required',
             'minimum_savings_period_months', 'savings_to_loan_ratio', 'mandatory_savings_amount',
             'is_active', 'is_mandatory', 'grace_period_days'
         ]
@@ -354,9 +368,9 @@ class SavingsLoanRuleForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
-            'loan_type': forms.TextInput(attrs={
+            'loan_category': forms.TextInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Enter loan type (e.g., personal, business)',
+                'placeholder': 'Enter loan category (e.g., personal, business)',
                 'required': True
             }),
             'minimum_balance_required': forms.NumberInput(attrs={
@@ -403,7 +417,7 @@ class SavingsLoanRuleForm(forms.ModelForm):
         self.fields['name'].label = 'Rule Name'
         self.fields['description'].label = 'Description'
         self.fields['rule_type'].label = 'Rule Type'
-        self.fields['loan_type'].label = 'Loan Type'
+        self.fields['loan_category'].label = 'Loan Category'
         self.fields['minimum_balance_required'].label = 'Minimum Balance Required (Tsh)'
         self.fields['minimum_savings_period_months'].label = 'Minimum Savings Period (Months)'
         self.fields['savings_to_loan_ratio'].label = 'Savings to Loan Ratio (%)'

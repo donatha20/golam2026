@@ -75,6 +75,8 @@ class PaymentMethodChoices(models.TextChoices):
 class FrequencyChoices(models.TextChoices):
     """Repayment frequency choices."""
     DAILY = 'daily', 'Daily'
+    EVEY_THREE_DAYS = 'evey_three_days', 'Every 3 Days (Legacy)'
+    EVERY_THREE_DAYS = 'every_three_days', 'Every 3 Days'
     WEEKLY = 'weekly', 'Weekly'
     BIWEEKLY = 'biweekly', 'Bi-weekly'
     MONTHLY = 'monthly', 'Monthly'

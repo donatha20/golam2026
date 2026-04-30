@@ -1,0 +1,506 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+{% load django_tables2 %}
+
+{% block title %}Expected Repayments - Golam Financial Services{% endblock %}
+
+{% block page_title %}Expected Repayments{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Universal System Styles */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 12px;
+        padding: 1rem;
+        min-height: 120px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.15);
+        transform: translateY(-2px);
+        border-color: #2b7a76;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        width: 6px;
+    }
+
+    .stat-card.overdue::before {
+        background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+    }
+
+    .stat-card.today::before {
+        background: linear-gradient(180deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    .stat-card.upcoming::before {
+        background: linear-gradient(180deg, #16a34a 0%, #22c55e 100%);
+    }
+
+    .stat-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+    }
+
+    .stat-change {
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-warning {
+        color: #f59e0b;
+    }
+
+    .stat-danger {
+        color: #dc2626;
+    }
+
+    .stat-positive {
+        color: #16a34a;
+    }
+
+    /* Action Buttons Grid */
+    .action-buttons-section {
+        margin-bottom: 1rem;
+    }
+
+    .action-buttons-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #475569;
+        transition: all 0.3s ease;
+        text-align: center;
+        min-height: 100px;
+        justify-content: center;
+    }
+
+    .action-btn i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .action-btn-primary {
+        border-color: #2b7a76;
+        color: #2b7a76;
+    }
+
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2b7a76 0%, #34d399 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(43, 122, 118, 0.3);
+    }
+
+    .action-btn-warning {
+        border-color: #f59e0b;
+        color: #f59e0b;
+    }
+
+    .action-btn-warning:hover {
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .action-btn-outline {
+        border-color: #64748b;
+        color: #64748b;
+    }
+
+    .action-btn-outline:hover {
+        background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(100, 116, 139, 0.3);
+    }
+
+    .action-btn:hover i {
+        transform: scale(1.1);
+    }
+
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .expected-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        min-width: 1300px;
+        width: 100%;
+    }
+
+    .expected-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .expected-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .expected-table tbody tr:hover {
+        background: rgba(43, 122, 118, 0.05);
+    }
+
+    .expected-table tbody tr.overdue {
+        background: rgba(239, 68, 68, 0.05);
+        border-left: 4px solid #dc2626;
+    }
+
+    .expected-table tbody tr.due-today {
+        background: rgba(245, 158, 11, 0.05);
+        border-left: 4px solid #f59e0b;
+    }
+
+    /* Status indicators */
+    .due-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .due-overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .due-today {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .due-upcoming {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value.danger {
+        color: #dc2626;
+    }
+
+    .stat-value.warning {
+        color: #f59e0b;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .filters-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-filter {
+        background: #2b7a76;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+        background: #1f5d5a;
+    }
+
+    .btn-clear {
+        background: #6b7280;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-clear:hover {
+        background: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards
+ <div class="stats-grid">
+    <div class="stat-card overdue">
+        <div class="stat-title">Overdue Payments</div>
+        <div class="stat-value">₹{{ overdue_amount|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-danger">
+            <i class="fas fa-exclamation-triangle"></i> {{ overdue_count|default:"0" }} payments
+        </div>
+    </div>
+    <div class="stat-card today">
+        <div class="stat-title">Due Today</div>
+        <div class="stat-value">₹{{ due_today_amount|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-warning">
+            <i class="fas fa-clock"></i> {{ due_today_count|default:"0" }} payments
+        </div>
+    </div>
+    <div class="stat-card upcoming">
+        <div class="stat-title">This Week</div>
+        <div class="stat-value">₹{{ due_week_amount|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-positive">
+            <i class="fas fa-calendar-week"></i> {{ due_week_count|default:"0" }} payments
+        </div>
+    </div>
+    <div class="stat-card upcoming">
+        <div class="stat-title">This Month</div>
+        <div class="stat-value">₹{{ due_month_amount|floatformat:0|default:"0" }}</div>
+        <div class="stat-change stat-positive">
+            <i class="fas fa-calendar-alt"></i> {{ due_month_count|default:"0" }} payments
+        </div>
+    </div>
+</div>
+-->
+
+
+<!-- Action Buttons -->
+<div class="action-buttons-section">
+    <div class="action-buttons-grid">
+        <a href="{% url 'repayments:record_repayment' %}" class="action-btn action-btn-primary">
+            <i class="fas fa-credit-card"></i>
+            <span>Record Payment</span>
+        </a>
+        <a href="{% url 'loans:outstanding_loans' %}" class="action-btn action-btn-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Outstanding Loans</span>
+        </a>
+        <a href="{% url 'loans:fully_paid_loans' %}" class="action-btn action-btn-outline">
+            <i class="fas fa-check-circle"></i>
+            <span>Completed Loans</span>
+        </a>
+        <a href="#" onclick="window.print()" class="action-btn action-btn-outline">
+            <i class="fas fa-print"></i>
+            <span>Print Report</span>
+        </a>
+    </div>
+</div>
+
+<!-- Filters Section 
+<div class="filters-section">
+    <h3 class="filters-title">Filter Expected Repayments</h3>
+    <form method="get" class="filters-form">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="borrower" class="filter-label">Borrower</label>
+                {{ filter.form.borrower }}
+            </div>
+            <div class="filter-group">
+                <label for="loan_officer" class="filter-label">Loan Officer</label>
+                {{ filter.form.loan_officer }}
+            </div>
+            <div class="filter-group">
+                <label for="due_status" class="filter-label">Due Status</label>
+                {{ filter.form.due_status }}
+            </div>
+            <div class="filter-group">
+                <label for="due_date_from" class="filter-label">Due From</label>
+                {{ filter.form.due_date_from }}
+            </div>
+            <div class="filter-group">
+                <label for="due_date_to" class="filter-label">Due To</label>
+                {{ filter.form.due_date_to }}
+            </div>
+            <div class="filter-group">
+                <label for="amount_min" class="filter-label">Min Amount</label>
+                {{ filter.form.amount_min }}
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+            </div>
+            <div class="filter-group">
+                <a href="{% url 'loans:expected_repayments' %}" class="btn-clear">Clear All</a>
+            </div>
+        </div>
+    </form>
+</div>
+-->
+<!-- Action Buttons 
+<div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'repayments:record_repayment' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-credit-card"></i> Record Payment
+    </a>
+    <a href="{% url 'loans:rollover_repayments' %}" class="btn btn-warning btn-sm">
+        <i class="fas fa-redo"></i> Rollover Payment
+    </a>
+    <a href="{% url 'loans:penalties' %}" class="btn btn-outline-danger">
+        <i class="fas fa-gavel"></i> Apply Penalty
+    </a>
+    <a href="{% url 'loans:outstanding_loans' %}" class="btn btn-outline-primary">
+        <i class="fas fa-clock"></i> Outstanding Loans
+    </a>
+</div>
+-->
+
+<!-- Expected Repayments Table -->
+<div class="table-container">
+    {% if table.data %}
+        {% render_table table %}
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: #6b7280;">
+            <i class="fas fa-calendar-check" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h3>No Expected Repayments</h3>
+            <p>No repayments are expected matching your criteria.</p>
+            <a href="{% url 'loans:disbursed_loans' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
+                <i class="fas fa-list"></i> View Active Loans
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav aria-label="Expected repayments pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Previous</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Next</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -265,7 +265,7 @@
                 <tr>
                     <td class="loan-number-cell">
                         <div class="loan-number">{{ loan.loan_number }}</div>
-                        <div class="loan-type">{{ loan.loan_type.name|default:"Personal Loan" }}</div>
+                        <div class="loan-type">{{ loan.loan_category|default:"Uncategorized"|title }}</div>
                     </td>
                     <td class="borrower-name-cell">
                         <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>
@@ -276,7 +276,7 @@
                     </td>
                     <td class="text-center">{{ loan.interest_rate|floatformat:1 }}%</td>
                     <td class="amount-cell">
-                        <div class="interest-amount">${{ loan.interest_receivable|default:0|floatformat:2 }}</div>
+                        <div class="interest-amount">TZS {{ loan.interest_receivable|default:0|floatformat:2 }}</div>
                     </td>
                     <td class="text-center">
                         {% if loan.days_outstanding %}

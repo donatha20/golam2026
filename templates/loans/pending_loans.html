@@ -49,7 +49,6 @@
                             <tr>
                                 <th>Application Date</th>
                                 <th>Borrower</th>
-                                <th>Loan Type</th>
                                 <th>Amount</th>
                                 <th>Purpose</th>
                                 <th>Loan Officer</th>
@@ -75,9 +74,6 @@
                                             <small class="text-muted">{{ loan.borrower.phone_number }}</small>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ loan.loan_type.name }}</span>
                                 </td>
                                 <td>
                                     <strong class="text-success">TZS{{ loan.amount|floatformat:2 }}</strong>
@@ -143,7 +139,6 @@
                             <tr>
                                 <th>Application Date</th>
                                 <th>Group</th>
-                                <th>Loan Type</th>
                                 <th>Amount</th>
                                 <th>Purpose</th>
                                 <th>Loan Officer</th>
@@ -169,9 +164,6 @@
                                             <small class="text-muted">{{ group_loan.group.members.count }} members</small>
                                         </div>
                                     </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ group_loan.loan.loan_type.name }}</span>
                                 </td>
                                 <td>
                                     <strong class="text-success">TZS{{ group_loan.loan.amount|floatformat:2 }}</strong>

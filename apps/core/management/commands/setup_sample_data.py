@@ -6,7 +6,6 @@ from django.utils import timezone
 from decimal import Decimal
 from apps.accounts.models import CustomUser, Branch, UserRole
 from apps.borrowers.models import Borrower
-from apps.loans.models import LoanType
 from apps.savings.models import SavingsProduct
 
 
@@ -27,50 +26,6 @@ class Command(BaseCommand):
             }
         )
         self.stdout.write(f"Branch {'created' if created else 'exists'}: {branch}")
-
-        # Create loan types
-        loan_types_data = [
-            {
-                'name': 'Micro Business Loan',
-                'code': 'MBL',
-                'description': 'Small business loans for entrepreneurs',
-                'default_interest_rate': Decimal('15.00'),
-                'min_amount': Decimal('100000'),
-                'max_amount': Decimal('5000000'),
-                'min_duration_months': 6,
-                'max_duration_months': 24,
-                'processing_fee_percentage': Decimal('2.00')
-            },
-            {
-                'name': 'Emergency Loan',
-                'code': 'EML',
-                'description': 'Quick emergency loans',
-                'default_interest_rate': Decimal('20.00'),
-                'min_amount': Decimal('50000'),
-                'max_amount': Decimal('1000000'),
-                'min_duration_months': 3,
-                'max_duration_months': 12,
-                'processing_fee_percentage': Decimal('3.00')
-            },
-            {
-                'name': 'Group Loan',
-                'code': 'GRL',
-                'description': 'Loans for borrower groups',
-                'default_interest_rate': Decimal('12.00'),
-                'min_amount': Decimal('500000'),
-                'max_amount': Decimal('10000000'),
-                'min_duration_months': 12,
-                'max_duration_months': 36,
-                'processing_fee_percentage': Decimal('1.50')
-            }
-        ]
-
-        for loan_data in loan_types_data:
-            loan_type, created = LoanType.objects.get_or_create(
-                code=loan_data['code'],
-                defaults=loan_data
-            )
-            self.stdout.write(f"Loan type {'created' if created else 'exists'}: {loan_type}")
 
         # Create savings products
         savings_products_data = [

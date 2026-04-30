@@ -1,0 +1,128 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mb-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-1">{{ title }}</h2>
+            <p class="text-muted">Loan ID: {{ loan.loan_number }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Loan Information Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Loan Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Borrower:</strong> {{ loan.borrower.get_full_name }}</p>
+                            <p><strong>Amount Requested:</strong> {{ loan.amount_requested|floatformat:2 }}</p>
+                            <p><strong>Duration:</strong> {{ loan.duration_months }} months</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Application Date:</strong> {{ loan.application_date|date:"M d, Y" }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-warning">{{ loan.get_status_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <p><strong>Purpose:</strong> {{ loan.proposed_project|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rejection Form -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">{{ action }} Loan</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="id_rejection_reason" class="form-label">
+                                <strong>Rejection Reason</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.rejection_reason }}
+                            <small class="form-text text-muted d-block mt-2">
+                                Provide detailed reason for rejection (minimum 10 characters)
+                            </small>
+                            {% if form.rejection_reason.errors %}
+                                <div class="alert alert-danger mt-2">
+                                    {{ form.rejection_reason.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> This action will set the loan status to REJECTED. 
+                            The rejection can be reversed later by an administrator if needed.
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-ban"></i> {{ action }}
+                            </button>
+                            <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Sidebar -->
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Borrower:</strong></p>
+                    <p>{{ loan.borrower.get_full_name }}</p>
+                    
+                    <p class="mt-3"><strong>Phone:</strong></p>
+                    <p>{{ loan.borrower.user.phone|default:"N/A" }}</p>
+                    
+                    <p class="mt-3"><strong>Loan Amount:</strong></p>
+                    <p class="text-primary">{{ loan.amount_requested|floatformat:2 }}</p>
+                    
+                    <p class="mt-3"><strong>Interest Rate:</strong></p>
+                    <p>{{ loan.interest_rate }}%</p>
+                </div>
+            </div>
+
+            <!-- Help Text -->
+            <div class="card mt-3" style="border-left: 4px solid #ffc107;">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-lightbulb"></i> Tips</h6>
+                    <ul class="small">
+                        <li>Provide clear, specific reasons for rejection</li>
+                        <li>Document any issues with the application</li>
+                        <li>Consider what changes would make the loan approvable</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_rejection_reason {
+        min-height: 120px;
+        resize: vertical;
+    }
+</style>
+{% endblock %}

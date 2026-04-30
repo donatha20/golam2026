@@ -590,7 +590,7 @@
                 <tr>
                     <td class="loan-number-cell">
                         <div class="loan-number">{{ loan.loan_number }}</div>
-                        <div class="loan-type">{{ loan.loan_type.name|default:"Personal Loan" }}</div>
+                        <div class="loan-type">{{ loan.loan_category|default:"Uncategorized"|title }}</div>
                     </td>
                     <td class="borrower-name-cell">
                         <div class="borrower-full-name">{{ loan.borrower.get_full_name }}</div>

@@ -702,11 +702,11 @@ def portfolio_analysis_report(request):
         total_amount=Sum('amount_approved')
     ).order_by('status')
 
-    # Portfolio by loan type
-    portfolio_by_type = Loan.objects.values('loan_type').annotate(
+    # Portfolio by loan category
+    portfolio_by_category = Loan.objects.values('loan_category').annotate(
         count=Count('id'),
         total_amount=Sum('amount_approved')
-    ).order_by('loan_type')
+    ).order_by('loan_category')
 
     # Calculate percentages for portfolio by status
     for item in portfolio_by_status:
@@ -715,8 +715,8 @@ def portfolio_analysis_report(request):
         else:
             item['percentage'] = 0
 
-    # Calculate percentages for portfolio by type
-    for item in portfolio_by_type:
+    # Calculate percentages for portfolio by category
+    for item in portfolio_by_category:
         if total_loans > 0:
             item['percentage'] = round((item['count'] / total_loans) * 100, 1)
         else:
@@ -733,7 +733,7 @@ def portfolio_analysis_report(request):
         'active_loans': active_loans,
         'active_loan_ratio': active_loan_ratio,
         'portfolio_by_status': portfolio_by_status,
-        'portfolio_by_type': portfolio_by_type,
+        'portfolio_by_category': portfolio_by_category,
     }
 
     return render(request, 'financial_statements/portfolio_analysis_report.html', context)

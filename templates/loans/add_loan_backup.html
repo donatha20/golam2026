@@ -99,6 +99,62 @@
         min-height: 80px;
     }
     
+    /* Error handling styles */
+    .form-errors {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .form-errors h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #991b1b;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .error-list li {
+        font-size: 0.85rem;
+        color: #7f1d1d;
+        margin: 0.25rem 0;
+        padding: 0.25rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+    
+    .error-list li:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+    }
+    
+    .form-input.is-invalid,
+    .form-select.is-invalid,
+    .form-textarea.is-invalid {
+        border-color: #dc2626;
+        background-color: #fef2f2;
+    }
+    
+    .form-input.is-invalid:focus,
+    .form-select.is-invalid:focus,
+    .form-textarea.is-invalid:focus {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    
     .form-help {
         font-size: 0.8rem;
         color: #6b7280;
@@ -468,19 +524,21 @@
 
             <!-- Display form errors -->
             {% if form.errors %}
-                <div class="alert alert-danger mb-4">
-                    <h5><i class="fas fa-exclamation-triangle"></i> Please correct the following errors:</h5>
-                    {% for field, errors in form.errors.items %}
-                        {% for error in errors %}
-                            <div class="mb-2">
-                                {% if field == '__all__' %}
-                                    <strong>{{ error }}</strong>
-                                {% else %}
-                                    <strong>{{ field|title }}:</strong> {{ error }}
-                                {% endif %}
-                            </div>
+                <div class="form-errors">
+                    <h5><i class="fas fa-exclamation-circle"></i> Please correct the errors:</h5>
+                    <ul class="error-list">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li>
+                                    {% if field == '__all__' %}
+                                        {{ error }}
+                                    {% else %}
+                                        <strong>{{ field|title }}:</strong> {{ error }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
+                    </ul>
                 </div>
             {% endif %}
 
@@ -518,22 +576,22 @@
                         <label for="loan_category" class="form-label required">Loan Category</label>
                         <select name="loan_category" id="loan_category" class="form-select form-select-sm" required>
                             <option value="">Select Category</option>
-                            <option value="asset">Asset Loans</option>
-                            <option value="individual">Individual Loans</option>
-                            <option value="emergency">Emergency Loans</option>
+                            <option value="asset" {% if request.POST.loan_category == 'asset' %}selected{% endif %}>Asset Loans</option>
+                            <option value="individual" {% if request.POST.loan_category == 'individual' %}selected{% endif %}>Individual Loans</option>
+                            <option value="emergency" {% if request.POST.loan_category == 'emergency' %}selected{% endif %}>Emergency Loans</option>
                         </select>
                     </div>
 
                     <div class="form-group">
                         <label for="amount_requested" class="form-label required">Loan Amount (TSh)</label>
                         <input type="number" name="amount_requested" id="amount_requested" class="form-input" 
-                               step="0.01" min="1000" required>
+                               step="0.01" min="1000" value="{{ request.POST.amount_requested }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="interest_amount" class="form-label required">Interest Amount (TSh)</label>
                         <input type="number" name="interest_amount" id="interest_amount" class="form-input" 
-                               step="0.01" min="0" required>
+                               step="0.01" min="0" value="{{ request.POST.interest_amount }}" required>
                     </div>
                 </div>
 
@@ -541,13 +599,13 @@
                     <div class="form-group">
                         <label for="duration_months" class="form-label required">Loan Duration (Months)</label>
                         <input type="number" name="duration_months" id="duration_months" class="form-input" 
-                               min="1" max="60" required>
+                               min="1" max="60" value="{{ request.POST.duration_months }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="proposed_project" class="form-label required">Name of Proposed Project</label>
                         <input type="text" name="proposed_project" id="proposed_project" class="form-input" 
-                               placeholder="e.g., Small retail shop, Maize farming..." required>
+                               placeholder="e.g., Small retail shop, Maize farming..." value="{{ request.POST.proposed_project }}" required>
                     </div>
                 </div>
             </div>
@@ -562,34 +620,34 @@
                     <div class="form-group">
                         <label for="collateral_name" class="form-label required">Name of Collateral</label>
                         <input type="text" name="collateral_name" id="collateral_name" class="form-input" 
-                               placeholder="e.g., Land title, Vehicle, Jewelry..." required>
+                               placeholder="e.g., Land title, Vehicle, Jewelry..." value="{{ request.POST.collateral_name }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="collateral_worth" class="form-label required">Collateral Worth Amount (TSh)</label>
                         <input type="number" name="collateral_worth" id="collateral_worth" class="form-input" 
-                               step="0.01" min="0" required>
+                               step="0.01" min="0" value="{{ request.POST.collateral_worth }}" required>
                     </div>
 
                     <div class="form-group">
                         <label for="collateral_withheld" class="form-label required">Collateral Withheld (TSh)</label>
                         <input type="number" name="collateral_withheld" id="collateral_withheld" class="form-input" 
-                               step="0.01" min="0" required>
+                               step="0.01" min="0" value="{{ request.POST.collateral_withheld }}" required>
                         <div class="form-help">Amount of collateral value held as security</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Disbursement & Payment Information -->
+            <!-- Application & Payment Information -->
             <div class="form-section">
                 <h3 class="section-title">
-                    <i class="fas fa-money-check-alt"></i> Disbursement & Payment Details
+                    <i class="fas fa-money-check-alt"></i> Application & Payment Details
                 </h3>
 
                 <div class="form-row-3">
                     <div class="form-group">
-                        <label for="disbursement_date" class="form-label required">Disbursement Date</label>
-                        <input type="date" name="disbursement_date" id="disbursement_date" class="form-input" required>
+                        <label for="application_date" class="form-label required">Application Date</label>
+                        <input type="date" name="application_date" id="application_date" class="form-input" value="{% if request.POST.application_date %}{{ request.POST.application_date }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" required>
                     </div>
 
                     <div class="form-group">
@@ -602,9 +660,9 @@
                         <label for="pay_method" class="form-label required">Payment Method</label>
                         <select name="pay_method" id="pay_method" class="form-select form-select-sm" required>
                             <option value="">Select Method</option>
-                            <option value="cash">Cash</option>
-                            <option value="mobile_money">Mobile Money Services</option>
-                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cash" {% if request.POST.pay_method == 'cash' %}selected{% endif %}>Cash</option>
+                            <option value="mobile_money" {% if request.POST.pay_method == 'mobile_money' %}selected{% endif %}>Mobile Money Services</option>
+                            <option value="bank_transfer" {% if request.POST.pay_method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
                         </select>
                     </div>
                 </div>
@@ -613,13 +671,13 @@
                     <div class="form-group">
                         <label for="payment_account" class="form-label">Payment Account</label>
                         <input type="text" name="payment_account" id="payment_account" class="form-input" 
-                               placeholder="Account number, mobile number, or cash designation">
+                               placeholder="Account number, mobile number, or cash designation" value="{{ request.POST.payment_account }}">
                         <div class="form-help">Required for mobile money and bank transfers</div>
                     </div>
 
                     <div class="form-group">
                         <label for="start_payment_date" class="form-label required">Start Payment Date</label>
-                        <input type="date" name="start_payment_date" id="start_payment_date" class="form-input" required>
+                        <input type="date" name="start_payment_date" id="start_payment_date" class="form-input" value="{{ request.POST.start_payment_date }}" required>
                     </div>
                 </div>
 
@@ -627,12 +685,9 @@
                     <label for="repayment_frequency" class="form-label required">Repayment Frequency (Interval)</label>
                     <select name="repayment_frequency" id="repayment_frequency" class="form-select form-select-sm" required>
                         <option value="">Select Repayment Frequency</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="biweekly">Bi-weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                        <option value="annually">Annually</option>
+                        {% for value, label in frequency_choices %}
+                        <option value="{{ value }}" {% if form.data.repayment_frequency == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -640,10 +695,10 @@
                     <label for="repayment_type" class="form-label required">Repayment Type</label>
                     <select name="repayment_type" id="repayment_type" class="form-select form-select-sm" required>
                         <option value="">Select Repayment Type</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
+                        <option value="daily" {% if request.POST.repayment_type == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if request.POST.repayment_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="monthly" {% if request.POST.repayment_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                        <option value="quarterly" {% if request.POST.repayment_type == 'quarterly' %}selected{% endif %}>Quarterly</option>
                     </select>
                 </div>
             </div>
@@ -658,11 +713,11 @@
                     <label for="loan_fees" class="form-label required">Are there loan fees to be paid during repayment period?</label>
                     <div class="choice-toggle">
                         <div class="choice-option">
-                            <input type="radio" name="loan_fees" id="loan_fees_yes" value="yes" required>
+                            <input type="radio" name="loan_fees" id="loan_fees_yes" value="yes" {% if request.POST.loan_fees == 'yes' %}checked{% endif %} required>
                             <label for="loan_fees_yes">Yes</label>
                         </div>
                         <div class="choice-option">
-                            <input type="radio" name="loan_fees" id="loan_fees_no" value="no" required>
+                            <input type="radio" name="loan_fees" id="loan_fees_no" value="no" {% if request.POST.loan_fees == 'no' %}checked{% endif %} required>
                             <label for="loan_fees_no">No</label>
                         </div>
                     </div>
@@ -689,7 +744,7 @@
                 <div class="form-group">
                     <label for="notes" class="form-label">Additional Notes</label>
                     <textarea name="notes" id="notes" class="form-textarea" 
-                              placeholder="Any additional information about the loan..."></textarea>
+                              placeholder="Any additional information about the loan...">{{ request.POST.notes }}</textarea>
                 </div>
             </div>
 
@@ -709,6 +764,42 @@
 
 {% block extra_js %}
 <script>
+    // Handle form field error highlighting and value preservation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('loanForm');
+        
+        // Get error field names from the form's data attribute or Python context
+        const errorFields = [
+            {% for field_name in form.errors.keys %}
+                "{{ field_name }}",
+            {% endfor %}
+        ];
+        
+        // Add error class to fields with errors
+        errorFields.forEach(fieldName => {
+            const field = form.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.classList.add('is-invalid');
+                // Also add error class to parent group for context
+                const formGroup = field.closest('.form-group');
+                if (formGroup) {
+                    formGroup.classList.add('has-error');
+                }
+            }
+        });
+        
+        // Scroll to first error field if errors exist
+        if (errorFields.length > 0) {
+            const firstErrorField = form.querySelector('.is-invalid');
+            if (firstErrorField) {
+                setTimeout(() => {
+                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstErrorField.focus();
+                }, 100);
+            }
+        }
+    });
+
     // Sample borrowers data - In real implementation, this would come from the backend
     const borrowers = [
         {% for borrower in borrowers %}
@@ -881,32 +972,32 @@
         }
 
         // Validate dates
-        const disbursedDate = new Date(document.getElementById('disbursement_date').value);
+        const applicationDate = new Date(document.getElementById('application_date').value);
         const startPaymentDate = new Date(document.getElementById('start_payment_date').value);
         
-        if (startPaymentDate <= disbursedDate) {
+        if (startPaymentDate <= applicationDate) {
             e.preventDefault();
-            alert('Start payment date must be after disbursement date');
+            alert('Start payment date must be after application date');
             return;
         }
     });
 
-    // Auto-set minimum start payment date based on disbursement date
-    document.getElementById('disbursement_date').addEventListener('change', function() {
-        const disbursedDate = new Date(this.value);
-        disbursedDate.setDate(disbursedDate.getDate() + 1); // Add 1 day
+    // Auto-set minimum start payment date based on application date
+    document.getElementById('application_date').addEventListener('change', function() {
+        const applicationDate = new Date(this.value);
+        applicationDate.setDate(applicationDate.getDate() + 1); // Add 1 day
         
         const startPaymentInput = document.getElementById('start_payment_date');
-        startPaymentInput.min = disbursedDate.toISOString().split('T')[0];
+        startPaymentInput.min = applicationDate.toISOString().split('T')[0];
         
-        // If start payment date is before disbursed date, clear it
+        // If start payment date is before application date, clear it
         if (startPaymentInput.value && new Date(startPaymentInput.value) <= new Date(this.value)) {
             startPaymentInput.value = '';
         }
     });
 
-    // Set default disbursement date to today
-    document.getElementById('disbursement_date').value = new Date().toISOString().split('T')[0];
+    // Set default application date to today
+    document.getElementById('application_date').value = new Date().toISOString().split('T')[0];
 
     // Form validation
     document.getElementById('loanForm').addEventListener('submit', function(e) {

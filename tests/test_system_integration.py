@@ -18,15 +18,14 @@ class TestSystemIntegration:
     def test_complete_loan_workflow(self, admin_client, sample_data):
         """Test complete loan workflow from application to disbursement."""
         borrower = sample_data['borrowers'][0]
-        loan_type = sample_data['loan_types'][0]
         
         # 1. Create loan application
         loan_data = {
             'borrower': borrower.id,
-            'loan_type': loan_type.id,
+            'loan_category': 'individual',
             'amount_requested': '50000.00',
             'duration_months': 12,
-            'purpose': 'Business expansion',
+            'proposed_project': 'Business expansion',
         }
         
         response = admin_client.post(reverse('loans:add_loan'), loan_data)

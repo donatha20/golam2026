@@ -35,7 +35,7 @@ LOCAL_APPS = [
     'apps.accounts.apps.AccountsConfig',
     'apps.notifications.apps.NotificationsConfig',
     'apps.borrowers',
-    'apps.loans',
+    'apps.loans.apps.LoansConfig',
     'apps.repayments',
     'apps.savings',
     'apps.finance_tracker',
@@ -119,8 +119,7 @@ STATICFILES_DIRS = [
 ]
 
 # Static files storage
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -180,3 +179,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 
+ 

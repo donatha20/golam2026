@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal
 from .models import (
-    Loan, LoanType, GroupLoan, RepaymentSchedule, Repayment, 
+    Loan, GroupLoan, RepaymentSchedule, Repayment, 
     Penalty, WrittenOffLoan, OldLoan, LoanDisbursement,
     PaymentMethodChoices, RepaymentTypeChoices
 )
@@ -42,7 +42,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
         fields = [
             'borrower', 'loan_category', 'amount_requested',
             'duration_months', 'proposed_project', 'collateral_name', 
-            'collateral_worth', 'collateral_withheld', 'disbursement_date',
+            'collateral_worth', 'collateral_withheld', 'application_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
             'repayment_type', 'repayment_frequency', 'loan_fees_applied', 'supporting_document', 'notes'
         ]
@@ -91,7 +91,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
                 'min': '0',
                 'placeholder': 'Amount to be withheld (TZS)',
             }),
-            'disbursement_date': forms.DateInput(attrs={
+            'application_date': forms.DateInput(attrs={
                 'class': 'form-input',
                 'type': 'date',
                 'required': True
@@ -117,7 +117,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
-            'repayment_frequency': forms.Select(choices=FrequencyChoices.choices, attrs={
+            'repayment_frequency': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
             }),
@@ -143,9 +143,9 @@ class ComprehensiveLoanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['borrower'].queryset = Borrower.objects.filter(status='active')
-        self.fields['disbursement_date'].required = False
+        self.fields['application_date'].required = True
+        self.fields['application_date'].initial = timezone.now().date()
         self.fields['start_payment_date'].required = False
-        self.fields['disbursement_date'].widget.attrs.pop('required', None)
         self.fields['start_payment_date'].widget.attrs.pop('required', None)
         # Make borrower field required
         self.fields['borrower'].required = True
@@ -166,6 +166,9 @@ class ComprehensiveLoanForm(forms.ModelForm):
             required=True
         )
         
+        # Set repayment_frequency field choices to use the latest FrequencyChoices
+        self.fields['repayment_frequency'].widget.choices = FrequencyChoices.choices
+        
         # When editing an existing loan, populate interest_amount from total_interest
         if self.instance and self.instance.pk:
             # If editing, populate interest_amount with existing total_interest
@@ -184,7 +187,7 @@ class ComprehensiveLoanForm(forms.ModelForm):
         self.fields['collateral_name'].label = 'Collateral Description'
         self.fields['collateral_worth'].label = 'Collateral Worth (TZS)'
         self.fields['collateral_withheld'].label = 'Amount Withheld (TZS)'
-        self.fields['disbursement_date'].label = 'Disbursement Date'
+        self.fields['application_date'].label = 'Application Date'
         self.fields['loan_officer'].label = 'Loan Officer'
         self.fields['pay_method'].label = 'Payment Method'
         self.fields['payment_account'].label = 'Payment Account'
@@ -206,12 +209,25 @@ class ComprehensiveLoanForm(forms.ModelForm):
                 raise ValidationError('Amount withheld cannot be greater than collateral worth')
         
         # Validate dates
-        disbursement_date = cleaned_data.get('disbursement_date')
+        application_date = cleaned_data.get('application_date')
         start_payment_date = cleaned_data.get('start_payment_date')
         
-        if disbursement_date and start_payment_date:
-            if start_payment_date <= disbursement_date:
-                raise ValidationError('Start payment date must be after disbursement date')
+        if application_date and start_payment_date:
+            if start_payment_date <= application_date:
+                raise ValidationError('Start payment date must be after application date')
+        
+        # Check backdating setting from WorkingMode
+        if application_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if application_date < today:
+                    raise ValidationError(
+                        'Backdating is not allowed. Application date cannot be earlier than today.'
+                    )
         
         # Validate payment account for non-cash methods
         pay_method = cleaned_data.get('pay_method')
@@ -283,15 +299,11 @@ class LoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            'borrower', 'loan_type', 'amount_requested', 'interest_rate',
+            'borrower', 'amount_requested', 'interest_rate',
             'duration_months', 'repayment_frequency', 'application_notes'
         ]
         widgets = {
             'borrower': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
-            }),
-            'loan_type': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
             }),
@@ -331,11 +343,12 @@ class LoanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['borrower'].queryset = Borrower.objects.filter(status='active')
-        self.fields['loan_type'].queryset = LoanType.objects.filter(is_active=True)
+
+        # Set repayment_frequency field choices dynamically
+        self.fields['repayment_frequency'].widget.choices = FrequencyChoices.choices
 
         # Set field labels
         self.fields['borrower'].label = 'Select Borrower'
-        self.fields['loan_type'].label = 'Loan Product'
         self.fields['amount_requested'].label = 'Loan Amount'
         self.fields['interest_rate'].label = 'Interest Rate (%)'
         self.fields['duration_months'].label = 'Duration (Months)'
@@ -344,22 +357,6 @@ class LoanForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        loan_type = cleaned_data.get('loan_type')
-        amount_requested = cleaned_data.get('amount_requested')
-        duration_months = cleaned_data.get('duration_months')
-
-        if loan_type and amount_requested:
-            if amount_requested < loan_type.min_amount:
-                raise ValidationError(f'Amount cannot be less than {loan_type.min_amount}')
-            if amount_requested > loan_type.max_amount:
-                raise ValidationError(f'Amount cannot be more than {loan_type.max_amount}')
-
-        if loan_type and duration_months:
-            if duration_months < loan_type.min_duration_months:
-                raise ValidationError(f'Duration cannot be less than {loan_type.min_duration_months} months')
-            if duration_months > loan_type.max_duration_months:
-                raise ValidationError(f'Duration cannot be more than {loan_type.max_duration_months} months')
-
         return cleaned_data
 
 
@@ -396,7 +393,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
         fields = [
             'loan_category', 'amount_requested',
             'duration_months', 'proposed_project', 'collateral_name', 
-            'collateral_worth', 'collateral_withheld', 'disbursement_date',
+            'collateral_worth', 'collateral_withheld', 'application_date',
             'loan_officer', 'pay_method', 'payment_account', 'start_payment_date',
             'repayment_type', 'repayment_frequency', 'loan_fees_applied', 'supporting_document', 'notes'
         ]
@@ -441,7 +438,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
                 'min': '0',
                 'placeholder': 'Amount to be withheld (TZS)',
             }),
-            'disbursement_date': forms.DateInput(attrs={
+            'application_date': forms.DateInput(attrs={
                 'class': 'form-input',
                 'type': 'date',
                 'required': True
@@ -467,7 +464,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
                 'class': 'form-select',
                 'required': True
             }),
-            'repayment_frequency': forms.Select(choices=FrequencyChoices.choices, attrs={
+            'repayment_frequency': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
             }),
@@ -500,9 +497,9 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['disbursement_date'].required = False
+        self.fields['application_date'].required = True
+        self.fields['application_date'].initial = timezone.now().date()
         self.fields['start_payment_date'].required = False
-        self.fields['disbursement_date'].widget.attrs.pop('required', None)
         self.fields['start_payment_date'].widget.attrs.pop('required', None)
         
         # Set the choices for loan_category field
@@ -515,6 +512,9 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
             required=True
         )
         
+        # Update repayment_frequency field choices to use the latest FrequencyChoices
+        self.fields['repayment_frequency'].widget.choices = FrequencyChoices.choices
+        
         # Set field labels
         self.fields['group'].label = 'Borrower Group'
         self.fields['loan_category'].label = 'Loan Category'
@@ -525,7 +525,7 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
         self.fields['collateral_name'].label = 'Group Collateral Description'
         self.fields['collateral_worth'].label = 'Total Collateral Worth (TZS)'
         self.fields['collateral_withheld'].label = 'Amount Withheld (TZS)'
-        self.fields['disbursement_date'].label = 'Disbursement Date'
+        self.fields['application_date'].label = 'Application Date'
         self.fields['loan_officer'].label = 'Loan Officer'
         self.fields['pay_method'].label = 'Payment Method'
         self.fields['payment_account'].label = 'Payment Account'
@@ -547,12 +547,25 @@ class ComprehensiveGroupLoanForm(forms.ModelForm):
                 raise ValidationError('Amount withheld cannot be greater than collateral worth')
         
         # Validate dates
-        disbursement_date = cleaned_data.get('disbursement_date')
+        application_date = cleaned_data.get('application_date')
         start_payment_date = cleaned_data.get('start_payment_date')
         
-        if disbursement_date and start_payment_date:
-            if start_payment_date <= disbursement_date:
-                raise ValidationError('Start payment date must be after disbursement date')
+        if application_date and start_payment_date:
+            if start_payment_date <= application_date:
+                raise ValidationError('Start payment date must be after application date')
+        
+        # Check backdating setting from WorkingMode
+        if application_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if application_date < today:
+                    raise ValidationError(
+                        'Backdating is not allowed. Application date cannot be earlier than today.'
+                    )
         
         # Validate payment account for non-cash methods
         pay_method = cleaned_data.get('pay_method')
@@ -616,14 +629,10 @@ class GroupLoanForm(forms.ModelForm):
     class Meta:
         model = Loan
         fields = [
-            'loan_type', 'amount_requested', 'interest_rate',
+            'amount_requested', 'interest_rate',
             'duration_months', 'repayment_frequency', 'application_notes'
         ]
         widgets = {
-            'loan_type': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
-            }),
             'amount_requested': forms.NumberInput(attrs={
                 'class': 'form-input',
                 'step': '0.01',
@@ -668,11 +677,11 @@ class GroupLoanForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['loan_type'].queryset = LoanType.objects.filter(is_active=True)
+        # Update repayment_frequency field choices to use the latest FrequencyChoices
+        self.fields['repayment_frequency'].widget.choices = FrequencyChoices.choices
 
         # Set field labels
         self.fields['group'].label = 'Select Borrower Group'
-        self.fields['loan_type'].label = 'Loan Product'
         self.fields['amount_requested'].label = 'Loan Amount'
         self.fields['interest_rate'].label = 'Interest Rate (%)'
         self.fields['duration_months'].label = 'Duration (Months)'
@@ -712,6 +721,25 @@ class RepaymentForm(forms.ModelForm):
         if amount_paid <= 0:
             raise ValidationError('Amount paid must be greater than zero')
         return amount_paid
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        payment_date = cleaned_data.get('payment_date')
+        
+        # Check backdating setting from WorkingMode
+        if payment_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if payment_date < today:
+                    raise ValidationError(
+                        'Backdating is not allowed. Payment date cannot be earlier than today.'
+                    )
+        
+        return cleaned_data
 
 
 class GroupRepaymentForm(forms.Form):
@@ -749,6 +777,25 @@ class GroupRepaymentForm(forms.Form):
         super().__init__(*args, **kwargs)
         if group:
             self.fields['paid_by'].queryset = group.members.all()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        payment_date = cleaned_data.get('payment_date')
+        
+        # Check backdating setting from WorkingMode
+        if payment_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if payment_date < today:
+                    raise ValidationError(
+                        'Backdating is not allowed. Payment date cannot be earlier than today.'
+                    )
+        
+        return cleaned_data
 
 
 class LoanApprovalForm(forms.ModelForm):
@@ -772,12 +819,6 @@ class LoanApprovalForm(forms.ModelForm):
                 'placeholder': 'Enter approval notes and conditions...'
             }),
         }
-    
-    def _post_clean(self):
-        """Skip model full_clean since date fields are managed by the system."""
-        # Don't call super()._post_clean() which runs model.full_clean()
-        # Just validate the form fields themselves, not the model's constraints
-        pass
 
 
 class LoanDisbursementForm(forms.ModelForm):
@@ -811,6 +852,24 @@ class LoanDisbursementForm(forms.ModelForm):
         if loan:
             self.fields['amount'].initial = loan.amount_approved
             self.fields['disbursement_date'].initial = timezone.now().date()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        disbursement_date = cleaned_data.get('disbursement_date')
+        
+        if disbursement_date:
+            from apps.core.models import WorkingMode
+            working_mode = WorkingMode.get_active_mode()
+            
+            # If backdating is not allowed and date is in the past, raise error
+            if working_mode and not working_mode.allow_backdating:
+                today = timezone.now().date()
+                if disbursement_date < today:
+                    raise ValidationError(
+                        'Backdating is not allowed. Disbursement date cannot be earlier than today.'
+                    )
+        
+        return cleaned_data
 
 
 class PenaltyForm(forms.ModelForm):

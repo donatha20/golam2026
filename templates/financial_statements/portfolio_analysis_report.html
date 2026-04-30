@@ -72,13 +72,13 @@
         </div>
     </div>
 
-    <!-- Portfolio by Type -->
+    <!-- Portfolio by Category -->
     <div class="col-lg-6 mb-4">
         <div class="card">
             <div class="card-header py-compact">
                 <h5 class="mb-0">
                     <i class="fas fa-chart-bar me-2 text-primary-teal"></i>
-                    Portfolio by Loan Type
+                    Portfolio by Loan Category
                 </h5>
             </div>
             <div class="card-body p-compact">
@@ -86,17 +86,17 @@
                     <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
-                                <th>Loan Type</th>
+                                <th>Loan Category</th>
                                 <th class="text-center">Count</th>
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-center">Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in portfolio_by_type %}
+                            {% for item in portfolio_by_category %}
                             <tr>
                                 <td>
-                                    <span class="badge bg-primary">{{ item.loan_type|title }}</span>
+                                    <span class="badge bg-primary">{{ item.loan_category|default:"Uncategorized"|title }}</span>
                                 </td>
                                 <td class="text-center">{{ item.count }}</td>
                                 <td class="text-end">{{ item.total_amount|floatformat:0 }}</td>
@@ -106,7 +106,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No loan type data available.</td>
+                                <td colspan="4" class="text-center text-muted">No loan category data available.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

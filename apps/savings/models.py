@@ -288,7 +288,7 @@ class SavingsProduct(models.Model):
 
 
 class SavingsLoanRule(models.Model):
-    """Rules linking savings requirements to loan types."""
+    """Rules linking savings requirements to loan categories."""
 
     RULE_TYPES = [
         ('minimum_balance', 'Minimum Balance Required'),
@@ -301,8 +301,8 @@ class SavingsLoanRule(models.Model):
     description = models.TextField(blank=True, null=True)
     rule_type = models.CharField(max_length=20, choices=RULE_TYPES)
 
-    # Loan type reference (we'll use CharField to avoid circular imports)
-    loan_type = models.CharField(max_length=50, help_text="Loan type this rule applies to")
+    # Loan category reference (we'll use CharField to avoid circular imports)
+    loan_category = models.CharField(max_length=50, help_text="Loan category this rule applies to")
 
     # Rule parameters
     minimum_balance_required = models.DecimalField(
@@ -346,11 +346,11 @@ class SavingsLoanRule(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['loan_type', 'rule_type']
-        unique_together = ['loan_type', 'rule_type']
+        ordering = ['loan_category', 'rule_type']
+        unique_together = ['loan_category', 'rule_type']
 
     def __str__(self):
-        return f"{self.loan_type} - {self.get_rule_type_display()}"
+        return f"{self.loan_category} - {self.get_rule_type_display()}"
 
     def check_compliance(self, savings_account, loan_amount=None):
         """Check if savings account complies with this rule."""
@@ -550,14 +550,14 @@ class SavingsAccount(AuditModel):
             self.balance >= self.minimum_balance_required
         )
 
-    def check_loan_eligibility(self, loan_type, loan_amount):
-        """Check eligibility for specific loan type and amount."""
+    def check_loan_eligibility(self, loan_category, loan_amount):
+        """Check eligibility for specific loan category and amount."""
         if not self.is_eligible_for_loan:
             return False, "Account not eligible for loans"
 
-        # Check savings rules for this loan type
+        # Check savings rules for this loan category
         rules = SavingsLoanRule.objects.filter(
-            loan_type=loan_type,
+            loan_category=loan_category,
             is_active=True
         )
 

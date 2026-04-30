@@ -421,16 +421,16 @@
                 </div>
             </div>
 
-            <!-- Disbursement Information Section -->
+            <!-- Application Information Section -->
             <div class="form-section">
                 <h3 class="section-title">
-                    <i class="fas fa-calendar-alt"></i> Disbursement Information
+                    <i class="fas fa-calendar-alt"></i> Application Information
                 </h3>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="disbursed_date" class="form-label required">Disbursement Date</label>
-                        <input type="date" name="disbursement_date" id="disbursed_date" class="form-input" required>
+                        <label for="application_date" class="form-label required">Application Date</label>
+                        <input type="date" name="application_date" id="application_date" class="form-input" value="{{ today|date:'Y-m-d' }}" required>
                     </div>
                     
                     <div class="form-group">
@@ -463,16 +463,27 @@
                         <label for="start_payment_date" class="form-label required">Start Payment Date</label>
                         <input type="date" name="start_payment_date" id="start_payment_date" class="form-input" required>
                     </div>
-                    
-                <div class="form-group">
-                    <label for="repayment_type" class="form-label required">Repayment Frequency</label>
-                    <select name="repayment_type" id="repayment_type" class="form-select form-select-sm" required>
-                        <option value="">Select repayment frequency</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quarterly">Quarterly</option>
-                    </select>
-                </div>
+
+                    <div class="form-group">
+                        <label for="repayment_frequency" class="form-label required">Repayment Frequency (Interval)</label>
+                        <select name="repayment_frequency" id="repayment_frequency" class="form-select form-select-sm" required>
+                            <option value="">Select repayment frequency</option>
+                            {% for value, label in frequency_choices %}
+                            <option value="{{ value }}" {% if form.data.repayment_frequency == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="repayment_type" class="form-label required">Repayment Type</label>
+                        <select name="repayment_type" id="repayment_type" class="form-select form-select-sm" required>
+                            <option value="">Select repayment type</option>
+                            <option value="daily" {% if form.data.repayment_type == 'daily' %}selected{% endif %}>Daily</option>
+                            <option value="weekly" {% if form.data.repayment_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                            <option value="monthly" {% if form.data.repayment_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                            <option value="quarterly" {% if form.data.repayment_type == 'quarterly' %}selected{% endif %}>Quarterly</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Loan Fees Section -->
@@ -714,31 +725,31 @@
         }
 
         // Validate dates
-        const disbursedDate = new Date(document.getElementById('disbursed_date').value);
+        const applicationDate = new Date(document.getElementById('application_date').value);
         const startPaymentDate = new Date(document.getElementById('start_payment_date').value);
         
-        if (startPaymentDate <= disbursedDate) {
+        if (startPaymentDate <= applicationDate) {
             e.preventDefault();
-            alert('Start payment date must be after disbursed date');
+            alert('Start payment date must be after application date');
             return;
         }
     });
 
-    // Auto-set minimum start payment date based on disbursed date
-    document.getElementById('disbursed_date').addEventListener('change', function() {
-        const disbursedDate = new Date(this.value);
-        disbursedDate.setDate(disbursedDate.getDate() + 1); // Add 1 day
+    // Auto-set minimum start payment date based on application date
+    document.getElementById('application_date').addEventListener('change', function() {
+        const applicationDate = new Date(this.value);
+        applicationDate.setDate(applicationDate.getDate() + 1); // Add 1 day
         
         const startPaymentInput = document.getElementById('start_payment_date');
-        startPaymentInput.min = disbursedDate.toISOString().split('T')[0];
+        startPaymentInput.min = applicationDate.toISOString().split('T')[0];
         
-        // If start payment date is before disbursed date, clear it
+        // If start payment date is before application date, clear it
         if (startPaymentInput.value && new Date(startPaymentInput.value) <= new Date(this.value)) {
             startPaymentInput.value = '';
         }
     });
 
-    // Set default disbursed date to today
-    document.getElementById('disbursed_date').value = new Date().toISOString().split('T')[0];
+    // Set default application date to today
+    document.getElementById('application_date').value = new Date().toISOString().split('T')[0];
 </script>
 {% endblock %}

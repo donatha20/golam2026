@@ -1,0 +1,527 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Loan Schedule - Golam Financial Services{% endblock %}
+
+{% block page_title %}Repayment Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Teal and White Consistent Styling */
+    :root {
+        --primary-teal: #2b7a76;
+        --light-teal: #e0f2f1;
+        --very-light-teal: #f0fffe;
+        --white: #ffffff;
+        --grey-light: #f5f5f5;
+        --grey-dark: #666666;
+        --text-dark: #333333;
+        --border-grey: #e0e0e0;
+        --success-green: #4caf50;
+        --warning-orange: #ff9800;
+        --danger-red: #f44336;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: var(--grey-light);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .container-main {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Header Section */
+    .header-section {
+        background: linear-gradient(135deg, var(--primary-teal) 0%, #1f5d5a 100%);
+        color: var(--white);
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(43, 122, 118, 0.15);
+    }
+
+    .header-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    /* Back Button */
+    .back-button {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 15px;
+        background: var(--primary-teal);
+        color: var(--white) !important;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .back-button:hover {
+        background: #1f5d5a;
+        box-shadow: 0 4px 8px rgba(43, 122, 118, 0.3);
+        color: var(--white) !important;
+    }
+
+    .back-button:visited,
+    .back-button:focus,
+    .back-button:active {
+        color: var(--white) !important;
+    }
+
+    /* Loan Info Card */
+    .loan-info-card {
+        background: var(--white);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .loan-info-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--light-teal);
+    }
+
+    .loan-info-left h2 {
+        font-size: 22px;
+        color: var(--primary-teal);
+        margin-bottom: 5px;
+    }
+
+    .loan-info-left p {
+        font-size: 14px;
+        color: var(--grey-dark);
+    }
+
+    .loan-status-badge {
+        display: inline-block;
+        background: var(--light-teal);
+        color: var(--primary-teal);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .loan-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+
+    .info-item {
+        background: var(--very-light-teal);
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: var(--grey-dark);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .info-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-teal);
+    }
+
+    .info-value.large {
+        font-size: 18px;
+    }
+
+    /* Schedule Stats */
+    .schedule-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .stat-box {
+        background: var(--grey-light);
+        padding: 12px;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .stat-box-label {
+        font-size: 11px;
+        color: var(--grey-dark);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .stat-box-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--primary-teal);
+    }
+
+    /* Schedule Table */
+    .table-container {
+        background: var(--white);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: linear-gradient(135deg, var(--primary-teal) 0%, #1f5d5a 100%);
+        color: var(--white);
+        font-weight: 600;
+    }
+
+    thead th {
+        padding: 15px;
+        text-align: left;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    tbody td {
+        padding: 15px;
+        border-bottom: 1px solid var(--border-grey);
+        font-size: 14px;
+    }
+
+    tbody tr:hover {
+        background-color: var(--very-light-teal);
+    }
+
+    tbody tr.status-paid {
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+
+    tbody tr.status-missed {
+        background-color: rgba(244, 67, 54, 0.05);
+        border-left: 4px solid var(--danger-red);
+    }
+
+    tbody tr.status-pending {
+        background-color: var(--very-light-teal);
+    }
+
+    tbody tr.status-partial {
+        background-color: rgba(255, 152, 0, 0.05);
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-paid {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: var(--success-green);
+    }
+
+    .status-pending {
+        background-color: rgba(156, 39, 176, 0.2);
+        color: #6f00c2;
+    }
+
+    .status-missed {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: var(--danger-red);
+    }
+
+    .status-partial {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: var(--warning-orange);
+    }
+
+    .status-due {
+        background-color: rgba(66, 165, 245, 0.2);
+        color: #1976d2;
+    }
+
+    /* Action Button */
+    .action-btn {
+        display: inline-block;
+        padding: 8px 16px;
+        background: var(--primary-teal);
+        color: var(--white);
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: #1f5d5a;
+        box-shadow: 0 2px 6px rgba(43, 122, 118, 0.3);
+    }
+
+    .action-btn.disabled {
+        background: var(--grey-light);
+        color: var(--grey-dark);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Amount Column */
+    .amount-text {
+        font-weight: 600;
+        color: var(--primary-teal);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container-main {
+            padding: 15px;
+        }
+
+        .loan-info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .schedule-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        table {
+            font-size: 12px;
+        }
+
+        thead th,
+        tbody td {
+            padding: 10px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-main">
+    <!-- Back Button -->
+    <a href="{% url 'loans:expected_repayments' %}" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to All Loans
+    </a>
+
+    <!-- Header -->
+    <div class="header-section">
+        <div class="header-title">
+            {{ loan.loan_number }}
+        </div>
+        <div class="header-subtitle">
+            Repayment Schedule for {{ loan.borrower.get_full_name }}
+        </div>
+    </div>
+
+    <!-- Loan Info Card -->
+    <div class="loan-info-card">
+        <div class="loan-info-header">
+            <div class="loan-info-left">
+                <h2>{{ loan.loan_number }}</h2>
+                <p>
+                    <i class="fas fa-user"></i> {{ loan.borrower.get_full_name }}
+                    <br>
+                    <i class="fas fa-id-card"></i> {{ loan.borrower.borrower_id }}
+                </p>
+            </div>
+            <span class="loan-status-badge">{{ loan.get_status_display }}</span>
+        </div>
+
+        <!-- Loan Details Grid -->
+        <div class="loan-info-grid">
+            <div class="info-item">
+                <div class="info-label">Loan Amount</div>
+                <div class="info-value large">Tsh {{ loan.amount_approved|floatformat:0 }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Outstanding Balance</div>
+                <div class="info-value large">Tsh {{ loan.outstanding_balance|floatformat:0 }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Total Paid</div>
+                <div class="info-value large">Tsh {{ loan.total_paid|floatformat:0 }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Duration</div>
+                <div class="info-value">{{ loan.duration_months }} months</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Disbursed</div>
+                <div class="info-value">{{ loan.disbursement_date|date:"M d, Y" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Interest Rate</div>
+                <div class="info-value">{{ loan.interest_rate }}%</div>
+            </div>
+        </div>
+
+        <!-- Schedule Stats -->
+        <div class="schedule-stats">
+            <div class="stat-box">
+                <div class="stat-box-label">Paid</div>
+                <div class="stat-box-value" style="color: var(--success-green);">{{ paid_count }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Pending</div>
+                <div class="stat-box-value">{{ pending_count }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Missed</div>
+                <div class="stat-box-value" style="color: var(--danger-red);">{{ missed_count }}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-label">Partial</div>
+                <div class="stat-box-value" style="color: var(--warning-orange);">{{ partial_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Inst#</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Amount Due</th>
+                    <th>Amount Paid</th>
+                    <th>Balance</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedules %}
+                    <tr class="status-{{ schedule.status|lower }}">
+                        <td>
+                            <strong>#{{ schedule.installment_number }}</strong>
+                        </td>
+                        <td>{{ schedule.due_date|date:"M d, Y" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ schedule.status|lower }}">
+                                {{ schedule.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="amount-text">Tsh {{ schedule.amount_due|floatformat:0 }}</span>
+                        </td>
+                        <td>
+                            <span class="amount-text">Tsh {{ schedule.amount_paid|floatformat:0 }}</span>
+                        </td>
+                        <td>
+                            <span class="amount-text">Tsh {{ schedule.remaining_amount|floatformat:0 }}</span>
+                        </td>
+                        <td>
+                            {% if schedule.status != 'paid' %}
+                                <button class="action-btn mark-paid-btn" 
+                                        data-schedule-id="{{ schedule.id }}"
+                                        data-schedule-num="{{ schedule.installment_number }}"
+                                        onclick="markSchedulePaid({{ schedule.id }}, {{ schedule.installment_number }})">
+                                    <i class="fas fa-check"></i> Mark Paid
+                                </button>
+                            {% else %}
+                                <button class="action-btn disabled" disabled>
+                                    <i class="fas fa-check-circle"></i> Paid
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px; color: var(--grey-dark);">
+                            <i class="fas fa-info-circle"></i> No repayment schedules found
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Buttons Section -->
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <a href="{% url 'repayments:record_repayment' %}" class="action-btn" 
+           style="background: var(--success-green); padding: 12px 24px; font-size: 14px;">
+            <i class="fas fa-receipt"></i> Record Partial Payment
+        </a>
+        <a href="{% url 'loans:expected_repayments' %}" class="action-btn"
+           style="padding: 12px 24px; font-size: 14px;">
+            <i class="fas fa-arrow-left"></i> Back to Loans
+        </a>
+    </div>
+</div>
+
+<!-- JavaScript for Mark Paid Action -->
+<script>
+function markSchedulePaid(scheduleId, installmentNum) {
+    if (confirm(`Mark Installment #${installmentNum} as paid?`)) {
+        fetch(`/loans/api/schedules/${scheduleId}/mark-paid/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert('✓ Payment recorded successfully!');
+                // Reload the page to reflect changes
+                location.reload();
+            } else {
+                alert('❌ Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Error processing request');
+        });
+    }
+}
+</script>
+{% endblock %}

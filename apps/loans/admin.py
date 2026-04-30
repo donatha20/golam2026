@@ -3,56 +3,18 @@ Admin configuration for loans app.
 """
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import LoanType, Loan, RepaymentSchedule, LoanPenalty
-
-
-@admin.register(LoanType)
-class LoanTypeAdmin(admin.ModelAdmin):
-    """Admin configuration for LoanType model."""
-    list_display = (
-        'name', 'code', 'default_interest_rate', 'min_amount', 
-        'max_amount', 'interest_type', 'is_active'
-    )
-    list_filter = ('interest_type', 'is_active', 'requires_savings', 'created_at')
-    search_fields = ('name', 'code', 'description')
-    readonly_fields = ('created_at', 'updated_at')
-    ordering = ('name',)
-    
-    fieldsets = (
-        ('Basic Information', {
-            'fields': ('name', 'code', 'description', 'is_active')
-        }),
-        ('Loan Limits', {
-            'fields': (
-                'min_amount', 'max_amount', 'min_duration_months', 
-                'max_duration_months'
-            )
-        }),
-        ('Interest Configuration', {
-            'fields': ('default_interest_rate', 'interest_type')
-        }),
-        ('Requirements', {
-            'fields': ('requires_savings', 'minimum_savings_percentage')
-        }),
-        ('Fees', {
-            'fields': ('processing_fee_percentage', 'processing_fee_fixed')
-        }),
-        ('Audit Information', {
-            'fields': ('created_at', 'updated_at', 'created_by', 'updated_by'),
-            'classes': ('collapse',)
-        }),
-    )
+from .models import Loan, RepaymentSchedule, LoanPenalty
 
 
 @admin.register(Loan)
 class LoanAdmin(admin.ModelAdmin):
     """Admin configuration for Loan model."""
     list_display = (
-        'loan_number', 'borrower', 'loan_type', 'amount_approved', 
+        'loan_number', 'borrower', 'amount_approved', 
         'status', 'application_date', 'disbursement_date', 'outstanding_balance'
     )
     list_filter = (
-        'status', 'loan_type', 'repayment_frequency', 
+        'status', 'repayment_frequency', 
         'application_date', 'disbursement_date'
     )
     search_fields = (
@@ -68,7 +30,7 @@ class LoanAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Loan Information', {
             'fields': (
-                'loan_number', 'borrower', 'loan_type', 'status'
+                'loan_number', 'borrower', 'status'
             )
         }),
         ('Loan Details', {
@@ -108,7 +70,7 @@ class LoanAdmin(admin.ModelAdmin):
         
         if obj and obj.status in ['disbursed', 'active', 'completed']:
             readonly.extend([
-                'borrower', 'loan_type', 'amount_requested', 
+                'borrower', 'amount_requested', 
                 'amount_approved', 'interest_rate', 'duration_months'
             ])
         

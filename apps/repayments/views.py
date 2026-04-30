@@ -13,6 +13,7 @@ from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 from decimal import Decimal
 import json
+import logging
 
 from .models import (
     LoanRepaymentSchedule, Payment, PaymentAllocation, PaymentHistory,
@@ -25,6 +26,10 @@ from .forms import (
     PaymentForm, BulkPaymentForm, PaymentAllocationForm, PaymentReversalForm,
     ScheduleAdjustmentForm, DailyCollectionForm, PaymentSearchForm
 )
+
+
+logger = logging.getLogger(__name__)
+_LOAN_BALANCE_VIEW_UPDATE_GUARD = set()
 
 
 def _require_repayment_approver(request):
@@ -778,6 +783,7 @@ def record_payment(request):
                     return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
 
             except Exception as e:
+                logger.exception('Error while recording payment via /repayments/record/')
                 messages.error(request, f'Error recording payment: {str(e)}')
         else:
             error_messages = []
@@ -898,6 +904,7 @@ def reverse_payment(request, payment_id):
                 return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
 
         except Exception as e:
+            logger.exception('Error while reversing payment %s', payment_id)
             messages.error(request, f'Error reversing payment: {str(e)}')
 
     return redirect('repayments:loan_repayments', loan_id=payment.loan.pk)
@@ -1004,30 +1011,37 @@ def reverse_payment_allocations(payment):
 
 def update_loan_balances(loan):
     """Update loan outstanding balances."""
-    # Calculate total paid amounts
-    from apps.loans.models import Repayment
-    from django.db.models import Sum
-    
-    total_paid = Repayment.objects.filter(
-        schedule__loan=loan
-    ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    if not loan or not loan.pk:
+        return
 
-    # Update loan balances
-    loan.total_paid = total_paid
-    loan.outstanding_balance = loan.total_amount - total_paid
-    
-    # Ensure outstanding balance doesn't go negative
-    if loan.outstanding_balance < 0:
-        loan.outstanding_balance = Decimal('0.00')
+    loan_key = loan.pk
+    if loan_key in _LOAN_BALANCE_VIEW_UPDATE_GUARD:
+        return
 
-    # Update loan status
-    from apps.loans.models import LoanStatusChoices
-    if loan.outstanding_balance <= 0:
-        loan.status = LoanStatusChoices.COMPLETED
-    elif loan.status in [LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED]:
-        loan.status = LoanStatusChoices.ACTIVE
+    _LOAN_BALANCE_VIEW_UPDATE_GUARD.add(loan_key)
+    try:
+        # Recompute balances from completed, non-reversed Payment rows.
+        total_paid = Payment.objects.filter(
+            loan=loan,
+            status=PaymentStatus.COMPLETED,
+            is_reversed=False,
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
-    loan.save(update_fields=['total_paid', 'outstanding_balance', 'status'])
+        loan.total_paid = total_paid
+        loan.outstanding_balance = loan.total_amount - total_paid
+
+        if loan.outstanding_balance < 0:
+            loan.outstanding_balance = Decimal('0.00')
+
+        from apps.loans.models import LoanStatusChoices
+        if loan.outstanding_balance <= 0:
+            loan.status = LoanStatusChoices.COMPLETED
+        elif loan.status in [LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED]:
+            loan.status = LoanStatusChoices.ACTIVE
+
+        loan.save(update_fields=['total_paid', 'outstanding_balance', 'status'])
+    finally:
+        _LOAN_BALANCE_VIEW_UPDATE_GUARD.discard(loan_key)
 
 
 @login_required

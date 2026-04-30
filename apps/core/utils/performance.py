@@ -26,7 +26,6 @@ class QueryOptimizer:
         
         return Loan.objects.select_related(
             'borrower',
-            'loan_type',
             'created_by',
             'approved_by',
             'disbursed_by'
@@ -144,7 +143,7 @@ class CacheManager:
         from django.db.models import Sum
         
         try:
-            loan = Loan.objects.select_related('borrower', 'loan_type').get(id=loan_id)
+            loan = Loan.objects.select_related('borrower').get(id=loan_id)
             
             repayments = loan.repayment_schedules.aggregate(
                 total_paid=Sum('repayments__amount_paid'),

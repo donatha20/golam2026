@@ -5,6 +5,7 @@ Production settings for microfinance_system project.
 from .base import *
 import dj_database_url
 from decouple import config
+import os
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
@@ -13,8 +14,14 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 
 # Database for production
 DATABASES = {
-  "default": dj_database_url.parse(config('DATABASE_URL'), conn_max_age=600)
-
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
 }
 
 # Email Configuration for production
@@ -119,13 +126,10 @@ LOGGING = {
 # Cache Configuration for Production (Redis recommended)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-        'KEY_PREFIX': 'microfinance',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
         'TIMEOUT': 300,
+        'KEY_PREFIX': 'microfinance',
     }
 }
 

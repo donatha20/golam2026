@@ -9,13 +9,19 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
 from django.conf import settings
+from django.core.cache import cache
 from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import json
 
 from apps.borrowers.models import Borrower
-from apps.loans.models import Loan
+from apps.loans.models import (
+    Loan,
+    RepaymentSchedule,
+    RepaymentStatusChoices,
+    refresh_repayment_schedule_statuses,
+)
 from apps.repayments.models import Payment
 from apps.savings.models import SavingsAccount
 from apps.accounts.models import CustomUser, UserActivity, UserSession, UserRole
@@ -179,6 +185,15 @@ def dashboard(request):
     """
     today = timezone.now().date()
     this_month = today.replace(day=1)
+
+    # Refresh repayment schedule statuses once per day.
+    last_refresh = cache.get("repayment_schedule_status_refresh")
+    if last_refresh != today:
+        try:
+            refresh_repayment_schedule_statuses(today)
+            cache.set("repayment_schedule_status_refresh", today, 60 * 60 * 24)
+        except Exception:
+            pass
     
     # Import new models with error handling
     try:
@@ -251,14 +266,26 @@ def dashboard(request):
         })
 
     try:
+        # Expected Collections (based on repayment schedule due today)
+        expected_today = RepaymentSchedule.objects.filter(
+            due_date=today,
+            status__in=[
+                RepaymentStatusChoices.PENDING,
+                RepaymentStatusChoices.DUE,
+                RepaymentStatusChoices.PARTIAL,
+            ]
+        )
+        expected_totals = expected_today.aggregate(
+            total_due=Sum('amount_due'),
+            total_paid=Sum('amount_paid'),
+            installment_count=Count('id')
+        )
+        expected_amount = (expected_totals['total_due'] or 0) - (expected_totals['total_paid'] or 0)
+
         # Payment Statistics
         stats.update({
-            'collections_today': Payment.objects.filter(
-                payment_date=today
-            ).aggregate(total=Sum('amount'))['total'] or 0,
-            'payments_today': Payment.objects.filter(
-                payment_date=today
-            ).count(),
+            'collections_today': expected_amount,
+            'payments_today': expected_totals['installment_count'] or 0,
             'monthly_collections': Payment.objects.filter(
                 payment_date__gte=this_month
             ).aggregate(total=Sum('amount'))['total'] or 0,
@@ -334,10 +361,19 @@ def dashboard(request):
     # Recent loan applications (last 10)
     recent_loans = Loan.objects.select_related('borrower').order_by('-created_at')[:10]
     
-    # Today's payments (last 10)
-    todays_payments = Payment.objects.select_related('borrower').filter(
-        payment_date=today
-    ).order_by('-processed_date')[:10]
+    # Today's expected repayments (next 10)
+    todays_expected_schedules = RepaymentSchedule.objects.filter(
+        due_date=today,
+        status__in=[
+            RepaymentStatusChoices.PENDING,
+            RepaymentStatusChoices.DUE,
+            RepaymentStatusChoices.PARTIAL,
+        ]
+    ).select_related('loan', 'loan__borrower', 'loan__disbursed_by').order_by(
+        'loan__borrower__first_name',
+        'loan__borrower__last_name',
+        'installment_number'
+    )[:10]
     
     # Portfolio chart data (last 6 months)
     portfolio_data = []
@@ -371,7 +407,7 @@ def dashboard(request):
         'today': today,
         'stats': stats,
         'recent_loans': recent_loans,
-        'todays_payments': todays_payments,
+        'todays_expected_schedules': todays_expected_schedules,
         'portfolio_data': json.dumps(portfolio_data),
         'portfolio_labels': json.dumps(portfolio_labels),
         'status_data': json.dumps(status_data),
