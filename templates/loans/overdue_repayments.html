@@ -1,0 +1,437 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Overdue Expected Payments - Golam Financial Services{% endblock %}
+
+{% block page_title %}Loan Arrears - Overdue Expected Payments{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Alert Section */
+    .alert-section {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border: 2px solid #fca5a5;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    }
+
+    .alert-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #991b1b;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .alert-message {
+        color: #7f1d1d;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #dc2626;
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        width: 6px;
+    }
+
+    .stat-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .stat-sublabel {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+
+    /* Severity Breakdown */
+    .severity-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .severity-card {
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .severity-critical { background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%); }
+    .severity-severe { background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%); }
+    .severity-moderate { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
+    .severity-mild { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+
+    .arrears-table {
+        margin: 0;
+        border: none;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .arrears-table thead th {
+        background: white;
+        color: #2b7a76;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem 0.75rem;
+        border-bottom: 2px solid #2b7a76;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .arrears-table tbody td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .arrears-table tbody tr:hover {
+        background-color: rgba(43, 122, 118, 0.05);
+    }
+
+    /* Amount highlighting */
+    .amount-due {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .amount-arrears {
+        color: #dc2626;
+        font-weight: 700;
+        background: rgba(220, 38, 38, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+
+    /* Status badge */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-pending { background: #dbeafe; color: #1e40af; }
+    .status-partial { background: #fed7aa; color: #92400e; }
+    .status-missed { background: #fecaca; color: #7f1d1d; }
+    .status-defaulted { background: #7f1d1d; color: white; }
+
+    /* Days overdue color */
+    .days-1-30 { color: #f59e0b; font-weight: 600; }
+    .days-31-60 { color: #d97706; font-weight: 600; }
+    .days-61-90 { color: #dc2626; font-weight: 600; }
+    .days-90plus { color: #991b1b; font-weight: 700; }
+
+    /* Action buttons */
+    .btn-group-sm {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .btn-collect {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-collect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #64748b;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .severity-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .table-container {
+            max-height: 50vh;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Alert Section -->
+<div class="alert-section">
+    <h2 class="alert-title">
+        <i class="fas fa-exclamation-triangle"></i>
+        Overdue Expected Payments (Loan Arrears)
+    </h2>
+    <p class="alert-message">
+        These are scheduled payments/installments that are past their due date and not yet fully paid.
+        Each row represents one installment that requires collection.
+    </p>
+    <p class="alert-message" style="margin-top: 0.5rem; font-size: 0.86rem;">
+        <i class="fas fa-info-circle"></i>
+        Arrears are calculated as: Amount Due - Amount Paid (remaining unpaid balance)
+    </p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Total Overdue Amount</div>
+        <div class="stat-value" style="color: #dc2626;">Tsh {{ total_overdue_amount|floatformat:0 }}</div>
+        <div class="stat-sublabel">in arrears</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Overdue Installments</div>
+        <div class="stat-value">{{ overdue_count }}</div>
+        <div class="stat-sublabel">unpaid or partial</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Affected Borrowers</div>
+        <div class="stat-value">{{ unique_borrowers }}</div>
+        <div class="stat-sublabel">with overdue payments</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Active Loans</div>
+        <div class="stat-value">{{ unique_loans }}</div>
+        <div class="stat-sublabel">with arrears</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">As of Date</div>
+        <div class="stat-value" style="font-size: 1.1rem;">{{ as_of|date:"M d" }}</div>
+        <div class="stat-sublabel">{{ as_of|date:"Y" }}</div>
+    </div>
+</div>
+
+<!-- Severity Breakdown -->
+<div class="severity-grid">
+    <div class="severity-card severity-critical">
+        <div><i class="fas fa-exclamation-circle"></i></div>
+        <div style="margin-top: 0.5rem;">90+ Days Overdue</div>
+        <div style="font-size: 1.5rem; font-weight: 700;">{{ critical_count }}</div>
+    </div>
+    <div class="severity-card severity-severe">
+        <div><i class="fas fa-warning"></i></div>
+        <div style="margin-top: 0.5rem;">61-90 Days Overdue</div>
+        <div style="font-size: 1.5rem; font-weight: 700;">{{ severe_count }}</div>
+    </div>
+    <div class="severity-card severity-moderate">
+        <div><i class="fas fa-flag"></i></div>
+        <div style="margin-top: 0.5rem;">31-60 Days Overdue</div>
+        <div style="font-size: 1.5rem; font-weight: 700;">{{ moderate_count }}</div>
+    </div>
+    <div class="severity-card severity-mild">
+        <div><i class="fas fa-calendar-times"></i></div>
+        <div style="margin-top: 0.5rem;">1-30 Days Overdue</div>
+        <div style="font-size: 1.5rem; font-weight: 700;">{{ mild_count }}</div>
+    </div>
+</div>
+
+<!-- Overdue Repayments Table -->
+<div class="table-container">
+    {% if schedules %}
+    <table class="table table-hover arrears-table">
+        <thead>
+            <tr>
+                <th>Borrower</th>
+                <th>Loan #</th>
+                <th>Installment</th>
+                <th>Due Date</th>
+                <th class="text-right">Expected Amount</th>
+                <th class="text-right">Amount Paid</th>
+                <th class="text-right">Remaining Arrears</th>
+                <th>Days Overdue</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for schedule in schedules %}
+            <tr>
+                <!-- Borrower -->
+                <td>
+                    <a href="{% url 'borrowers:borrower_detail' schedule.loan.borrower.id %}" 
+                       class="text-decoration-none" style="color: #2b7a76; font-weight: 600;">
+                        {{ schedule.loan.borrower.get_full_name }}
+                    </a>
+                </td>
+                
+                <!-- Loan Number -->
+                <td>
+                    <a href="{% url 'loans:loan_detail' schedule.loan.id %}" 
+                       class="text-decoration-none" style="color: #2b7a76; font-weight: 600;">
+                        {{ schedule.loan.loan_number }}
+                    </a>
+                </td>
+                
+                <!-- Installment Number -->
+                <td style="text-align: center; font-weight: 600;">#{{ schedule.installment_number }}</td>
+                
+                <!-- Due Date -->
+                <td style="font-family: monospace;">{{ schedule.due_date|date:"d M Y" }}</td>
+                
+                <!-- Expected Amount -->
+                <td class="text-right amount-due">
+                    Tsh {{ schedule.amount_due|floatformat:0 }}
+                </td>
+                
+                <!-- Amount Paid -->
+                <td class="text-right" style="color: #16a34a; font-weight: 600;">
+                    Tsh {{ schedule.amount_paid|default:0|floatformat:0 }}
+                </td>
+                
+                <!-- Remaining Arrears -->
+                <td class="text-right amount-arrears">
+                    Tsh {{ schedule.remaining_arrears|floatformat:0 }}
+                </td>
+                
+                <!-- Days Overdue -->
+                <td style="text-align: center;">
+                    {% if schedule.days_past_due >= 90 %}
+                        <span class="days-90plus">{{ schedule.days_past_due }} days</span>
+                    {% elif schedule.days_past_due >= 61 %}
+                        <span class="days-61-90">{{ schedule.days_past_due }} days</span>
+                    {% elif schedule.days_past_due >= 31 %}
+                        <span class="days-31-60">{{ schedule.days_past_due }} days</span>
+                    {% else %}
+                        <span class="days-1-30">{{ schedule.days_past_due }} days</span>
+                    {% endif %}
+                </td>
+                
+                <!-- Status -->
+                <td>
+                    {% if schedule.status == 'pending' %}
+                        <span class="status-badge status-pending">Pending</span>
+                    {% elif schedule.status == 'partial' %}
+                        <span class="status-badge status-partial">Partial</span>
+                    {% elif schedule.status == 'missed' %}
+                        <span class="status-badge status-missed">Missed</span>
+                    {% elif schedule.status == 'defaulted' %}
+                        <span class="status-badge status-defaulted">Defaulted</span>
+                    {% else %}
+                        <span class="status-badge">{{ schedule.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                
+                <!-- Collect Action -->
+                <td>
+                    <form method="POST" action="{% url 'loans:collect_expected_repayment' schedule.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-collect" title="Collect remaining balance">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Collect</span>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 style="color: #1e293b; font-size: 1.3rem; margin-bottom: 0.5rem;">No Overdue Payments</h3>
+        <p style="color: #64748b; margin-bottom: 1rem;">Great news! There are currently no overdue expected payments (loan arrears).</p>
+        <p style="font-size: 0.9rem; color: #94a3b8;">All scheduled payments are either on time, in progress, or fully collected.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Back Button -->
+<div style="text-align: center; padding: 2rem 0;">
+    <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+{% endblock %}

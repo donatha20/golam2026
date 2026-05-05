@@ -36,7 +36,48 @@ def _require_elevated_access(request):
 @login_required
 def borrower_list(request):
     """Display list of all borrowers/clients."""
+    start_date_param = request.GET.get('start_date')
+    end_date_param = request.GET.get('end_date')
+    gender = request.GET.get('gender', '').strip()
+    loan_filter = request.GET.get('loan_filter', '').strip()
+
+    start_date = None
+    end_date = None
+
+    if start_date_param:
+        try:
+            start_date = datetime.strptime(start_date_param, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            messages.warning(request, 'Invalid start date format ignored.')
+
+    if end_date_param:
+        try:
+            end_date = datetime.strptime(end_date_param, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            messages.warning(request, 'Invalid end date format ignored.')
+
+    if start_date and end_date and start_date > end_date:
+        start_date, end_date = end_date, start_date
+
     borrowers = Borrower.objects.select_related('branch', 'registered_by').order_by('-registration_date')
+
+    if gender:
+        borrowers = borrowers.filter(gender=gender)
+
+    if start_date:
+        borrowers = borrowers.filter(registration_date__gte=start_date)
+
+    if end_date:
+        borrowers = borrowers.filter(registration_date__lte=end_date)
+
+    if loan_filter == 'with_loans':
+        borrowers = borrowers.filter(loans__isnull=False).distinct()
+    elif loan_filter == 'without_loans':
+        borrowers = borrowers.filter(loans__isnull=True)
+    elif loan_filter == 'active_loans':
+        borrowers = borrowers.filter(loans__status__in=['disbursed', 'active']).distinct()
+    elif loan_filter == 'defaulted_loans':
+        borrowers = borrowers.filter(loans__status='defaulted').distinct()
     
     # Create data table
     table = BorrowerTable(borrowers)
@@ -55,6 +96,18 @@ def borrower_list(request):
     context = {
         'table': table,
         'stats': stats,
+        'gender_choices': Borrower._meta.get_field('gender').choices,
+        'loan_filter_choices': [
+            ('', 'All Loans'),
+            ('with_loans', 'Clients with Loans'),
+            ('without_loans', 'Clients without Loans'),
+            ('active_loans', 'Clients with Active Loans'),
+            ('defaulted_loans', 'Clients with Defaulted Loans'),
+        ],
+        'selected_gender': gender,
+        'selected_loan_filter': loan_filter,
+        'start_date': start_date,
+        'end_date': end_date,
     }
     return render(request, 'borrowers/borrower_list.html', context)
 

@@ -137,8 +137,10 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Session Configuration
-SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=3600, cast=int)
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=600, cast=int)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = config('SESSION_EXPIRE_AT_BROWSER_CLOSE', default=True, cast=bool)
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_TIMEOUT = config('SESSION_TIMEOUT', default=600, cast=int)
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
 

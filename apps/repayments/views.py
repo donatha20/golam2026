@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db.models import Sum, Q, Count, Avg, F
+from django.db import models, transaction
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.views.decorators.http import require_http_methods
@@ -19,7 +20,7 @@ from .models import (
     LoanRepaymentSchedule, Payment, PaymentAllocation, PaymentHistory,
     OutstandingBalance, DailyCollection, CollectionSummary, PaymentStatus
 )
-from apps.loans.models import Loan
+from apps.loans.models import Loan, RepaymentSchedule as LoanRepaymentScheduleModel
 from apps.borrowers.models import Borrower
 from apps.accounts.models import UserActivity
 from .forms import (
@@ -52,64 +53,82 @@ def _require_repayment_approver(request):
 @login_required
 def dashboard(request):
     """Repayment management dashboard."""
-    today = timezone.now().date()
+    from django.utils import timezone
+    today = timezone.localdate()
     
-    # Payment statistics
+    # Payment statistics - use active completed Payment records only.
+    active_payments = Payment.objects.filter(
+        status=PaymentStatus.COMPLETED,
+        is_reversed=False,
+    )
+    today_payments = active_payments.filter(payment_date=today)
+    
     payment_stats = {
-        'today_collections': Payment.objects.filter(
-            payment_date=today,
-            status=PaymentStatus.COMPLETED
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
-        'today_payments_count': Payment.objects.filter(
-            payment_date=today,
-            status=PaymentStatus.COMPLETED
-        ).count(),
+        'today_collections': today_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+        'today_payments_count': today_payments.count(),
         'pending_payments': Payment.objects.filter(
             status=PaymentStatus.PENDING
         ).count(),
-        'total_outstanding': OutstandingBalance.objects.filter(
-            is_current=True
-        ).aggregate(total=Sum('total_outstanding'))['total'] or Decimal('0.00'),
+        'total_outstanding': Loan.objects.aggregate(total=Sum('outstanding_balance'))['total'] or Decimal('0.00'),
     }
     
-    # Overdue statistics
+    # Overdue expected payments (arrears/installments) - NOT loans
+    # An expected payment is overdue if:
+    # 1. due_date < today (past due)
+    # 2. status NOT in [PAID, COMPLETED] (not fully paid)
+    # 3. remaining amount > 0 (has unpaid balance)
+    overdue_schedules = LoanRepaymentScheduleModel.objects.filter(
+        due_date__lt=today,
+        status__in=['pending', 'due', 'partial', 'missed', 'defaulted'],
+        amount_paid__lt=models.F('amount_due')  # Only unpaid/partial
+    ).select_related('loan__borrower')
+    
+    # Calculate overdue statistics from installments, not loans
     overdue_stats = {
-        'overdue_installments': LoanRepaymentSchedule.objects.filter(
-            payment_status='overdue'
-        ).count(),
-        'overdue_amount': (
-            (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')) -
-            (LoanRepaymentSchedule.objects.filter(payment_status='overdue').aggregate(total=Sum('total_paid'))['total'] or Decimal('0.00'))
-        ),
-        'overdue_borrowers': LoanRepaymentSchedule.objects.filter(
-            payment_status='overdue'
-        ).values('loan__borrower').distinct().count(),
+        'overdue_installments': overdue_schedules.count(),
+        'overdue_amount': overdue_schedules.aggregate(
+            total=models.Sum(
+                models.F('amount_due') - models.F('amount_paid'),
+                output_field=models.DecimalField()
+            )
+        )['total'] or Decimal('0.00'),
+        'overdue_borrowers': overdue_schedules.values('loan__borrower').distinct().count(),
     }
     
     # Collection efficiency
     this_month_start = today.replace(day=1)
+    month_collections = Payment.objects.filter(
+        payment_date__gte=this_month_start,
+        status=PaymentStatus.COMPLETED,
+        is_reversed=False,
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
     collection_stats = {
-        'month_collections': Payment.objects.filter(
-            payment_date__gte=this_month_start,
-            status=PaymentStatus.COMPLETED
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+        'month_collections': month_collections,
         'month_target': Decimal('1000000.00'),  # This should come from settings
         'collection_efficiency': 0,  # Calculate based on due vs collected
     }
     
-    # Recent activities
+    # Recent activities - actual Payment records
     recent_payments = Payment.objects.select_related(
         'loan', 'borrower', 'collected_by'
-    ).order_by('-created_at')[:10]
+    ).filter(status=PaymentStatus.COMPLETED, is_reversed=False).order_by('-payment_date')[:10]
     
-    recent_overdue = LoanRepaymentSchedule.objects.filter(
-        payment_status='overdue'
-    ).select_related('loan__borrower').order_by('-due_date')[:10]
+    # Recent overdue schedules (for quick reference)
+    recent_overdue = list(overdue_schedules.order_by('-due_date')[:10])
     
-    # Daily collections summary
-    daily_collections = DailyCollection.objects.filter(
-        collection_date__gte=today - timedelta(days=7)
-    ).order_by('-collection_date')[:7]
+    # Daily collections summary - calculate from Payment objects
+    daily_collections = []
+    for i in range(7):
+        date = today - timedelta(days=i)
+        daily_payments = active_payments.filter(payment_date=date)
+        daily_total = daily_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+        daily_collections.append({
+            'collection_date': date,
+            'total_amount': daily_total,
+            'payment_count': daily_payments.count(),
+        })
+    daily_collections.reverse()  # Oldest first
     
     context = {
         'payment_stats': payment_stats,
@@ -170,6 +189,16 @@ def payment_list(request):
     paginator = Paginator(payments, 25)
     page_number = request.GET.get('page')
     payments = paginator.get_page(page_number)
+
+    # Summary stats for the payment history dashboard.
+    stats = {
+        'total_payments': payments.paginator.count,
+        'total_amount': payments.paginator.object_list.aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+        'today_collections': payments.paginator.object_list.filter(
+            payment_date=timezone.now().date()
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+        'pending_payments': payments.paginator.object_list.filter(status='pending').count(),
+    }
     
     # Get filter options
     from apps.accounts.models import CustomUser
@@ -180,6 +209,9 @@ def payment_list(request):
     
     context = {
         'payments': payments,
+        'page_obj': payments,
+        'is_paginated': payments.has_other_pages(),
+        'stats': stats,
         'collectors': collectors,
         'search_query': search_query,
         'status_filter': status_filter,
@@ -192,7 +224,7 @@ def payment_list(request):
         'page_title': 'All Payments',
     }
     
-    return render(request, 'repayments/payment_list.html', context)
+    return render(request, 'repayments/repayment_list.html', context)
 
 
 @login_required
@@ -321,63 +353,105 @@ def overdue_payments(request):
 
 @login_required
 def outstanding_balances(request):
-    """View outstanding balances for all loans."""
-    balances = OutstandingBalance.objects.filter(
-        is_current=True
-    ).select_related('loan__borrower').order_by('-total_outstanding')
+    """View outstanding loans for all active loans."""
+    # Query loans with outstanding balance > 0, not a separate OutstandingBalance model
+    loans_queryset = Loan.objects.filter(
+        outstanding_balance__gt=Decimal('0.00'),
+        status__in=['active', 'disbursed', 'defaulted']
+    ).select_related('borrower', 'created_by').order_by('-outstanding_balance')
 
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
-        balances = balances.filter(
-            Q(loan__loan_number__icontains=search_query) |
-            Q(loan__borrower__first_name__icontains=search_query) |
-            Q(loan__borrower__last_name__icontains=search_query) |
-            Q(loan__borrower__phone_number__icontains=search_query)
+        loans_queryset = loans_queryset.filter(
+            Q(loan_number__icontains=search_query) |
+            Q(borrower__first_name__icontains=search_query) |
+            Q(borrower__last_name__icontains=search_query) |
+            Q(borrower__borrower_id__icontains=search_query) |
+            Q(borrower__phone_number__icontains=search_query)
         )
 
     # Filter by balance range
     balance_filter = request.GET.get('balance', '')
     if balance_filter:
         if balance_filter == '0-10000':
-            balances = balances.filter(total_outstanding__lte=10000)
+            loans_queryset = loans_queryset.filter(outstanding_balance__lte=10000)
         elif balance_filter == '10001-50000':
-            balances = balances.filter(total_outstanding__gte=10001, total_outstanding__lte=50000)
+            loans_queryset = loans_queryset.filter(outstanding_balance__gte=10001, outstanding_balance__lte=50000)
         elif balance_filter == '50001-100000':
-            balances = balances.filter(total_outstanding__gte=50001, total_outstanding__lte=100000)
+            loans_queryset = loans_queryset.filter(outstanding_balance__gte=50001, outstanding_balance__lte=100000)
         elif balance_filter == '100000+':
-            balances = balances.filter(total_outstanding__gt=100000)
+            loans_queryset = loans_queryset.filter(outstanding_balance__gt=100000)
 
     # Filter by overdue status
+    today = timezone.localdate()
     overdue_filter = request.GET.get('overdue', '')
     if overdue_filter == 'yes':
-        balances = balances.filter(days_overdue__gt=0)
+        # Get loans with overdue schedules that haven't been paid
+        loans_queryset = loans_queryset.filter(
+            repayment_schedules__due_date__lt=today,
+            repayment_schedules__amount_paid__lt=models.F('repayment_schedules__amount_due'),
+            repayment_schedules__status__in=['missed', 'defaulted', 'due', 'pending']
+        ).distinct()
     elif overdue_filter == 'no':
-        balances = balances.filter(days_overdue=0)
+        # Get loans without overdue unpaid schedules
+        overdue_loan_ids = Loan.objects.filter(
+            repayment_schedules__due_date__lt=today,
+            repayment_schedules__amount_paid__lt=models.F('repayment_schedules__amount_due'),
+            repayment_schedules__status__in=['missed', 'defaulted']
+        ).values_list('id', flat=True).distinct()
+        loans_queryset = loans_queryset.exclude(id__in=overdue_loan_ids)
 
     # Pagination
-    paginator = Paginator(balances, 25)
+    paginator = Paginator(loans_queryset, 25)
     page_number = request.GET.get('page')
-    balances = paginator.get_page(page_number)
+    page_obj = paginator.get_page(page_number)
+
+    # Wrap loans with a simple object that has the fields the template expects
+    class LoanWrapper:
+        def __init__(self, loan):
+            self.loan = loan
+            self.principal_outstanding = loan.outstanding_balance
+            self.interest_outstanding = Decimal('0.00')
+            self.penalty_outstanding = Decimal('0.00')
+            self.total_outstanding = loan.outstanding_balance
+            
+            # Calculate days overdue
+            overdue_schedule = loan.repayment_schedules.filter(
+                due_date__lt=today,
+                amount_paid__lt=models.F('amount_due'),
+                status__in=['missed', 'defaulted']
+            ).order_by('-due_date').first()
+            
+            if overdue_schedule:
+                self.days_overdue = (today - overdue_schedule.due_date).days
+            else:
+                self.days_overdue = 0
+
+    wrapped_loans = [LoanWrapper(loan) for loan in page_obj]
+    # Re-paginate with wrapped objects
+    page_obj.object_list = wrapped_loans
 
     # Calculate totals
-    total_stats = OutstandingBalance.objects.filter(is_current=True).aggregate(
-        total_principal=Sum('principal_outstanding'),
-        total_interest=Sum('interest_outstanding'),
-        total_penalty=Sum('penalty_outstanding'),
-        total_fees=Sum('fees_outstanding'),
-        total_outstanding=Sum('total_outstanding'),
+    total_stats = Loan.objects.filter(
+        outstanding_balance__gt=Decimal('0.00'),
+        status__in=['active', 'disbursed', 'defaulted']
+    ).aggregate(
+        total_outstanding=Sum('outstanding_balance'),
+        total_principal=Sum(models.F('amount_approved') - models.F('total_paid')),
         count=Count('id')
     )
 
     context = {
-        'balances': balances,
+        'balances': wrapped_loans,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
         'total_stats': total_stats,
         'search_query': search_query,
         'balance_filter': balance_filter,
         'overdue_filter': overdue_filter,
-        'title': 'Outstanding Balances',
-        'page_title': 'Outstanding Balances',
+        'title': 'Outstanding Loans',
+        'page_title': 'Outstanding Loans',
     }
 
     return render(request, 'repayments/outstanding_balances.html', context)
@@ -385,32 +459,57 @@ def outstanding_balances(request):
 
 @login_required
 def collection_report(request):
-    """Generate collection reports."""
+    """Generate collection reports from Payment records."""
     report_type = request.GET.get('report_type', 'daily')
+    today = timezone.localdate()
 
     if report_type == 'daily':
-        # Daily collection report
+        # Daily collection report - calculate from Payment records
         date_from = request.GET.get('date_from', '')
         date_to = request.GET.get('date_to', '')
 
         if not date_from:
-            date_from = timezone.now().date() - timedelta(days=30)
+            date_from = today - timedelta(days=30)
+        else:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+        
         if not date_to:
-            date_to = timezone.now().date()
+            date_to = today
+        else:
+            date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
 
-        collections = DailyCollection.objects.filter(
-            collection_date__range=[date_from, date_to]
-        ).order_by('-collection_date')
+        # Get all completed payments in date range
+        payments = Payment.objects.filter(
+            payment_date__range=[date_from, date_to],
+            status=PaymentStatus.COMPLETED,
+            is_reversed=False
+        ).select_related('collected_by')
+
+        # Group by payment_date and collector
+        from django.db.models import Prefetch
+        daily_data = []
+        current_date = date_from
+        while current_date <= date_to:
+            day_payments = payments.filter(payment_date=current_date)
+            daily_data.append({
+                'collection_date': current_date,
+                'total_amount': day_payments.aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+                'payment_count': day_payments.count(),
+                'borrower_count': day_payments.values('borrower').distinct().count(),
+                'avg_payment': day_payments.aggregate(avg=Avg('amount'))['avg'] or Decimal('0.00'),
+            })
+            current_date += timedelta(days=1)
 
         # Calculate totals
-        total_collections = collections.aggregate(
-            total_collected_amount=Sum('total_amount'),
-            total_payments=Sum('payment_count'),
-            average_collection_amount=Avg('total_amount')
+        total_collections = payments.aggregate(
+            total_collected_amount=Sum('amount'),
+            total_payments=Count('id'),
+            average_collection_amount=Avg('amount'),
+            unique_borrowers=Count('borrower', distinct=True)
         )
 
         report_data = {
-            'collections': collections,
+            'collections': daily_data,
             'total_collections': total_collections,
             'date_from': date_from,
             'date_to': date_to,
@@ -418,18 +517,30 @@ def collection_report(request):
 
     elif report_type == 'collector':
         # Collector-wise collection report
-        date_from = request.GET.get('date_from', timezone.now().date().replace(day=1))
-        date_to = request.GET.get('date_to', timezone.now().date())
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+
+        if not date_from:
+            date_from = today.replace(day=1)
+        else:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+        
+        if not date_to:
+            date_to = today
+        else:
+            date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
 
         from apps.accounts.models import CustomUser
         collectors = CustomUser.objects.filter(
             is_active=True,
-            collected_payments__payment_date__range=[date_from, date_to]
+            collected_payments__payment_date__range=[date_from, date_to],
+            collected_payments__status=PaymentStatus.COMPLETED,
+            collected_payments__is_reversed=False
         ).annotate(
             total_collected=Sum('collected_payments__amount'),
             payment_count=Count('collected_payments'),
             avg_payment=Avg('collected_payments__amount')
-        ).order_by('-total_collected')
+        ).order_by('-total_collected').distinct()
 
         report_data = {
             'collectors': collectors,
@@ -439,12 +550,23 @@ def collection_report(request):
 
     else:
         # Payment method report
-        date_from = request.GET.get('date_from', timezone.now().date().replace(day=1))
-        date_to = request.GET.get('date_to', timezone.now().date())
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+
+        if not date_from:
+            date_from = today.replace(day=1)
+        else:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
+        
+        if not date_to:
+            date_to = today
+        else:
+            date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
 
         method_stats = Payment.objects.filter(
             payment_date__range=[date_from, date_to],
-            status=PaymentStatus.COMPLETED
+            status=PaymentStatus.COMPLETED,
+            is_reversed=False
         ).values('payment_method').annotate(
             total_amount=Sum('amount'),
             payment_count=Count('id'),
@@ -849,20 +971,6 @@ def loan_repayments(request, loan_id):
     }
 
     return render(request, 'repayments/loan_repayments.html', context)
-
-
-@login_required
-def payment_detail(request, payment_id):
-    """View payment details."""
-    payment = get_object_or_404(Payment, pk=payment_id)
-
-    context = {
-        'payment': payment,
-        'allocations': payment.allocations.all(),
-        'title': f'Payment Details - {payment.payment_reference}'
-    }
-
-    return render(request, 'repayments/payment_detail.html', context)
 
 
 @login_required

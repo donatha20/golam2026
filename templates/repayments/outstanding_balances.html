@@ -1,9 +1,9 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
-{% block title %}Outstanding Balances - Golam Financial Services{% endblock %}
+{% block title %}Outstanding Loans - Golam Financial Services{% endblock %}
 
-{% block page_title %}Outstanding Balances{% endblock %}
+{% block page_title %}Outstanding Loans{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -239,7 +239,7 @@
     <div class="table-container">
         <div class="table-controls">
             <div class="table-info">
-                Showing {{ balances|length|default:0 }} outstanding balances
+                Showing {{ balances|length|default:0 }} outstanding loans
             </div>
             <div class="table-actions">
                 <form method="GET" class="d-flex gap-2">
@@ -313,7 +313,7 @@
                 <tr>
                     <td colspan="9" class="text-center text-muted py-4">
                         <i class="fas fa-check-circle fa-2x mb-2" style="color: #16a34a;"></i><br>
-                        No outstanding balances found
+                        No outstanding loans found
                     </td>
                 </tr>
                 {% endfor %}
@@ -363,7 +363,7 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'outstanding_balances.csv';
+        a.download = 'outstanding_loans.csv';
         a.click();
         window.URL.revokeObjectURL(url);
     }

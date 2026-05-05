@@ -7,13 +7,15 @@
 
 {% block extra_css %}
 <style>
+    /* Compact layout adjustments */
     .payment-card {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1rem;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        padding: 0.5rem;
+        margin-bottom: 0.6rem;
+        transition: none;
+        font-size: 0.88rem;
     }
     
     .payment-card:hover {
@@ -22,12 +24,12 @@
     }
     
     .payment-status {
-        padding: 0.375rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
-        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.04em;
     }
     
     .status-completed {
@@ -49,114 +51,107 @@
     }
     
     .payment-amount {
-        font-size: 1.5rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: #1e7570;
     }
     
     .payment-meta {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: #6b7280;
     }
     
     .filters-card {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 1rem;
-        margin-bottom: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        padding: 0.6rem;
+        margin-bottom: 1rem;
     }
     
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.6rem;
+        margin-bottom: 1rem;
     }
     
     .stat-card {
         background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
         color: white;
-        padding: 1rem;
-        border-radius: 12px;
+        padding: 0.6rem;
+        border-radius: 8px;
         text-align: center;
+        font-size: 0.85rem;
     }
     
     .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
     }
     
     .stat-label {
-        font-size: 0.875rem;
-        opacity: 0.9;
+        font-size: 0.72rem;
+        opacity: 0.95;
     }
     
     .btn-primary {
         background: linear-gradient(135deg, #1e7570 0%, #2b7a76 100%);
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        padding: 0.45rem 0.9rem;
+        border-radius: 6px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        font-size: 0.82rem;
     }
     
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(30, 117, 112, 0.3);
-    }
+    .btn-primary:hover { box-shadow: none; }
     
     .btn-outline-primary {
-        border: 2px solid #1e7570;
+        border: 1px solid #1e7570;
         color: #1e7570;
         background: transparent;
-        padding: 0.5rem 1rem;
+        padding: 0.35rem 0.7rem;
         border-radius: 6px;
         font-weight: 500;
-        transition: all 0.3s ease;
+        font-size: 0.82rem;
     }
     
-    .btn-outline-primary:hover {
-        background: #1e7570;
-        color: white;
-    }
+    .btn-outline-primary:hover { background: #1e7570; color: white; }
     
     .table th {
         background: white !important;
         color: #2b7a76 !important;
-        border-bottom: 2px solid #2b7a76 !important;
-        font-weight: 600;
+        border-bottom: 1px solid #e6eef0 !important;
+        font-weight: 700;
+        font-size: 0.78rem;
+        padding: 0.45rem 0.6rem;
     }
+    .table td { padding: 0.45rem 0.6rem; vertical-align: middle; font-size: 0.82rem; }
     
     .allocation-breakdown {
         background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-top: 1rem;
+        border-radius: 6px;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        font-size: 0.82rem;
     }
     
     .allocation-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e9ecef;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid #eef3f4;
     }
     
     .allocation-item:last-child {
         border-bottom: none;
     }
     
-    .allocation-label {
-        font-weight: 500;
-        color: #374151;
-    }
+    .allocation-label { font-weight: 500; color: #374151; font-size: 0.78rem; }
     
-    .allocation-amount {
-        font-weight: 600;
-        color: #1e7570;
-    }
+    .allocation-amount { font-weight: 600; color: #1e7570; font-size: 0.82rem; }
 </style>
 {% endblock %}
 
@@ -246,69 +241,83 @@
     </div>
 
     <!-- Payments List -->
-    <div class="row">
-        {% for payment in payments %}
-        <div class="col-lg-6 col-xl-4">
-            <div class="payment-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h6 class="mb-1">{{ payment.loan.borrower.get_full_name }}</h6>
-                        <div class="payment-meta">
-                            <i class="fas fa-calendar me-1"></i>
-                            {{ payment.payment_date|date:"M d, Y" }}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle bg-white shadow-sm rounded overflow-hidden">
+            <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Borrower</th>
+                    <th scope="col">Loan</th>
+                    <th scope="col">Amount</th>
+                    <th scope="col">Method</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Receipt</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                    <td>
+                        <div class="fw-semibold">{{ payment.loan.borrower.get_full_name }}</div>
+                        <div class="text-muted small">{{ payment.borrower.borrower_id }}</div>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">{{ payment.loan.loan_number }}</div>
+                        <div class="text-muted small">Loan ID: {{ payment.loan.loan_id }}</div>
+                    </td>
+                    <td class="fw-semibold text-nowrap">TZS {{ payment.amount|floatformat:2 }}</td>
+                    <td>{{ payment.get_payment_method_display }}</td>
+                    <td>
+                        <span class="payment-status status-{{ payment.status }}">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ payment.receipt_number|default:"N/A" }}</td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{% url 'repayments:payment_detail' payment.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            {% if payment.status == 'completed' and perms.repayments.can_reverse_payment %}
+                            <a href="{% url 'repayments:reverse_payment' payment.id %}" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-undo me-1"></i>Reverse
+                            </a>
+                            {% endif %}
                         </div>
-                    </div>
-                    <span class="payment-status status-{{ payment.status }}">
-                        {{ payment.get_status_display }}
-                    </span>
-                </div>
-                
-                <div class="payment-amount mb-3">
-                    Tsh. {{ payment.amount|floatformat:2 }}
-                </div>
-                
-                <div class="payment-meta mb-3">
-                    <div><strong>Loan ID:</strong> {{ payment.loan.loan_id }}</div>
-                    <div><strong>Method:</strong> {{ payment.get_payment_method_display }}</div>
-                    <div><strong>Receipt:</strong> {{ payment.receipt_number|default:"N/A" }}</div>
-                </div>
-                
+                    </td>
+                </tr>
+
                 {% if payment.allocation_set.exists %}
-                <div class="allocation-breakdown">
-                    <h6 class="mb-2">Payment Allocation</h6>
-                    {% for allocation in payment.allocation_set.all %}
-                    <div class="allocation-item">
-                        <span class="allocation-label">{{ allocation.get_allocation_type_display }}</span>
-                        <span class="allocation-amount">TZS {{ allocation.amount|floatformat:2 }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
+                <tr>
+                    <td colspan="8" class="pt-0">
+                        <div class="allocation-breakdown mt-0">
+                            <h6 class="mb-2">Payment Allocation</h6>
+                            {% for allocation in payment.allocation_set.all %}
+                            <div class="allocation-item">
+                                <span class="allocation-label">{{ allocation.get_allocation_type_display }}</span>
+                                <span class="allocation-amount">TZS {{ allocation.amount|floatformat:2 }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
                 {% endif %}
-                
-                <div class="d-flex gap-2 mt-3">
-                    <a href="{% url 'repayments:payment_detail' payment.id %}" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-eye me-1"></i>View Details
-                    </a>
-                    {% if payment.status == 'completed' and perms.repayments.can_reverse_payment %}
-                    <a href="{% url 'repayments:reverse_payment' payment.id %}" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-undo me-1"></i>Reverse
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12">
-            <div class="payment-card text-center">
-                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                <h5>No payments found</h5>
-                <p class="text-muted">No payments match your current filters.</p>
-                <a href="{% url 'repayments:record_repayment' %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-2"></i>Record First Payment
-                </a>
-            </div>
-        </div>
-        {% endfor %}
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <h5>No payments found</h5>
+                        <p class="text-muted mb-3">No payments match your current filters.</p>
+                        <a href="{% url 'repayments:record_repayment' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Record First Payment
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     <!-- Pagination -->

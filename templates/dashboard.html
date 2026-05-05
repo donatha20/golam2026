@@ -297,7 +297,7 @@
                     <i class="fas fa-calendar-check me-2 text-primary-teal"></i>
                     Today's Expected Collections
                 </h5>
-                <a href="{% url 'repayments:record_repayment' %}" class="btn btn-sm btn-primary">Record Payment</a>
+                <a href="{% url 'repayments:record_repayment' %}" class="btn btn-sm btn-primary">Manual Payment</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -349,7 +349,14 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a class="btn btn-sm btn-success" href="{% url 'repayments:record_repayment' %}?loan={{ schedule.loan.id }}">Record payment</a>
+                                    {% if schedule.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                        <form method="post" action="{% url 'loans:collect_expected_repayment' schedule.id %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-success" type="submit">Record payment</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}

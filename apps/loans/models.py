@@ -882,6 +882,23 @@ class RepaymentSchedule(models.Model):
         return 0
 
     @property
+    def is_overdue(self):
+        """Check if schedule is overdue and unpaid (in arrears).
+        
+        An expected payment is in arrears if:
+        1. Due date has passed (due_date < today)
+        2. Not fully paid (status NOT in [PAID])
+        3. Has remaining balance (amount_due > amount_paid)
+        """
+        today = timezone.now().date()
+        remaining = self.amount_due - (self.amount_paid or Decimal('0.00'))
+        return (
+            self.due_date < today and
+            self.status != RepaymentStatusChoices.PAID and
+            remaining > 0
+        )
+
+    @property
     def remaining_amount(self):
         """Calculate remaining amount to be paid."""
         return self.amount_due - self.amount_paid

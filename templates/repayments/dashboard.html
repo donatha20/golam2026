@@ -366,6 +366,27 @@
 {% endblock %}
 
 {% block content %}
+<div class="container-fluid mb-3" style="display:block !important;">
+    <div class="row g-2">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <h6 class="mb-0">Repayment Dashboard</h6>
+                            <small class="text-muted">Collections, overdue accounts, and recent payment activity</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'repayments:record_repayment' %}" class="btn btn-primary btn-sm">Record Payment</a>
+                            <a href="{% url 'repayments:payment_list' %}" class="btn btn-outline-primary btn-sm">Payment History</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="rep-dashboard">
     <div class="rep-topline">
         <div>
@@ -397,8 +418,8 @@
             <a href="{% url 'repayments:outstanding_balances' %}" class="action-card">
                 <div class="action-icon"><i class="fas fa-balance-scale"></i></div>
                 <div>
-                    <div class="action-title">Outstanding Balances</div>
-                    <div class="action-description">View loan balances</div>
+                    <div class="action-title">Outstanding Loans</div>
+                    <div class="action-description">View loans with outstanding balance</div>
                 </div>
             </a>
 
@@ -426,8 +447,8 @@
                 <div class="stat-title">Today's Collections</div>
                 <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
             </div>
-            <div class="stat-value">TZS {{ payment_stats.today_collections|floatformat:0 }}</div>
-            <div class="stat-description">{{ payment_stats.today_payments_count }} payments received</div>
+            <div class="stat-value">TZS {{ payment_stats.today_collections|default:0|floatformat:0 }}</div>
+            <div class="stat-description">{{ payment_stats.today_payments_count|default:0 }} payments received</div>
         </div>
 
         <div class="stat-card overdue">
@@ -435,8 +456,8 @@
                 <div class="stat-title">Overdue Payments</div>
                 <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
             </div>
-            <div class="stat-value">{{ overdue_stats.overdue_installments }}</div>
-            <div class="stat-description">TZS {{ overdue_stats.overdue_amount|floatformat:0 }} overdue<br>{{ overdue_stats.overdue_borrowers }} borrowers affected</div>
+            <div class="stat-value">{{ overdue_stats.overdue_installments|default:0 }}</div>
+            <div class="stat-description">TZS {{ overdue_stats.overdue_amount|default:0|floatformat:0 }} overdue<br>{{ overdue_stats.overdue_borrowers|default:0 }} borrowers affected</div>
         </div>
 
         <div class="stat-card outstanding">
@@ -444,7 +465,7 @@
                 <div class="stat-title">Total Outstanding</div>
                 <div class="stat-icon"><i class="fas fa-balance-scale"></i></div>
             </div>
-            <div class="stat-value">TZS {{ payment_stats.total_outstanding|floatformat:0 }}</div>
+            <div class="stat-value">TZS {{ payment_stats.total_outstanding|default:0|floatformat:0 }}</div>
             <div class="stat-description">Across all active loans</div>
         </div>
 
@@ -453,7 +474,7 @@
                 <div class="stat-title">Pending Payments</div>
                 <div class="stat-icon"><i class="fas fa-clock"></i></div>
             </div>
-            <div class="stat-value">{{ payment_stats.pending_payments }}</div>
+            <div class="stat-value">{{ payment_stats.pending_payments|default:0 }}</div>
             <div class="stat-description">Payments awaiting processing</div>
         </div>
     </div>
@@ -502,7 +523,7 @@
                                 </div>
                                 <div class="recent-details">{{ installment.loan.loan_number }} | Installment {{ installment.installment_number }} | {{ installment.days_overdue }} days overdue</div>
                             </div>
-                            <div class="overdue-amount">TZS {{ installment.outstanding_amount|floatformat:2 }}</div>
+                            <div class="overdue-amount">TZS {{ installment.remaining_amount|floatformat:2 }}</div>
                         </div>
                     {% endfor %}
                 {% else %}

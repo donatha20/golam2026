@@ -117,6 +117,35 @@
         box-shadow: 0 2px 8px rgba(43, 122, 118, 0.3);
         color: white !important;
     }
+
+    .collect-btn {
+        background: #16a34a !important;
+        color: white !important;
+        padding: 10px 18px !important;
+        border: none !important;
+        border-radius: 4px;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        cursor: pointer;
+        display: inline-block;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        line-height: 1.5 !important;
+        vertical-align: middle !important;
+        text-align: center !important;
+    }
+
+    .collect-btn:hover {
+        background: #15803d !important;
+        box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+        color: white !important;
+    }
+
+    .collect-btn[disabled] {
+        background: #9ca3af !important;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
     
     .view-btn:visited {
         color: white !important;
@@ -200,56 +229,100 @@
 {% endblock %}
 
 {% block content %}
-<div style="max-width: 1100px; margin: 0 auto; padding: 20px;">
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #2b7a76; margin-bottom: 20px; font-size: 24px;">
-        <i class="fas fa-calendar-check"></i> Expected Repayments
+        <i class="fas fa-calendar-check"></i> Expected Repayments - Today
     </h2>
 
-    {% if loans %}
+    <!-- Search Form -->
+    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
+        <form method="get" style="display: flex; gap: 10px; align-items: center;">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search by borrower name, ID, or loan number..." 
+                value="{{ search_query }}"
+                style="flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+            />
+            <button 
+                type="submit" 
+                style="padding: 10px 25px; background: #2b7a76; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;"
+            >
+                <i class="fas fa-search"></i> Search
+            </button>
+            {% if search_query %}
+                <a 
+                    href="{% url 'loans:expected_repayments' %}" 
+                    style="padding: 10px 15px; background: #f0f0f0; color: #666; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;"
+                >
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if schedules %}
         <div class="table-container">
             <table class="repayments-table">
                 <thead>
                     <tr>
                         <th>Loan Number</th>
                         <th>Borrower</th>
-                        <th>Outstanding Balance</th>
-                        <th>Unpaid Count</th>
-                        <th>Next Due</th>
-                        <th>Total Unpaid</th>
+                        <th>Due Date</th>
+                        <th>Amount Due</th>
+                        <th>Amount Paid</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for loan in loans %}
+                    {% for schedule in schedules %}
                         <tr>
                             <td>
                                 <div class="loan-id-wrap">
-                                    <span class="loan-number">{{ loan.loan_number }}</span>
-                                    <span class="loan-category-meta">{{ loan.loan_category|default:"Uncategorized"|title }}</span>
+                                    <span class="loan-number">{{ schedule.loan.loan_number }}</span>
+                                    <span class="loan-category-meta">{{ schedule.loan.loan_category|default:"Uncategorized"|title }}</span>
                                 </div>
                             </td>
                             <td>
-                                <div class="loan-number">{{ loan.borrower.get_full_name }}</div>
-                                <div class="borrower-info">ID: {{ loan.borrower.borrower_id }}</div>
+                                <div class="loan-number">{{ schedule.loan.borrower.get_full_name }}</div>
+                                <div class="borrower-info">ID: {{ schedule.loan.borrower.borrower_id }}</div>
                             </td>
-                            <td class="amount">TZS {{ loan.outstanding_balance|floatformat:2 }}</td>
                             <td>
-                                <span class="unpaid-count {% if loan.missed_count > 0 %}has-missed{% else %}no-missed{% endif %}">
-                                    {{ loan.unpaid_count }}
+                                {{ schedule.due_date|date:"M d, Y" }}
+                            </td>
+                            <td class="amount">TZS {{ schedule.amount_due|floatformat:2 }}</td>
+                            <td class="amount">TZS {{ schedule.amount_paid|floatformat:2 }}</td>
+                            <td class="amount" style="{% if schedule.amount_due|add:"-"|add:schedule.amount_paid > 0 %}color: #d32f2f; font-weight: 700;{% endif %}">
+                                TZS {{ schedule.amount_due|add:schedule.amount_paid|add:"-"|floatformat:2 }}
+                            </td>
+                            <td>
+                                <span style="padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px;
+                                    {% if schedule.status == 'MISSED' %}
+                                        background: #ffebee; color: #d32f2f;
+                                    {% elif schedule.status == 'DUE' %}
+                                        background: #fff3e0; color: #e65100;
+                                    {% elif schedule.status == 'PARTIAL' %}
+                                        background: #f3e5f5; color: #7b1fa2;
+                                    {% else %}
+                                        background: #e8f5e9; color: #388e3c;
+                                    {% endif %}
+                                ">
+                                    {{ schedule.get_status_display }}
                                 </span>
                             </td>
                             <td>
-                                {% if loan.next_due %}
-                                    {{ loan.next_due|date:"M d, Y" }}
+                                {% if schedule.status == 'paid' %}
+                                    <button class="collect-btn" type="button" disabled>Paid</button>
                                 {% else %}
-                                    -
+                                    <form method="post" action="{% url 'loans:collect_expected_repayment' schedule.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button class="collect-btn" type="submit">
+                                            <i class="fas fa-check"></i> Collect
+                                        </button>
+                                    </form>
                                 {% endif %}
-                            </td>
-                            <td class="amount">TZS {{ loan.total_unpaid|floatformat:2 }}</td>
-                            <td>
-                                <a href="{% url 'loans:loan_schedule_detail' loan.id %}" class="view-btn">
-                                    View Schedule
-                                </a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -260,8 +333,8 @@
         {% if is_paginated %}
             <div class="pagination">
                 {% if page_obj.has_previous %}
-                    <a href="?page=1" class="page-link">First</a>
-                    <a href="?page={{ page_obj.previous_page_number }}" class="page-link">Previous</a>
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">Previous</a>
                 {% else %}
                     <span class="page-link disabled">First</span>
                     <span class="page-link disabled">Previous</span>
@@ -272,8 +345,8 @@
                 </span>
 
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="page-link">Next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}" class="page-link">Last</a>
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="page-link">Last</a>
                 {% else %}
                     <span class="page-link disabled">Next</span>
                     <span class="page-link disabled">Last</span>
@@ -285,9 +358,13 @@
             <div class="empty-state-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <div class="empty-state-title">No Expected Repayments</div>
+            <div class="empty-state-title">No Expected Repayments Today</div>
             <div class="empty-state-message">
-                All loans are fully paid or there are no active loans in the system.
+                {% if search_query %}
+                    No repayments found matching your search. <a href="{% url 'loans:expected_repayments' %}" style="color: #2b7a76; font-weight: 600;">Clear search</a>
+                {% else %}
+                    No repayment schedules are due today, or all scheduled repayments have been paid.
+                {% endif %}
             </div>
         </div>
     {% endif %}

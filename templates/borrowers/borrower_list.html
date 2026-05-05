@@ -73,6 +73,16 @@
     .borrower-table tbody tr:hover {
         background: rgba(43, 122, 118, 0.05);
     }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-actions .btn {
+        white-space: nowrap;
+    }
     
     /* Avatar Styling */
     .table-avatar {
@@ -368,6 +378,45 @@
         </div>
     </div>
     
+    <!-- Filters -->
+    <div class="table-container" style="margin-bottom: 1.5rem;">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="gender" class="form-label fw-semibold">Gender</label>
+                <select name="gender" id="gender" class="form-select">
+                    <option value="">All Genders</option>
+                    {% for value, label in gender_choices %}
+                        <option value="{{ value }}" {% if selected_gender == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="loan_filter" class="form-label fw-semibold">Loans</label>
+                <select name="loan_filter" id="loan_filter" class="form-select">
+                    {% for value, label in loan_filter_choices %}
+                        <option value="{{ value }}" {% if selected_loan_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="start_date" class="form-label fw-semibold">From Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="end_date" class="form-label fw-semibold">To Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-2 filter-actions">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'borrowers:borrower_list' %}" class="btn btn-outline-secondary btn-sm">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
     <!-- Data Table -->
     <div class="table-container">
         <div class="table-controls">

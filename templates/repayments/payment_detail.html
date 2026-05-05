@@ -421,7 +421,7 @@
             </div>
             <div class="detail-item">
                 <div class="detail-label">Loan</div>
-                <a href="{% url 'loans:view_loan' payment.loan.id %}" class="detail-value link">
+                <a href="{% url 'loans:loan_detail' payment.loan.id %}" class="detail-value link">
                     {{ payment.loan.loan_number }}
                 </a>
             </div>
@@ -469,14 +469,14 @@
             <div class="allocation-breakdown">
                 <div class="allocation-box">
                     <div class="allocation-label">Principal Paid</div>
-                    <div class="allocation-amount">₹{{ payment.principal_paid|floatformat:2 }}</div>
+                    <div class="allocation-amount">TZS {{ payment.principal_paid|floatformat:2 }}</div>
                     <div class="allocation-percentage">
                         {{ payment.principal_paid|percentage:payment.amount|floatformat:1 }}%
                     </div>
                 </div>
                 <div class="allocation-box">
                     <div class="allocation-label">Interest Paid</div>
-                    <div class="allocation-amount">₹{{ payment.interest_paid|floatformat:2 }}</div>
+                    <div class="allocation-amount">TZS {{ payment.interest_paid|floatformat:2 }}</div>
                     <div class="allocation-percentage">
                         {{ payment.interest_paid|percentage:payment.amount|floatformat:1 }}%
                     </div>
@@ -531,17 +531,17 @@
                 {% for allocation in allocations %}
                 <tr>
                     <td>
-                        <a href="{% url 'loans:view_loan' allocation.installment.loan.id %}" style="color: #2b7a76; text-decoration: none;">
+                        <a href="{% url 'loans:loan_detail' allocation.installment.loan.id %}" style="color: #2b7a76; text-decoration: none;">
                             Installment #{{ allocation.installment.installment_number }}
                         </a>
                         <br>
                         <small style="color: #9ca3af;">Due: {{ allocation.installment.due_date|date:"d M Y" }}</small>
                     </td>
-                    <td class="table-amount">₹{{ allocation.principal_allocated|floatformat:2 }}</td>
-                    <td class="table-amount">₹{{ allocation.interest_allocated|floatformat:2 }}</td>
-                    <td class="table-amount">₹{{ allocation.penalty_allocated|floatformat:2 }}</td>
-                    <td class="table-amount">₹{{ allocation.fees_allocated|floatformat:2 }}</td>
-                    <td class="table-amount">₹{{ allocation.total_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">TZS{{ allocation.principal_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">TZS{{ allocation.interest_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">TZS{{ allocation.penalty_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">TZS{{ allocation.fees_allocated|floatformat:2 }}</td>
+                    <td class="table-amount">TZS{{ allocation.total_allocated|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

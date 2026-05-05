@@ -99,6 +99,11 @@ class SessionSecurityMiddleware(MiddlewareMixin):
     
     def process_request(self, request):
         if request.user.is_authenticated:
+            # Check session timeout before refreshing the activity timestamp.
+            if self.is_session_expired(request):
+                logout(request)
+                return redirect(reverse('login'))
+
             # Check for session hijacking
             if self.detect_session_hijacking(request):
                 logger.warning(f'Potential session hijacking detected for user {request.user.username}')
@@ -107,11 +112,6 @@ class SessionSecurityMiddleware(MiddlewareMixin):
             
             # Update last activity
             request.session['last_activity'] = time.time()
-            
-            # Check session timeout
-            if self.is_session_expired(request):
-                logout(request)
-                return redirect(reverse('login'))
         
         return None
     

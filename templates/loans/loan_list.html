@@ -74,6 +74,28 @@
         font-weight: 500;
         margin-top: 2px;
     }
+
+    .filter-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-actions .btn {
+        white-space: nowrap;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.82rem;
+        line-height: 1.2;
+    }
     
     /* Status Badge Styling */
     .status-badge {
@@ -262,6 +284,48 @@
     </div>
 -->
     <!-- Data Table -->
+    <div class="filter-card">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label for="borrower" class="form-label fw-semibold">Borrower</label>
+                <input type="text" name="borrower" id="borrower" class="form-control" placeholder="Name, ID, or phone" value="{{ borrower_query }}">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="status" class="form-label fw-semibold">Status</label>
+                <select name="status" id="status" class="form-select">
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="category" class="form-label fw-semibold">Category</label>
+                <select name="category" id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for value in category_choices %}
+                        <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>{{ value|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="start_date" class="form-label fw-semibold">From Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="end_date" class="form-label fw-semibold">To Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-lg-1 col-md-12 filter-actions">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{% url 'loans:loan_list' %}" class="btn btn-outline-secondary btn-sm">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="table-container">
         <div class="table-controls">
             <div class="table-info">

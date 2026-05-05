@@ -210,127 +210,189 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stats Cards 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-title">Total Repayments Today</div>
-        <div class="stat-value">₹{{ total_repayments_today|floatformat:0|default:"0" }}</div>
-        <div class="stat-change">{{ repayments_count_today|default:"0" }} payments</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Total This Month</div>
-        <div class="stat-value">₹{{ total_repayments_month|floatformat:0|default:"0" }}</div>
-        <div class="stat-change">{{ repayments_count_month|default:"0" }} payments</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Average Payment</div>
-        <div class="stat-value">₹{{ average_payment|floatformat:0|default:"0" }}</div>
-        <div class="stat-change">Per Transaction</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Collection Rate</div>
-        <div class="stat-value">{{ collection_rate|floatformat:1|default:"0" }}%</div>
-        <div class="stat-change">This Month</div>
-    </div>
-</div>
--->
-
-<!-- Filters Section 
-<div class="filters-section">
-    <h3 class="filters-title">Filter Repayments</h3>
-    <form method="get" class="filters-form">
-        <div class="filters-grid">
-            <div class="filter-group">
-                <label for="borrower" class="filter-label">Borrower</label>
-                {{ filter.form.borrower }}
+<!-- Loan Header -->
+<div class="card shadow-sm mb-4" style="border-left: 4px solid #2b7a76;">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div>
+                    <small class="text-muted d-block">Loan Number</small>
+                    <h5 class="mb-2">{{ loan.loan_number }}</h5>
+                </div>
+                <div>
+                    <small class="text-muted d-block">Borrower</small>
+                    <span>
+                        <a href="{% url 'borrowers:borrower_detail' loan.borrower.id %}">
+                            {{ loan.borrower.get_full_name }}
+                        </a>
+                    </span>
+                </div>
             </div>
-            <div class="filter-group">
-                <label for="loan" class="filter-label">Loan Number</label>
-                {{ filter.form.loan }}
-            </div>
-            <div class="filter-group">
-                <label for="payment_date_after" class="filter-label">From Date</label>
-                {{ filter.form.payment_date_after }}
-            </div>
-            <div class="filter-group">
-                <label for="payment_date_before" class="filter-label">To Date</label>
-                {{ filter.form.payment_date_before }}
-            </div>
-            <div class="filter-group">
-                <label for="amount_paid_min" class="filter-label">Min Amount</label>
-                {{ filter.form.amount_paid_min }}
-            </div>
-            <div class="filter-group">
-                <label for="amount_paid_max" class="filter-label">Max Amount</label>
-                {{ filter.form.amount_paid_max }}
-            </div>
-            <div class="filter-group">
-                <button type="submit" class="btn-filter">Apply Filters</button>
-            </div>
-            <div class="filter-group">
-                <a href="{% url 'loans:loan_repayments' loan.id %}" class="btn-clear">Clear All</a>
+            <div class="col-md-6">
+                <div class="row g-3 text-sm">
+                    <div class="col-6">
+                        <div>
+                            <small class="text-muted d-block">Loan Status</small>
+                            <span class="badge bg-{% if loan.status == 'active' or loan.status == 'disbursed' %}success{% elif loan.status == 'pending' %}warning{% elif loan.status == 'completed' %}info{% else %}secondary{% endif %}">
+                                {{ loan.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div>
+                            <small class="text-muted d-block">Application Date</small>
+                            <span>{{ loan.application_date|date:"d M Y" }}</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </form>
+    </div>
 </div>
--->
-<!-- Action Buttons 
-<div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-    <a href="{% url 'loans:expected_repayments' %}" class="btn btn-primary btn-sm">
-        <i class="fas fa-calendar-alt"></i> Expected Repayments
-    </a>
-    <a href="{% url 'loans:expected_repayments' %}" class="btn btn-secondary btn-sm">
-        <i class="fas fa-users"></i> View Schedules
-    </a>
-    <a href="{% url 'loans:expected_repayments' %}" class="btn btn-outline-primary">
-        <i class="fas fa-calendar-alt"></i> Expected Repayments
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border-top: 3px solid #2b7a76;">
+            <div class="card-body text-center p-3">
+                <small class="text-muted d-block">Total Loan Amount</small>
+                <h6 class="mb-0 mt-2">Tsh {{ total_amount|floatformat:0 }}</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border-top: 3px solid #16a34a;">
+            <div class="card-body text-center p-3">
+                <small class="text-muted d-block">Total Repaid</small>
+                <h6 class="mb-0 mt-2" style="color: #16a34a;">Tsh {{ total_repaid|floatformat:0 }}</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border-top: 3px solid #dc2626;">
+            <div class="card-body text-center p-3">
+                <small class="text-muted d-block">Outstanding Balance</small>
+                <h6 class="mb-0 mt-2" style="color: #dc2626;">Tsh {{ outstanding_balance|floatformat:0 }}</h6>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border-top: 3px solid #6366f1;">
+            <div class="card-body text-center p-3">
+                <small class="text-muted d-block">Total Repayments</small>
+                <h6 class="mb-0 mt-2" style="color: #6366f1;">{{ repayment_count }}</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Back Button -->
+<div class="mb-3">
+    <a href="{% url 'borrowers:borrower_detail' loan.borrower.id %}" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Borrower
     </a>
 </div>
--->
+
+<!-- Filters Section removed for single-loan view -->
+
 <!-- Repayments Table -->
+<h6 class="mb-3 mt-4"><i class="fas fa-history me-2"></i>Repayment History</h6>
 <div class="table-container">
-    {% if table.data %}
-        {% render_table table %}
+    {% if repayments %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 15%;">Payment Date</th>
+                        <th style="width: 12%;">Amount</th>
+                        <th style="width: 12%;">Method</th>
+                        <th style="width: 18%;">Collected By</th>
+                        <th style="width: 12%;">Status</th>
+                        <th style="width: 20%;">Reference / Notes</th>
+                        <th style="width: 11%;">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rep in repayments %}
+                    <tr>
+                        <td>
+                            {% if rep|add:'' == rep|add:'' %}
+                                {{ rep.payment_date|date:"d M Y" }}
+                            {% else %}
+                                {{ rep.payment_date|date:"d M Y" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span style="color: #16a34a; font-weight: 600;">
+                                Tsh {{ rep.amount_paid|default:rep.amount|floatformat:0 }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if rep.payment_method %}
+                                    {{ rep.payment_method|title }}
+                                {% elif rep.schedule %}
+                                    Direct
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <small>
+                                {% if rep.received_by %}
+                                    {{ rep.received_by.get_full_name }}
+                                {% elif rep.collected_by %}
+                                    {{ rep.collected_by.get_full_name }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if rep.status|lower == 'paid' or rep.status == 'completed' %}success{% elif rep.status|lower == 'partial' %}warning{% else %}secondary{% endif %} bg-opacity-75">
+                                {{ rep.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if rep.schedule %}
+                                    Schedule #{{ rep.schedule.installment_number }}
+                                {% elif rep.notes %}
+                                    {{ rep.notes|truncatewords:3 }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if rep.schedule %}
+                                    Direct
+                                {% elif rep.payment_type %}
+                                    {{ rep.payment_type|title }}
+                                {% else %}
+                                    Payment
+                                {% endif %}
+                            </small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
         <div style="text-align: center; padding: 3rem; color: #6b7280;">
-            <i class="fas fa-credit-card" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-            <h3>No Repayments Found</h3>
-            <p>No loan repayments match your criteria. Try adjusting your filters or record a new payment.</p>
-            <a href="{% url 'loans:expected_repayments' %}" class="btn btn-primary btn-sm" style="margin-top: 1rem;">
-                <i class="fas fa-calendar-alt"></i> View Expected Repayments
+            <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <h5>No Repayments Found</h5>
+            <p class="mb-3">No repayment records have been created for this loan yet.</p>
+            <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Loan
             </a>
         </div>
     {% endif %}
 </div>
 
 <!-- Pagination -->
-{% if is_paginated %}
-<nav aria-label="Repayments pagination" style="margin-top: 2rem;">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">First</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Previous</a>
-            </li>
-        {% endif %}
-        
-        <li class="page-item active">
-            <span class="page-link">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
-        </li>
-        
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Next</a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.items %}&{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}{% endif %}">Last</a>
-            </li>
-        {% endif %}
-    </ul>
-</nav>
-{% endif %}
+<!-- Pagination removed for single-loan view -->
 {% endblock %} 
