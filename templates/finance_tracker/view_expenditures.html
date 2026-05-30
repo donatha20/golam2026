@@ -334,7 +334,7 @@
             </div>
         </div>
         
-        <table class="table expenditures-table" id="expenditures-table">
+        <table class="table table-striped table-hover table-sm expenditures-table" id="expenditures-table">
             <thead>
                 <tr>
                     <th>Expenditure</th>
@@ -361,9 +361,13 @@
                         </div>
                     </td>
                     <td>
-                        <span class="type-badge type-{{ expenditure.expenditure_type }}">
-                            {{ expenditure.get_expenditure_type_display }}
-                        </span>
+                        {% if expenditure.expenditure_type and expenditure.expenditure_type.code %}
+                            <span class="type-badge type-{{ expenditure.expenditure_type.code }}">
+                                {{ expenditure.get_expenditure_type_display }}
+                            </span>
+                        {% else %}
+                            <span class="type-badge">{{ expenditure.get_expenditure_type_display }}</span>
+                        {% endif %}
                     </td>
                     <td>
                         <span class="expenditure-amount">TSh {{ expenditure.amount|floatformat:0 }}</span>

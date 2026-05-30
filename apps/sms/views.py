@@ -22,7 +22,7 @@ from .forms import SendSMSForm, BulkSMSForm
 
 
 def _require_elevated_sms_access(request, json_response=False):
-    if request.user.role in {UserRole.ADMIN, UserRole.MANAGER}:
+    if getattr(request.user, 'is_admin_or_manager', False) or request.user.is_superuser:
         return None
 
     message = 'Only admin and manager users can access SMS management.'

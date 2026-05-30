@@ -934,7 +934,7 @@
                 </a>
             </div>
             
-            {% if user.role == 'admin' %}
+            {% if user.is_admin_or_manager %}
             <div class="nav-section" data-section="users" data-url-prefix="/users/">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('users-submenu', event);" data-tooltip="Users">
                     <span><i class="fas fa-users-cog"></i> Users</span>
@@ -990,7 +990,7 @@
                 </div>
             </div>
             
-            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
+            {% if user.is_admin_or_manager or user.is_superuser %}
             <div class="nav-section" data-section="capital" data-url-prefix="/finance/">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('capital-submenu', event);">
                     <span><i class="fas fa-university"></i> Capital</span>
@@ -1035,9 +1035,13 @@
                     <a href="{% url 'loans:add_group_loan' %}" class="nav-link">
                         <span><i class="fas fa-users"></i> Add Group Loan</span>
                     </a>
+                    <a href="{% url 'loans:referred_loans' %}" class="nav-link">
+                        <span><i class="fas fa-reply"></i> Referred Loans</span>
+                    </a>
                     <a href="{% url 'loans:pending_loans' %}" class="nav-link">
                         <span><i class="fas fa-clipboard-check"></i> Loan Application Approval</span>
                     </a>
+                    {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                     <a href="{% url 'loans:approved_loans' %}" class="nav-link">
                         <span><i class="fas fa-check-circle"></i> Approved Loans</span>
                     </a>
@@ -1047,6 +1051,7 @@
                     <a href="{% url 'loans:disbursed_loans' %}" class="nav-link">
                         <span><i class="fas fa-list"></i> Disbursed Loans</span>
                     </a>
+                    {% endif %}
                     <a href="{% url 'loans:outstanding_loans' %}" class="nav-link">
                         <span><i class="fas fa-clock"></i> Outstanding Loans</span>
                     </a>
@@ -1240,7 +1245,7 @@
                 </div>
             </div>
 
-            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
+            {% if user.is_admin_or_manager or user.is_superuser %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('payroll-submenu', event);">
                     <span><i class="fas fa-calculator"></i> Employee Payroll</span>
@@ -1330,14 +1335,14 @@
             </div>
             {% endif %}
 
-            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser or user.role == 'loan_officer' %}
+            {% if user.is_admin_or_manager or user.is_officer_or_accountant or user.is_superuser %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('income-expenditure-submenu', event);">
                     <span><i class="fas fa-chart-pie"></i> Income & Expenditure</span>
                     <i class="fas fa-chevron-down nav-toggle" id="income-expenditure-toggle"></i>
                 </a>
                 <div class="nav-submenu" id="income-expenditure-submenu">
-                    {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
+                    {% if user.is_admin_or_manager or user.is_superuser %}
                     <a href="#" class="nav-link" onclick="return toggleSubmenu('income-sub-submenu', event);">
                         <span><i class="fas fa-plus-circle"></i> Income</span>
                         <i class="fas fa-chevron-down nav-toggle" id="income-sub-toggle"></i>
@@ -1380,7 +1385,7 @@
             </div>
             {% endif %}
 
-            {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
+            {% if user.is_admin_or_manager or user.is_superuser %}
             <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('reports-submenu', event);">
                     <span><i class="fas fa-chart-bar"></i> Reports</span>
@@ -1412,7 +1417,7 @@
             </div>
             {% endif %}
 
-                        {% if user.role == 'admin' or user.role == 'manager' or user.is_superuser %}
+                        {% if user.is_admin_or_manager or user.is_superuser %}
               <div class="nav-section">
                 <a href="#" class="nav-link" onclick="return toggleSubmenu('settings-submenu', event);" data-tooltip="Settings">
                     <span><i class="fas fa-cog"></i> Settings</span>

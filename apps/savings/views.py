@@ -26,8 +26,7 @@ from apps.borrowers.models import Borrower
 def _require_admin_access(request):
     """Restrict sensitive actions to admin/manager-level users."""
     if any([
-        getattr(request.user, 'role', None) in {UserRole.ADMIN, UserRole.MANAGER},
-        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_admin_or_manager', False),
         getattr(request.user, 'is_staff', False),
         getattr(request.user, 'is_superuser', False),
     ]):

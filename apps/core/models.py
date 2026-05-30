@@ -56,6 +56,7 @@ class LoanStatusChoices(models.TextChoices):
     PENDING = 'pending', 'Pending'
     APPROVED = 'approved', 'Approved'
     REJECTED = 'rejected', 'Rejected'
+    REFERRED = 'referred', 'Referred'
     DISBURSED = 'disbursed', 'Disbursed'
     ACTIVE = 'active', 'Active'
     COMPLETED = 'completed', 'Completed'

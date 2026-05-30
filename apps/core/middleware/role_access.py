@@ -46,13 +46,10 @@ class RoleAccessMiddleware(MiddlewareMixin):
 
         role = getattr(request.user, 'role', None)
 
-        is_admin = any([
+        if any([
             getattr(request.user, 'is_superuser', False),
-            getattr(request.user, 'is_admin', False),
-            role == UserRole.ADMIN,
-        ])
-
-        if is_admin:
+            getattr(request.user, 'is_admin_or_manager', False),
+        ]):
             return None
 
         if role == UserRole.MANAGER:
@@ -62,10 +59,7 @@ class RoleAccessMiddleware(MiddlewareMixin):
 
         path = request.path
 
-        if (
-            role == UserRole.LOAN_OFFICER
-            and path in self.LOAN_OFFICER_ALLOWED_PATHS
-        ):
+        if getattr(request.user, 'is_officer_or_accountant', False) and path in self.LOAN_OFFICER_ALLOWED_PATHS:
             return None
 
         if path in self.ADMIN_ONLY_EXACT or any(path.startswith(prefix) for prefix in self.ADMIN_ONLY_PREFIXES):

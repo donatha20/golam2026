@@ -62,6 +62,29 @@ class LoanRejectionReversalForm(forms.Form):
         return reason
 
 
+class LoanReferralForm(forms.Form):
+    """Form for referring a pending loan back to the originating loan officer."""
+
+    referral_reason = forms.CharField(
+        label='Referral Reason',
+        widget=forms.Textarea(attrs={
+            'class': 'form-textarea',
+            'rows': 5,
+            'placeholder': 'Explain what needs correction, clarification, or additional information...',
+            'required': True
+        }),
+        help_text='Be specific so the original loan officer can resolve the issue quickly.'
+    )
+
+    def clean_referral_reason(self):
+        reason = self.cleaned_data.get('referral_reason')
+        if not reason or not reason.strip():
+            raise ValidationError('Referral reason cannot be empty')
+        if len(reason) < 10:
+            raise ValidationError('Referral reason must be at least 10 characters')
+        return reason
+
+
 class RejectedLoanEditForm(forms.ModelForm):
     """Form for editing rejected loans after reversal."""
     

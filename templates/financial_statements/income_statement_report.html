@@ -62,7 +62,7 @@
                             <table class="table table-sm">
                                 {% for income in income_data %}
                                 <tr>
-                                    <td>{{ income.source|title }}</td>
+                                    <td>{{ income.get_source_display }}</td>
                                     <td class="text-end">{{ income.total|floatformat:2 }}</td>
                                 </tr>
                                 {% empty %}

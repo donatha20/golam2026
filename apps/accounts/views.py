@@ -17,11 +17,9 @@ from .forms import UserProfileForm, UserCreateForm, BranchForm
 
 def _has_elevated_access(user):
     """Return True for admin/manager-style management access."""
-    role = getattr(user, 'role', None)
-    if role in {'admin', 'manager'}:
+    if getattr(user, 'is_admin_or_manager', False):
         return True
     return any([
-        getattr(user, 'is_admin', False),
         getattr(user, 'is_staff', False),
         getattr(user, 'is_superuser', False),
     ])

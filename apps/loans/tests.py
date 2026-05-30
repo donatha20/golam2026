@@ -17,11 +17,13 @@ from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.db import transaction, IntegrityError
+from django.urls import reverse
 
 from apps.borrowers.models import Borrower, BorrowerGroup
-from apps.accounts.models import CustomUser
+from apps.accounts.models import CustomUser, UserRole
+from apps.core.models import Branch
 from apps.loans.models import (
-    Loan, RepaymentSchedule, Repayment, LoanPenalty,
+    Loan, LoanReferral, RepaymentSchedule, Repayment, LoanPenalty,
     LoanStatusChoices, RepaymentStatusChoices,
     NPLCategoryChoices, LoanConstants, FrequencyChoices
 )
@@ -419,3 +421,119 @@ class QueryOptimizationTests(TestCase):
         
         # Should return same object (cached)
         self.assertEqual(first_access, second_access)
+
+
+class LoanReferralPermissionTests(TestCase):
+    """Test referral edit and resubmission permissions."""
+
+    def setUp(self):
+        self.branch = Branch.objects.create(
+            name='Main Branch',
+            code='MB001',
+            address='Test Street',
+            phone_number='+255700000000',
+        )
+
+        self.admin = CustomUser.objects.create_user(
+            username='admin_user',
+            password='pass12345',
+            role=UserRole.ADMIN,
+            branch=self.branch,
+        )
+        self.officer_one = CustomUser.objects.create_user(
+            username='officer_one',
+            password='pass12345',
+            role=UserRole.LOAN_OFFICER,
+            branch=self.branch,
+        )
+        self.officer_two = CustomUser.objects.create_user(
+            username='officer_two',
+            password='pass12345',
+            role=UserRole.LOAN_OFFICER,
+            branch=self.branch,
+        )
+
+        self.borrower = Borrower.objects.create(
+            first_name='Test',
+            last_name='Borrower',
+            gender='male',
+            date_of_birth=date(1990, 1, 1),
+            marital_status='single',
+            occupation='Trader',
+            phone_number='255700000000',
+            id_type='national_id',
+            id_number='ID-REF-001',
+            street='Street 1',
+            ward='Ward 1',
+            district='District 1',
+            region='Region 1',
+            next_of_kin_name='Kin Name',
+            next_of_kin_relationship='Sibling',
+            next_of_kin_phone='255700000001',
+            next_of_kin_address='Kin Address',
+            branch=self.branch,
+            registered_by=self.officer_one,
+        )
+
+        self.loan = Loan.objects.create(
+            borrower=self.borrower,
+            amount_requested=100000,
+            interest_rate=15,
+            duration_months=12,
+            repayment_frequency=FrequencyChoices.MONTHLY,
+            created_by=self.officer_one,
+            status=LoanStatusChoices.REFERRED,
+        )
+
+        self.referral = LoanReferral.objects.create(
+            loan=self.loan,
+            referred_by=self.admin,
+            referred_to=self.officer_one,
+            referral_reason='Please correct the borrower income evidence.',
+        )
+
+    def test_referred_list_is_scoped_to_assigned_officer(self):
+        self.client.force_login(self.officer_one)
+        response = self.client.get(reverse('loans:referred_loans'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.loan.loan_number)
+
+        self.client.force_login(self.officer_two)
+        response = self.client.get(reverse('loans:referred_loans'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.loan.loan_number)
+
+    def test_assigned_officer_can_edit_referred_loan(self):
+        self.client.force_login(self.officer_one)
+        response = self.client.get(reverse('loans:edit_loan', args=[self.loan.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Edit Referred Loan')
+
+    def test_other_officer_cannot_edit_referred_loan(self):
+        self.client.force_login(self.officer_two)
+        response = self.client.get(reverse('loans:edit_loan', args=[self.loan.id]))
+        self.assertEqual(response.status_code, 302)
+        self.loan.refresh_from_db()
+        self.assertEqual(self.loan.status, LoanStatusChoices.REFERRED)
+
+    def test_assigned_officer_can_resubmit_referred_loan(self):
+        self.client.force_login(self.officer_one)
+        response = self.client.post(reverse('loans:resubmit_referred_loan', args=[self.loan.id]))
+        self.assertEqual(response.status_code, 302)
+
+        self.loan.refresh_from_db()
+        self.referral.refresh_from_db()
+        self.assertEqual(self.loan.status, LoanStatusChoices.PENDING)
+        self.assertTrue(self.referral.is_resolved)
+        self.assertEqual(self.referral.resubmitted_by, self.officer_one)
+
+    def test_officer_cannot_approve_reject_or_disburse(self):
+        self.client.force_login(self.officer_one)
+
+        approval_response = self.client.get(reverse('loans:loan_approval', args=[self.loan.id]))
+        rejection_response = self.client.post(reverse('loans:loan_rejection', args=[self.loan.id]), data='{}', content_type='application/json')
+        disbursement_response = self.client.get(reverse('loans:loan_disbursement', args=[self.loan.id]))
+
+        self.assertEqual(approval_response.status_code, 403)
+        self.assertEqual(rejection_response.status_code, 403)
+        self.assertEqual(disbursement_response.status_code, 403)

@@ -800,10 +800,19 @@ class GroupRepaymentForm(forms.Form):
 
 class LoanApprovalForm(forms.ModelForm):
     """Form for approving loans."""
+
+    approval_date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-input',
+            'type': 'date',
+            'required': True,
+        }),
+        required=False,
+    )
     
     class Meta:
         model = Loan
-        fields = ['amount_approved', 'approval_notes']
+        fields = ['amount_approved', 'approval_date', 'approval_notes']
         exclude = ['application_date', 'approval_date', 'disbursement_date']
         widgets = {
             'amount_approved': forms.NumberInput(attrs={
@@ -819,6 +828,30 @@ class LoanApprovalForm(forms.ModelForm):
                 'placeholder': 'Enter approval notes and conditions...'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['approval_date'].initial = self.instance.approval_date or timezone.now().date()
+
+    def clean_approval_date(self):
+        approval_date = self.cleaned_data.get('approval_date')
+        if not approval_date:
+            return timezone.now().date()
+
+        from apps.core.models import WorkingMode
+        working_mode = WorkingMode.get_active_mode()
+        if working_mode and not working_mode.allow_backdating:
+            today = timezone.now().date()
+            if approval_date < today:
+                raise ValidationError(
+                    'Backdating is not allowed. Approval date cannot be earlier than today.'
+                )
+
+        application_date = self.instance.application_date
+        if application_date and approval_date < application_date:
+            raise ValidationError('Approval date cannot be earlier than application date.')
+
+        return approval_date
 
 
 class LoanDisbursementForm(forms.ModelForm):
@@ -849,6 +882,7 @@ class LoanDisbursementForm(forms.ModelForm):
 
     def __init__(self, *args, loan=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.loan = loan
         if loan:
             self.fields['amount'].initial = loan.amount_approved
             self.fields['disbursement_date'].initial = timezone.now().date()
@@ -868,6 +902,10 @@ class LoanDisbursementForm(forms.ModelForm):
                     raise ValidationError(
                         'Backdating is not allowed. Disbursement date cannot be earlier than today.'
                     )
+
+        if disbursement_date and self.loan and self.loan.approval_date:
+            if disbursement_date < self.loan.approval_date:
+                raise ValidationError('Disbursement date cannot be earlier than approval date.')
         
         return cleaned_data
 

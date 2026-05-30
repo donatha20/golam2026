@@ -246,7 +246,7 @@
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="expenditure_type" class="form-label required">Expenditure Type</label>
+                                <label for="expenditure_type" class="form-label required">Expenditure Name</label>
                                 <select id="expenditure_type" name="expenditure_type" class="form-select form-select-sm" required>
                                     <option value="">Select Type</option>
                                     {% for value, label in expenditure_types %}
@@ -254,15 +254,7 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="category" class="form-label">Category</label>
-                                <select id="category" name="category" class="form-select form-select-sm">
-                                    <option value="">Select Category (Optional)</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                            <!-- Category removed from simplified UI -->
                         </div>
                         
                         <div class="form-row">
@@ -291,18 +283,8 @@
                             <i class="fas fa-building"></i> Vendor Information
                         </h3>
                         
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="vendor_name" class="form-label required">Vendor/Supplier Name</label>
-                                <input type="text" id="vendor_name" name="vendor_name" class="form-input" required
-                                       placeholder="Name of vendor or supplier">
-                            </div>
-                            <div class="form-group">
-                                <label for="vendor_contact" class="form-label">Vendor Contact</label>
-                                <input type="text" id="vendor_contact" name="vendor_contact" class="form-input" 
-                                       placeholder="Phone, email, or address">
-                            </div>
-                        </div>
+                        <!-- Vendor information is hidden in the simplified UI; provide default value -->
+                        <input type="hidden" id="vendor_name" name="vendor_name" value="Unknown">
                     </div>
                     
                     <!-- Payment & Documentation -->
@@ -385,15 +367,14 @@
 
 {% block extra_js %}
 <script>
-    // Form validation
+        // Form validation
     document.getElementById('expenditureForm').addEventListener('submit', function(e) {
         const expenditureType = document.getElementById('expenditure_type').value;
         const amount = parseFloat(document.getElementById('amount').value);
         const description = document.getElementById('description').value.trim();
         const expenditureDate = document.getElementById('expenditure_date').value;
-        const vendorName = document.getElementById('vendor_name').value.trim();
         
-        if (!expenditureType || !amount || !description || !expenditureDate || !vendorName) {
+        if (!expenditureType || !amount || !description || !expenditureDate) {
             e.preventDefault();
             alert('Please fill in all required fields.');
             return;

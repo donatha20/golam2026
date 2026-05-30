@@ -58,15 +58,11 @@ from apps.core.utils.analytics_utils import format_currency
 
 def _require_admin_access(request):
     """Restrict sensitive loan state changes to elevated roles."""
-    role = getattr(request.user, 'role', None)
-    if role in {'admin', 'manager'}:
-        return None
-
-    if any([
-        getattr(request.user, 'is_admin', False),
-        getattr(request.user, 'is_staff', False),
-        getattr(request.user, 'is_superuser', False),
-    ]):
+    if (
+        getattr(request.user, 'is_admin_or_manager', False)
+        or getattr(request.user, 'is_staff', False)
+        or getattr(request.user, 'is_superuser', False)
+    ):
         return None
 
     messages.error(request, 'Access denied. Admin privileges required.')
@@ -75,11 +71,8 @@ def _require_admin_access(request):
 
 def _has_elevated_access(user):
     """Return True for users allowed to view global approval queues."""
-    role = getattr(user, 'role', None)
-    if role in {'admin', 'manager'}:
-        return True
     return any([
-        getattr(user, 'is_admin', False),
+        getattr(user, 'is_admin_or_manager', False),
         getattr(user, 'is_staff', False),
         getattr(user, 'is_superuser', False),
     ])
@@ -455,6 +448,13 @@ def loan_detail(request, loan_id):
     
     # Get actual repayments
     repayments = Repayment.objects.filter(schedule__loan=loan).order_by('-payment_date')
+
+    referral_history = loan.referrals.select_related(
+        'referred_by',
+        'referred_to',
+        'resubmitted_by',
+    ).order_by('-referral_date')
+    latest_referral = referral_history.first()
     
     # Calculate loan statistics
     total_expected = schedule.aggregate(total=Sum('amount_due'))['total'] or Decimal('0')
@@ -468,6 +468,12 @@ def loan_detail(request, loan_id):
         'total_expected': total_expected,
         'total_paid': total_paid,
         'outstanding_balance': outstanding_balance,
+        'latest_referral': latest_referral,
+        'referral_history': referral_history,
+        'can_edit_loan': loan.can_be_edited_by(request.user),
+        'can_resubmit_loan': loan.can_be_resubmitted_by(request.user),
+        'is_referred_edit': loan.status == LoanStatusChoices.REFERRED and loan.is_referred_to_user(request.user),
+        'can_review_loan': _has_elevated_access(request.user),
         'today': timezone.now().date(),
     }
     
@@ -619,11 +625,14 @@ def add_group_loan(request):
 @login_required
 def edit_loan(request, loan_id):
     """Edit a pending individual loan application."""
-    denied_response = _require_admin_access(request)
-    if denied_response:
-        return denied_response
-
     loan = get_object_or_404(Loan, pk=loan_id)
+
+    if not loan.can_be_edited_by(request.user):
+        messages.error(request, 'You do not have permission to edit this loan.')
+        return redirect('loans:loan_detail', loan_id=loan.id)
+
+    is_referred_edit = loan.status == LoanStatusChoices.REFERRED and loan.is_referred_to_user(request.user)
+    latest_referral = loan.latest_referral_record
 
     # Group loan editing is handled in its dedicated workflow.
     try:
@@ -643,6 +652,13 @@ def edit_loan(request, loan_id):
             updated_loan = form.save(commit=False)
             updated_loan.updated_by = request.user
             updated_loan.save()
+            if is_referred_edit:
+                messages.success(
+                    request,
+                    f'Loan {updated_loan.loan_number} updated successfully. Resubmit it for approval when ready.'
+                )
+                return redirect('loans:edit_loan', loan_id=updated_loan.id)
+
             messages.success(request, f'Loan {updated_loan.loan_number} updated successfully.')
             return redirect('loans:loan_detail', loan_id=updated_loan.id)
         messages.error(request, 'Please correct the errors below.')
@@ -654,40 +670,56 @@ def edit_loan(request, loan_id):
         'loan': loan,
         'title': f'Edit Loan {loan.loan_number}',
         'page_title': 'Edit Loan Application',
+        'is_referred_edit': is_referred_edit,
+        'referral_reason': latest_referral.referral_reason if latest_referral else None,
+        'can_resubmit_loan': loan.can_be_resubmitted_by(request.user),
     }
     return render(request, 'loans/edit_loan.html', context)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
+@transaction.atomic
 def delete_loan(request, loan_id):
-    """Soft-delete a loan by rejecting it before disbursement."""
+    """Delete a rejected loan when no real financial transactions are linked."""
     denied_response = _require_admin_access(request)
     if denied_response:
         return denied_response
 
     loan = get_object_or_404(Loan, pk=loan_id)
 
-    if loan.status not in {LoanStatusChoices.PENDING, LoanStatusChoices.APPROVED}:
-        messages.error(request, 'Only pending or approved loans can be deleted.')
+    if loan.status != LoanStatusChoices.REJECTED:
+        messages.error(request, 'Only rejected loans can be deleted.')
         return redirect('loans:loan_detail', loan_id=loan.id)
 
-    if request.method == 'POST':
-        reason = request.POST.get('deletion_reason', '').strip() or 'Deleted by admin/manager'
-        loan.status = LoanStatusChoices.REJECTED
-        loan.rejection_reason = reason
-        loan.rejected_by = request.user
-        loan.rejection_date = timezone.now().date()
-        loan.updated_by = request.user
-        loan.save(update_fields=['status', 'rejection_reason', 'rejected_by', 'rejection_date', 'updated_by', 'updated_at'])
+    has_financial_activity = any([
+        loan.disbursements.exists(),
+        loan.payments.exists(),
+        loan.repayment_schedules.exists(),
+    ])
 
-        messages.success(request, f'Loan {loan.loan_number} deleted successfully.')
+    if request.method == 'POST':
+        if has_financial_activity:
+            messages.error(
+                request,
+                'This rejected loan has linked financial records and cannot be deleted. Please keep it for audit.'
+            )
+            return redirect('loans:loan_detail', loan_id=loan.id)
+
+        loan_number = loan.loan_number
+        loan.delete()
+
+        messages.success(request, f'Loan {loan_number} deleted successfully.')
         return redirect('loans:loan_list')
 
-    return render(request, 'loans/delete_loan.html', {'loan': loan})
+    return render(request, 'loans/delete_loan.html', {
+        'loan': loan,
+        'has_financial_activity': has_financial_activity,
+    })
 
 
 @login_required
+@transaction.atomic
 def loan_approval(request, loan_id):
     """Approve a pending loan. Disbursement is handled separately."""
     denied_response = _require_admin_access(request)
@@ -704,7 +736,7 @@ def loan_approval(request, loan_id):
             # Approval only; disbursement is a separate workflow step.
             loan.status = LoanStatusChoices.APPROVED
             loan.approved_by = request.user
-            loan.approval_date = timezone.now().date()
+            loan.approval_date = form.cleaned_data.get('approval_date') or timezone.now().date()
 
             # Loan registration captures application date only; disbursement date is set later.
             loan.disbursement_date = None
@@ -762,6 +794,7 @@ def loan_approval(request, loan_id):
 
 @login_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def loan_rejection(request, loan_id):
     """Reject a pending loan."""
     denied_response = _require_admin_access(request)
@@ -772,7 +805,10 @@ def loan_rejection(request, loan_id):
     
     if request.method == 'POST':
         import json
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except (TypeError, json.JSONDecodeError):
+            return JsonResponse({'success': False, 'error': 'Invalid payload'})
         rejection_reason = data.get('rejection_reason', '').strip()
         
         if not rejection_reason:
@@ -783,6 +819,9 @@ def loan_rejection(request, loan_id):
         loan.rejection_reason = rejection_reason
         loan.rejected_by = request.user
         loan.rejection_date = timezone.now().date()
+        loan.disbursement_date = None
+        loan.maturity_date = None
+        loan.disbursed_by = None
         loan.save()
 
         # Notify the loan creator about rejection.
@@ -1914,8 +1953,10 @@ def loans_graphs_summary(request):
 
     # Basic statistics
     total_loans = Loan.objects.count()
-    total_disbursed = Loan.objects.exclude(status__in=[LoanStatusChoices.PENDING, LoanStatusChoices.REJECTED]).aggregate(Sum('amount_approved'))['amount_approved__sum'] or Decimal('0')
-    active_loans = Loan.objects.filter(status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED, LoanStatusChoices.APPROVED]).count()
+    total_disbursed = Loan.objects.filter(
+        disbursement_date__isnull=False
+    ).aggregate(Sum('amount_approved'))['amount_approved__sum'] or Decimal('0')
+    active_loans = Loan.objects.filter(status__in=[LoanStatusChoices.ACTIVE, LoanStatusChoices.DISBURSED]).count()
 
     # Calculate repayment rate
     completed_loans = Loan.objects.filter(status=LoanStatusChoices.COMPLETED).count()
@@ -1924,11 +1965,9 @@ def loans_graphs_summary(request):
     # Enhanced monthly data - Get data for current year
     months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     
-    # Monthly disbursement amounts - Include ALL loan statuses except pending/rejected
+    # Monthly disbursement amounts - only loans with an actual disbursement date.
     disbursement_summary = Loan.objects.filter(
         disbursement_date__year=timezone.now().year
-    ).exclude(
-        status__in=[LoanStatusChoices.PENDING, LoanStatusChoices.REJECTED]
     ).annotate(
         month=TruncMonth('disbursement_date')
     ).values('month').annotate(
@@ -2337,15 +2376,18 @@ def export_loans_excel(request):
 def export_portfolio_analysis_pdf(request):
     """Export portfolio analysis to PDF."""
     loans = Loan.objects.all()
+    disbursed_loans = loans.filter(disbursement_date__isnull=False)
 
     # Calculate portfolio metrics
     total_loans = loans.count()
     basic_metrics = loans.aggregate(
-        total_disbursed=Sum('amount_approved'),
         total_outstanding=Sum('outstanding_balance'),
         avg_loan_size=Avg('amount_approved'),
         total_interest_earned=Sum('total_interest'),
     )
+    basic_metrics['total_disbursed'] = disbursed_loans.aggregate(
+        total_disbursed=Sum('amount_approved'),
+    )['total_disbursed'] or Decimal('0')
 
     status_breakdown = {}
     status_mappings = [
@@ -2785,6 +2827,7 @@ def rejected_loans_list(request):
     context = {
         'title': 'Rejected Loan Applications',
         'rejected_loans': rejected_loans,
+        'can_delete_rejected_loans': _has_elevated_access(request.user),
     }
 
     return render(request, 'loans/rejected_loans.html', context)

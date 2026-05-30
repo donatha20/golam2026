@@ -116,6 +116,11 @@
         background: rgba(245, 158, 11, 0.1);
         color: #d97706;
     }
+
+    .status-referred {
+        background: rgba(245, 158, 11, 0.14);
+        color: #b45309;
+    }
     
     .status-completed {
         background: rgba(107, 114, 128, 0.1);
@@ -373,7 +378,13 @@
                             <a class="btn-action btn-view" href="{% url 'loans:loan_detail' loan.id %}" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                             {% if loan.status == 'pending' %}
+                            <a class="btn-action btn-edit" href="{% url 'loans:edit_loan' loan.id %}" title="Edit Loan">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                            {% elif loan.status == 'referred' and loan.created_by_id == user.id %}
                             <a class="btn-action btn-edit" href="{% url 'loans:edit_loan' loan.id %}" title="Edit Loan">
                                 <i class="fas fa-edit"></i>
                             </a>

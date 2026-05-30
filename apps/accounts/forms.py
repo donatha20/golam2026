@@ -212,7 +212,7 @@ class BranchForm(forms.ModelForm):
         # Only show active users as potential managers
         self.fields['manager'].queryset = CustomUser.objects.filter(
             is_active=True,
-            role__in=[UserRole.ADMIN, UserRole.LOAN_OFFICER]
+            role__in=[UserRole.ADMIN, UserRole.MANAGER]
         )
         self.fields['manager'].empty_label = "Select a manager"
     

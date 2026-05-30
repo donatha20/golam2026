@@ -86,6 +86,12 @@
                                             <i class="fas fa-undo-alt"></i>
                                         </a>
                                         {% endif %}
+                                        {% if can_delete_rejected_loans %}
+                                        <a href="{% url 'loans:delete_loan' loan.id %}"
+                                           class="btn btn-sm btn-danger" title="Delete Rejected Loan">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -224,12 +230,12 @@
     <div class="alert alert-light mt-4 border">
         <h6 class="mb-3"><i class="fas fa-audit"></i> Audit Trail</h6>
         <p class="small mb-2">
-            All loan rejections and reversals are tracked and cannot be deleted. This ensures complete transparency and accountability:
+            Loan rejections and reversals are tracked for transparency. Rejected loans can be deleted only by admin/manager when no financial activity exists:
         </p>
         <ul class="small mb-0">
             <li><strong>Original Rejection:</strong> Recorded with rejection reason, date, and admin user</li>
             <li><strong>Reversal:</strong> Recorded with reversal reason, date, and admin user</li>
-            <li><strong>Edit History:</strong> Any changes made after reversal are logged</li>
+            <li><strong>Protected Records:</strong> Rejected loans with disbursement/repayment activity cannot be deleted</li>
             <li><strong>Re-submission:</strong> New submissions are tracked separately</li>
         </ul>
     </div>

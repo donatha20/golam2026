@@ -3,8 +3,7 @@ Django tables for finance tracker app.
 """
 import django_tables2 as tables
 from django.utils.html import format_html
-from django.urls import reverse
-from .models import Income, Expenditure
+from .models import Income, Expenditure, IncomeCategory, ExpenditureCategory
 
 
 class IncomeTable(tables.Table):
@@ -15,7 +14,7 @@ class IncomeTable(tables.Table):
     
     # Income details
     income_id = tables.Column(verbose_name="Income ID")
-    source = tables.Column(empty_values=(), verbose_name="Source")
+    source = tables.Column(empty_values=(), verbose_name="Income Name")
     category = tables.Column(empty_values=(), verbose_name="Category")
     amount = tables.Column(verbose_name="Amount")
     income_date = tables.DateColumn(format="M d, Y", verbose_name="Date")
@@ -30,11 +29,11 @@ class IncomeTable(tables.Table):
 
     class Meta:
         model = Income
-        template_name = "django_tables2/bootstrap4.html"
+        template_name = "django_tables2/bootstrap5.html"
         fields = ("avatar", "income_id", "source", "category", "amount", "income_date", 
                  "received_from", "payment_method", "recorded_by", "actions")
         attrs = {
-            "class": "table table-hover income-table",
+            "class": "table table-striped table-hover table-sm income-table",
             "id": "income-table"
         }
 
@@ -95,7 +94,7 @@ class ExpenditureTable(tables.Table):
     
     # Expenditure details
     expenditure_id = tables.Column(verbose_name="Expenditure ID")
-    expenditure_type = tables.Column(empty_values=(), verbose_name="Type")
+    expenditure_type = tables.Column(empty_values=(), verbose_name="Expenditure Name")
     category = tables.Column(empty_values=(), verbose_name="Category")
     amount = tables.Column(verbose_name="Amount")
     expenditure_date = tables.DateColumn(format="M d, Y", verbose_name="Date")
@@ -113,11 +112,11 @@ class ExpenditureTable(tables.Table):
 
     class Meta:
         model = Expenditure
-        template_name = "django_tables2/bootstrap4.html"
+        template_name = "django_tables2/bootstrap5.html"
         fields = ("avatar", "expenditure_id", "expenditure_type", "category", "amount", 
                  "expenditure_date", "vendor_name", "payment_method", "status", "recorded_by", "actions")
         attrs = {
-            "class": "table table-hover expenditure-table",
+            "class": "table table-striped table-hover table-sm expenditure-table",
             "id": "expenditure-table"
         }
 
@@ -213,18 +212,21 @@ class IncomeCategoryTable(tables.Table):
     """Table for displaying income categories."""
 
     name = tables.Column(verbose_name="Category Name")
-    description = tables.Column(verbose_name="Description")
+    description = tables.Column(
+        verbose_name="Description",
+        attrs={"td": {"style": "min-width: 220px; white-space: normal;"}}
+    )
     is_active = tables.Column(empty_values=(), verbose_name="Status")
     income_count = tables.Column(empty_values=(), verbose_name="Income Records")
     total_amount = tables.Column(empty_values=(), verbose_name="Total Amount")
     actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
 
     class Meta:
-        model = Income
-        template_name = "django_tables2/bootstrap4.html"
+        model = IncomeCategory
+        template_name = "django_tables2/bootstrap5.html"
         fields = ("name", "description", "is_active", "income_count", "total_amount", "actions")
         attrs = {
-            "class": "table table-hover category-table",
+            "class": "table table-striped table-hover table-sm category-table",
             "id": "income-category-table"
         }
 
@@ -275,18 +277,21 @@ class ExpenditureCategoryTable(tables.Table):
     """Table for displaying expenditure categories."""
 
     name = tables.Column(verbose_name="Category Name")
-    description = tables.Column(verbose_name="Description")
+    description = tables.Column(
+        verbose_name="Description",
+        attrs={"td": {"style": "min-width: 220px; white-space: normal;"}}
+    )
     is_active = tables.Column(empty_values=(), verbose_name="Status")
     expenditure_count = tables.Column(empty_values=(), verbose_name="Expenditure Records")
     total_amount = tables.Column(empty_values=(), verbose_name="Total Amount")
     actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
 
     class Meta:
-        model = Expenditure
-        template_name = "django_tables2/bootstrap4.html"
+        model = ExpenditureCategory
+        template_name = "django_tables2/bootstrap5.html"
         fields = ("name", "description", "is_active", "expenditure_count", "total_amount", "actions")
         attrs = {
-            "class": "table table-hover category-table",
+            "class": "table table-striped table-hover table-sm category-table",
             "id": "expenditure-category-table"
         }
 

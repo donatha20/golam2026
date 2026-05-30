@@ -1,5 +1,5 @@
 """
-Forms for income and expenditure management.
+Clean, simplified forms for income and expenditure management.
 """
 from django import forms
 from django.utils import timezone
@@ -8,273 +8,169 @@ from .models import Income, Expenditure, IncomeCategory, ExpenditureCategory, Ca
 
 
 class IncomeForm(forms.ModelForm):
-    """Form for recording income."""
+    """Form for recording income with configured sources."""
     
     class Meta:
         model = Income
+        # Expose only the transaction fields required by the simplified UI
         fields = [
-            'source', 'category', 'amount', 'description', 'income_date',
-            'reference_number', 'received_from', 'payment_method'
+            'source', 'amount', 'description', 'income_date'
         ]
-        
         widgets = {
             'source': forms.Select(attrs={
-                'class': 'form-select',
+                'class': 'form-select form-select-sm',
                 'required': True
-            }),
-            'category': forms.Select(attrs={
-                'class': 'form-select'
             }),
             'amount': forms.NumberInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control form-control-sm',
                 'step': '0.01',
                 'min': '0.01',
-                'placeholder': 'Enter income amount',
-                'required': True
+                'placeholder': '0.00'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
+                'class': 'form-control form-control-sm',
                 'rows': 3,
-                'placeholder': 'Describe the income source and details...',
-                'required': True
+                'placeholder': 'Describe the income...'
             }),
             'income_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date',
-                'required': True
+                'class': 'form-control form-control-sm',
+                'type': 'date'
             }),
-            'reference_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Reference/Receipt number (optional)'
-            }),
-            'received_from': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Source/Person/Organization (optional)'
-            }),
-            'payment_method': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Cash, Bank Transfer, Cheque, etc.'
-            }),
+            # Note: other Income model fields (reference_number, received_from, payment_method)
+            # are intentionally excluded from the form to simplify the transaction UI.
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Set field labels
-        self.fields['source'].label = 'Income Source'
-        self.fields['category'].label = 'Income Category'
+
+        # Load active income sources from configured IncomeSource objects
+        from apps.core.models import IncomeSource
+        configured_sources = IncomeSource.objects.filter(is_active=True).order_by('name')
+
+        # If there are configured sources, use them as queryset for the FK field
+        if configured_sources.exists():
+            self.fields['source'].queryset = configured_sources
+            self.fields['source'].empty_label = '--- Select Income Source ---'
+        else:
+            # Fallback to legacy static choices when no configured sources exist
+            self.fields['source'].choices = [('', '--- Select Income Source ---')] + list(Income.INCOME_SOURCES)
+
+        # Set labels
+        # Display the Income Source as "Income Name" in the simplified form
+        self.fields['source'].label = 'Income Name'
         self.fields['amount'].label = 'Amount (Tsh)'
+        self.fields['income_date'].label = 'Date'
         self.fields['description'].label = 'Description'
-        self.fields['income_date'].label = 'Income Date'
-        self.fields['reference_number'].label = 'Reference Number'
-        self.fields['received_from'].label = 'Received From'
-        self.fields['payment_method'].label = 'Payment Method'
         
-        # Set category queryset to active categories only
-        self.fields['category'].queryset = IncomeCategory.objects.filter(is_active=True)
-        self.fields['category'].empty_label = "Select Category (Optional)"
 
-        # Use Settings-managed income sources when available.
-        configured_sources = list(
-            IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
-        )
-        if configured_sources:
-            self.fields['source'].choices = configured_sources
-
-        # Keep existing source selectable for edits even if now inactive.
-        current_source = getattr(self.instance, 'source', None)
-        if current_source and current_source not in dict(self.fields['source'].choices):
-            self.fields['source'].choices = list(self.fields['source'].choices) + [(current_source, current_source)]
-        
-        # Set default date to today
+        # Set default date
         if not self.instance.pk:
             self.fields['income_date'].initial = timezone.now().date()
-    
-    def clean_amount(self):
-        amount = self.cleaned_data.get('amount')
-        if amount and amount <= 0:
-            raise forms.ValidationError('Amount must be greater than zero.')
-        return amount
-    
-    def clean_description(self):
-        description = self.cleaned_data.get('description', '').strip()
-        if not description:
-            raise forms.ValidationError('Description is required.')
-        if len(description) < 10:
-            raise forms.ValidationError('Description must be at least 10 characters long.')
-        return description
 
 
 class ExpenditureForm(forms.ModelForm):
-    """Form for recording expenditure."""
+    """Form for recording expenditure with configured expense categories."""
     
     class Meta:
         model = Expenditure
+        # Only show the simplified transaction fields; vendor_name is required by the model
+        # so we include it as a hidden field and default it when not supplied.
         fields = [
-            'expenditure_type', 'category', 'amount', 'description', 'expenditure_date',
-            'vendor_name', 'vendor_contact', 'payment_method', 'reference_number',
-            'invoice_number', 'status'
+            'expenditure_type', 'amount', 'description', 'expenditure_date', 'vendor_name'
         ]
-        
         widgets = {
             'expenditure_type': forms.Select(attrs={
-                'class': 'form-select',
+                'class': 'form-select form-select-sm',
                 'required': True
-            }),
-            'category': forms.Select(attrs={
-                'class': 'form-select'
             }),
             'amount': forms.NumberInput(attrs={
-                'class': 'form-input',
+                'class': 'form-control form-control-sm',
                 'step': '0.01',
                 'min': '0.01',
-                'placeholder': 'Enter expenditure amount',
-                'required': True
+                'placeholder': '0.00'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
+                'class': 'form-control form-control-sm',
                 'rows': 3,
-                'placeholder': 'Describe the expenditure purpose and details...',
-                'required': True
+                'placeholder': 'Describe the expenditure...'
             }),
             'expenditure_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date',
-                'required': True
+                'class': 'form-control form-control-sm',
+                'type': 'date'
             }),
+            # vendor_name is included as a hidden input in the simplified UI, but we provide
+            # a widget here in case the form is rendered as a ModelForm in edit views.
             'vendor_name': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Vendor/Supplier name',
-                'required': True
-            }),
-            'vendor_contact': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Phone/Email (optional)'
-            }),
-            'payment_method': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Cash, Bank Transfer, Cheque, etc.'
-            }),
-            'reference_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Payment reference number (optional)'
-            }),
-            'invoice_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Invoice/Bill number (optional)'
-            }),
-            'status': forms.Select(attrs={
-                'class': 'form-select',
-                'required': True
+                'class': 'form-control form-control-sm',
+                'placeholder': 'Vendor or supplier name'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Set field labels
-        self.fields['expenditure_type'].label = 'Expenditure Type'
-        self.fields['category'].label = 'Expenditure Category'
+
+        # Load active expense categories from configured ExpenseCategory objects
+        from apps.core.models import ExpenseCategory
+        configured_types = ExpenseCategory.objects.filter(is_active=True).order_by('name')
+
+        if configured_types.exists():
+            self.fields['expenditure_type'].queryset = configured_types
+            self.fields['expenditure_type'].empty_label = '--- Select Expense Type ---'
+        else:
+            # Fallback to legacy static choices when no configured types exist
+            self.fields['expenditure_type'].choices = [('', '--- Select Expense Type ---')] + list(Expenditure.EXPENDITURE_TYPES)
+
+        # Set labels
+        # Display Expenditure type as "Expenditure Name" in the simplified form
+        self.fields['expenditure_type'].label = 'Expenditure Name'
         self.fields['amount'].label = 'Amount (Tsh)'
+        self.fields['expenditure_date'].label = 'Date'
         self.fields['description'].label = 'Description'
-        self.fields['expenditure_date'].label = 'Expenditure Date'
-        self.fields['vendor_name'].label = 'Vendor/Supplier Name'
-        self.fields['vendor_contact'].label = 'Vendor Contact'
-        self.fields['payment_method'].label = 'Payment Method'
-        self.fields['reference_number'].label = 'Reference Number'
-        self.fields['invoice_number'].label = 'Invoice Number'
-        self.fields['status'].label = 'Approval Status'
-        
-        # Set category queryset to active categories only
-        self.fields['category'].queryset = ExpenditureCategory.objects.filter(is_active=True)
-        self.fields['category'].empty_label = "Select Category (Optional)"
+        self.fields['vendor_name'].label = 'Vendor/Supplier (hidden)'
 
-        # Use Settings-managed expense categories as expenditure types when available.
-        configured_types = list(
-            ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
-        )
-        if configured_types:
-            self.fields['expenditure_type'].choices = configured_types
-
-        # Keep existing type selectable for edits even if now inactive.
-        current_type = getattr(self.instance, 'expenditure_type', None)
-        if current_type and current_type not in dict(self.fields['expenditure_type'].choices):
-            self.fields['expenditure_type'].choices = list(self.fields['expenditure_type'].choices) + [(current_type, current_type)]
-        
-        # Set default date to today
+        # Set default date
         if not self.instance.pk:
             self.fields['expenditure_date'].initial = timezone.now().date()
-    
-    def clean_amount(self):
-        amount = self.cleaned_data.get('amount')
-        if amount and amount <= 0:
-            raise forms.ValidationError('Amount must be greater than zero.')
-        return amount
-    
-    def clean_description(self):
-        description = self.cleaned_data.get('description', '').strip()
-        if not description:
-            raise forms.ValidationError('Description is required.')
-        if len(description) < 10:
-            raise forms.ValidationError('Description must be at least 10 characters long.')
-        return description
-    
-    def clean_vendor_name(self):
-        vendor_name = self.cleaned_data.get('vendor_name', '').strip()
-        if not vendor_name:
-            raise forms.ValidationError('Vendor name is required.')
-        return vendor_name
 
+        # Ensure a vendor_name exists for the model (model requires vendor_name non-null)
+        if not self.initial.get('vendor_name') and not getattr(self.instance, 'vendor_name', None):
+            self.initial['vendor_name'] = 'Unknown'
 
+    def clean(self):
+        cleaned = super().clean()
+        # Provide a default vendor name if none supplied (form hides vendor field from users)
+        if not cleaned.get('vendor_name'):
+            cleaned['vendor_name'] = 'Unknown'
+        return cleaned
 class IncomeCategoryForm(forms.ModelForm):
     """Form for managing income categories."""
     
     class Meta:
         model = IncomeCategory
         fields = ['name', 'description', 'is_active']
-        
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Enter category name',
-                'required': True
+                'class': 'form-control form-control-sm',
+                'placeholder': 'Category name'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
-                'rows': 3,
-                'placeholder': 'Optional description of this category...'
+                'class': 'form-control form-control-sm',
+                'rows': 2,
+                'placeholder': 'Description (optional)'
             }),
             'is_active': forms.CheckboxInput(attrs={
-                'class': 'form-checkbox'
+                'class': 'form-check-input'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Set field labels
-        self.fields['name'].label = 'Category Name'
+        self.fields['name'].label = 'Name'
         self.fields['description'].label = 'Description'
         self.fields['is_active'].label = 'Active'
         
-        # Set default active status
         if not self.instance.pk:
             self.fields['is_active'].initial = True
-    
-    def clean_name(self):
-        name = self.cleaned_data.get('name', '').strip()
-        if not name:
-            raise forms.ValidationError('Category name is required.')
-        
-        # Check for duplicate names (excluding current instance)
-        existing = IncomeCategory.objects.filter(name__iexact=name)
-        if self.instance.pk:
-            existing = existing.exclude(pk=self.instance.pk)
-        
-        if existing.exists():
-            raise forms.ValidationError('A category with this name already exists.')
-        
-        return name
 
 
 class ExpenditureCategoryForm(forms.ModelForm):
@@ -283,338 +179,171 @@ class ExpenditureCategoryForm(forms.ModelForm):
     class Meta:
         model = ExpenditureCategory
         fields = ['name', 'description', 'is_active']
-        
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Enter category name',
-                'required': True
+                'class': 'form-control form-control-sm',
+                'placeholder': 'Category name'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
-                'rows': 3,
-                'placeholder': 'Optional description of this category...'
+                'class': 'form-control form-control-sm',
+                'rows': 2,
+                'placeholder': 'Description (optional)'
             }),
             'is_active': forms.CheckboxInput(attrs={
-                'class': 'form-checkbox'
+                'class': 'form-check-input'
             }),
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Set field labels
-        self.fields['name'].label = 'Category Name'
+        self.fields['name'].label = 'Name'
         self.fields['description'].label = 'Description'
         self.fields['is_active'].label = 'Active'
         
-        # Set default active status
         if not self.instance.pk:
             self.fields['is_active'].initial = True
-    
-    def clean_name(self):
-        name = self.cleaned_data.get('name', '').strip()
-        if not name:
-            raise forms.ValidationError('Category name is required.')
-        
-        # Check for duplicate names (excluding current instance)
-        existing = ExpenditureCategory.objects.filter(name__iexact=name)
-        if self.instance.pk:
-            existing = existing.exclude(pk=self.instance.pk)
-        
-        if existing.exists():
-            raise forms.ValidationError('A category with this name already exists.')
-        
-        return name
 
+
+# ============= FILTER FORMS =============
 
 class IncomeFilterForm(forms.Form):
     """Form for filtering income records."""
-    
     search = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-input',
-            'placeholder': 'Search by description, ID, or source...'
+            'class': 'form-control form-control-sm',
+            'placeholder': 'Search by ID or description...'
         })
     )
-    
-    source = forms.ChoiceField(
+    from apps.core.models import IncomeSource
+    source = forms.ModelChoiceField(
         required=False,
-        widget=forms.Select(attrs={'class': 'form-select'})
+        queryset=IncomeSource.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'})
     )
-    
-    category = forms.ModelChoiceField(
-        queryset=IncomeCategory.objects.filter(is_active=True),
+    status = forms.ChoiceField(
         required=False,
-        empty_label="All Categories",
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'})
     )
-    
-    date_from = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-input',
-            'type': 'date'
-        })
-    )
-    
-    date_to = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-input',
-            'type': 'date'
-        })
-    )
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set source choices
-        source_choices = [('', 'All Sources')] + list(Income.INCOME_SOURCES)
-        self.fields['source'].choices = source_choices
+        # Use configured IncomeSource queryset; set an empty label for the model choice field
+        try:
+            self.fields['source'].empty_label = '--- All Sources ---'
+        except Exception:
+            # If field isn't a ModelChoiceField (fallback), leave choices as legacy
+            self.fields['source'].choices = [('', '--- All Sources ---')] + list(Income.INCOME_SOURCES)
+        
+        # Set status choices
+        self.fields['status'].choices = [('', '--- All Statuses ---')] + list(Income.STATUS_CHOICES)
 
 
 class ExpenditureFilterForm(forms.Form):
     """Form for filtering expenditure records."""
-    
     search = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-input',
-            'placeholder': 'Search by description, ID, or vendor...'
+            'class': 'form-control form-control-sm',
+            'placeholder': 'Search by ID or description...'
         })
     )
-    
-    expenditure_type = forms.ChoiceField(
+    from apps.core.models import ExpenseCategory
+    type = forms.ModelChoiceField(
         required=False,
-        widget=forms.Select(attrs={'class': 'form-select'})
+        queryset=ExpenseCategory.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'}),
+        label='Expenditure Type'
     )
-    
-    category = forms.ModelChoiceField(
-        queryset=ExpenditureCategory.objects.filter(is_active=True),
-        required=False,
-        empty_label="All Categories",
-        widget=forms.Select(attrs={'class': 'form-select'})
-    )
-    
     status = forms.ChoiceField(
         required=False,
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm'})
     )
-    
-    date_from = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-input',
-            'type': 'date'
-        })
-    )
-    
-    date_to = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={
-            'class': 'form-input',
-            'type': 'date'
-        })
-    )
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set expenditure type choices
-        type_choices = [('', 'All Types')] + list(Expenditure.EXPENDITURE_TYPES)
-        self.fields['expenditure_type'].choices = type_choices
+        # Use configured ExpenseCategory queryset; set an empty label for the model choice field
+        try:
+            self.fields['type'].empty_label = '--- All Types ---'
+        except Exception:
+            self.fields['type'].choices = [('', '--- All Types ---')] + list(Expenditure.EXPENDITURE_TYPES)
         
         # Set status choices
-        status_choices = [('', 'All Statuses')] + list(Expenditure.APPROVAL_STATUS)
-        self.fields['status'].choices = status_choices
+        self.fields['status'].choices = [('', '--- All Statuses ---')] + list(Expenditure.STATUS_CHOICES)
 
+
+# ============= OTHER FORMS =============
 
 class ShareholderForm(forms.ModelForm):
     """Form for managing shareholders."""
-
+    
     class Meta:
         model = Shareholder
-        fields = [
-            'name', 'shareholder_type', 'email', 'phone_number', 'address',
-            'shares_owned', 'share_value', 'join_date'
-        ]
+        fields = ['name', 'shareholder_type', 'email', 'phone_number', 'address', 'shares_owned', 'status']
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter shareholder name'
-            }),
-            'shareholder_type': forms.Select(attrs={
-                'class': 'form-control'
-            }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter email address'
-            }),
-            'phone_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter phone number'
-            }),
-            'address': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Enter address'
-            }),
-            'shares_owned': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Number of shares'
-            }),
-            'share_value': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0',
-                'placeholder': 'Value per share'
-            }),
-            'join_date': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
+            'name': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'shareholder_type': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control form-control-sm'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'address': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 2}),
+            'shares_owned': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '1'}),
+            'status': forms.Select(attrs={'class': 'form-select form-select-sm'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['join_date'].initial = timezone.now().date()
 
 
 class CapitalForm(forms.ModelForm):
-    """Form for managing capital transactions."""
-
+    """Form for managing capital."""
+    
     class Meta:
         model = Capital
-        fields = [
-            'capital_type', 'transaction_type', 'amount', 'description',
-            'transaction_date', 'shareholder', 'reference_number'
-        ]
+        fields = ['capital_type', 'transaction_type', 'amount', 'description', 'shareholder', 'transaction_date']
         widgets = {
-            'capital_type': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'transaction_type': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'amount': forms.NumberInput(attrs={
-                'class': 'form-input',
-                'step': '0.01',
-                'min': '0.01',
-                'placeholder': 'Enter amount'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
-                'rows': 3,
-                'placeholder': 'Describe the capital transaction'
-            }),
-            'transaction_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date'
-            }),
-            'shareholder': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'reference_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Reference number (optional)'
-            }),
+            'capital_type': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'transaction_type': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+            'description': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 3}),
+            'shareholder': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'transaction_date': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['transaction_date'].initial = timezone.now().date()
-        self.fields['shareholder'].queryset = Shareholder.objects.filter(status='active')
-        self.fields['shareholder'].empty_label = "Select Shareholder (optional)"
 
 
 class CapitalInjectionForm(forms.ModelForm):
-    """Form specifically for capital injections."""
-
+    """Form for capital injection."""
+    
     class Meta:
         model = Capital
-        fields = [
-            'capital_type', 'amount', 'description',
-            'transaction_date', 'shareholder', 'reference_number'
-        ]
+        fields = ['capital_type', 'amount', 'description', 'shareholder', 'transaction_date']
         widgets = {
-            'capital_type': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'amount': forms.NumberInput(attrs={
-                'class': 'form-input',
-                'step': '0.01',
-                'min': '0.01',
-                'placeholder': 'Enter amount'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
-                'rows': 3,
-                'placeholder': 'Describe the capital injection'
-            }),
-            'transaction_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date'
-            }),
-            'shareholder': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'reference_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Reference number (optional)'
-            }),
+            'capital_type': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+            'description': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 3}),
+            'shareholder': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'transaction_date': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
         }
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['transaction_date'].initial = timezone.now().date()
-        self.fields['shareholder'].queryset = Shareholder.objects.filter(status='active')
-        self.fields['shareholder'].empty_label = "Select Shareholder (optional)"
+        if not self.instance.pk:
+            self.fields['transaction_date'].initial = timezone.now().date()
 
 
 class CapitalWithdrawalForm(forms.ModelForm):
-    """Form specifically for capital withdrawals."""
-
+    """Form for capital withdrawal."""
+    
     class Meta:
         model = Capital
-        fields = [
-            'capital_type', 'amount', 'description',
-            'transaction_date', 'shareholder', 'reference_number'
-        ]
+        fields = ['capital_type', 'amount', 'description', 'shareholder', 'transaction_date']
         widgets = {
-            'capital_type': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'amount': forms.NumberInput(attrs={
-                'class': 'form-input',
-                'step': '0.01',
-                'min': '0.01',
-                'placeholder': 'Enter amount'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-textarea',
-                'rows': 3,
-                'placeholder': 'Describe the capital withdrawal'
-            }),
-            'transaction_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date'
-            }),
-            'shareholder': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'reference_number': forms.TextInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Reference number (optional)'
-            }),
+            'capital_type': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'step': '0.01'}),
+            'description': forms.Textarea(attrs={'class': 'form-control form-control-sm', 'rows': 3}),
+            'shareholder': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'transaction_date': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
         }
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['transaction_date'].initial = timezone.now().date()
-        self.fields['shareholder'].queryset = Shareholder.objects.filter(status='active')
-        self.fields['shareholder'].empty_label = "Select Shareholder (optional)"
-
-
+        if not self.instance.pk:
+            self.fields['transaction_date'].initial = timezone.now().date()

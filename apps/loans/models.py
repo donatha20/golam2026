@@ -383,6 +383,46 @@ class Loan(AuditModel):
     def __str__(self):
         return f"{self.loan_number} - {self.borrower.get_full_name()}"
 
+    @property
+    def latest_referral_record(self):
+        """Return the most recent referral for this loan, if any."""
+        prefetched_referrals = getattr(self, '_prefetched_objects_cache', {}).get('referrals')
+        if prefetched_referrals is not None:
+            return max(prefetched_referrals, key=lambda referral: referral.referral_date, default=None)
+
+        return self.referrals.order_by('-referral_date').first()
+
+    def is_referred_to_user(self, user):
+        """Return True when the latest referral is assigned to the given user."""
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+
+        referral = self.latest_referral_record
+        if not referral:
+            return False
+
+        return referral.referred_to_id == user.id or self.created_by_id == user.id
+
+    def can_be_edited_by(self, user):
+        """Return True when the user may edit this loan."""
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+
+        if getattr(user, 'is_admin_or_manager', False) or getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+            return self.status not in {LoanStatusChoices.COMPLETED, LoanStatusChoices.WRITTEN_OFF}
+
+        return self.status == LoanStatusChoices.REFERRED and self.is_referred_to_user(user)
+
+    def can_be_resubmitted_by(self, user):
+        """Return True when the user may resubmit a referred loan."""
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+
+        if getattr(user, 'is_admin_or_manager', False) or getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+            return self.status == LoanStatusChoices.REFERRED
+
+        return self.status == LoanStatusChoices.REFERRED and self.is_referred_to_user(user)
+
     @transaction.atomic
     def save(self, *args, **kwargs):
         """Save loan with atomic transaction to ensure consistency across all calculations."""
@@ -789,6 +829,49 @@ class Loan(AuditModel):
                 amount_due=installment_amount,
                 status=RepaymentStatusChoices.PENDING
             )
+
+
+class LoanReferral(models.Model):
+    """Tracks referrals sent back to the originating loan officer."""
+
+    loan = models.ForeignKey(
+        Loan,
+        on_delete=models.CASCADE,
+        related_name='referrals'
+    )
+    referred_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.PROTECT,
+        related_name='loan_referrals_made'
+    )
+    referred_to = models.ForeignKey(
+        CustomUser,
+        on_delete=models.PROTECT,
+        related_name='loan_referrals_received'
+    )
+    referral_reason = models.TextField()
+    referral_date = models.DateTimeField(default=timezone.now)
+    is_resolved = models.BooleanField(default=False)
+    resubmitted_date = models.DateTimeField(null=True, blank=True)
+    resubmitted_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='loan_referrals_resubmitted'
+    )
+
+    class Meta:
+        verbose_name = 'Loan Referral'
+        verbose_name_plural = 'Loan Referrals'
+        ordering = ['-referral_date']
+        indexes = [
+            models.Index(fields=['loan', '-referral_date']),
+            models.Index(fields=['referred_to', 'is_resolved']),
+        ]
+
+    def __str__(self):
+        return f'{self.loan.loan_number} referral to {self.referred_to}'
 
 
 class GroupLoan(models.Model):

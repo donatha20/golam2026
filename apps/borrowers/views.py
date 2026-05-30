@@ -20,11 +20,8 @@ from apps.loans.models import Loan
 
 def _require_elevated_access(request):
     """Restrict destructive borrower actions to admin/manager users."""
-    role = getattr(request.user, 'role', None)
-    if role in {UserRole.ADMIN, UserRole.MANAGER}:
-        return None
     if any([
-        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_admin_or_manager', False),
         getattr(request.user, 'is_staff', False),
         getattr(request.user, 'is_superuser', False),
     ]):

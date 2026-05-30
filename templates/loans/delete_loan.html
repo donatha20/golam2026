@@ -1,24 +1,28 @@
 {% extends 'dashboard_base.html' %}
 
-{% block title %}Delete Loan{% endblock %}
-{% block page_title %}Delete Loan{% endblock %}
+{% block title %}Delete Rejected Loan{% endblock %}
+{% block page_title %}Delete Rejected Loan{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="card border-danger">
         <div class="card-header bg-danger text-white">Confirm Delete</div>
         <div class="card-body">
-            <p>Delete loan <strong>{{ loan.loan_number }}</strong> for <strong>{{ loan.borrower.get_full_name }}</strong>?</p>
-            <p class="mb-3">This will mark the loan as rejected/cancelled in records.</p>
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="deletion_reason" class="form-label">Reason</label>
-                    <textarea id="deletion_reason" name="deletion_reason" class="form-control" rows="3" placeholder="Enter deletion reason"></textarea>
+            <p>Delete rejected loan <strong>{{ loan.loan_number }}</strong> for <strong>{{ loan.borrower.get_full_name }}</strong>?</p>
+            <p class="mb-3">This permanently removes the rejected record and is allowed only when no financial transactions exist.</p>
+
+            {% if has_financial_activity %}
+                <div class="alert alert-warning">
+                    This loan has linked financial activity and cannot be deleted to preserve audit integrity.
                 </div>
-                <button type="submit" class="btn btn-danger btn-sm">Delete Loan</button>
-                <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary btn-sm">Cancel</a>
-            </form>
+                <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary btn-sm">Back</a>
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm">Delete Loan</button>
+                    <a href="{% url 'loans:loan_detail' loan.id %}" class="btn btn-secondary btn-sm">Cancel</a>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>

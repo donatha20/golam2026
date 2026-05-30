@@ -203,6 +203,24 @@
         background: #b91c1c;
         transform: translateY(-1px);
     }
+
+    .btn-refer {
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+
+    .btn-refer:hover {
+        background: #d97706;
+        transform: translateY(-1px);
+    }
     
     .btn-cancel {
         background: #f3f4f6;
@@ -413,6 +431,15 @@
                     {% endif %}
                     <div class="form-help">Enter the approved loan amount (can be different from requested amount)</div>
                 </div>
+
+                <div class="form-group">
+                    <label for="{{ form.approval_date.id_for_label }}" class="form-label required">{{ form.approval_date.label }}</label>
+                    {{ form.approval_date }}
+                    {% if form.approval_date.errors %}
+                        <div class="form-error">{{ form.approval_date.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-help">Approval date defaults to today but can be backdated when permitted.</div>
+                </div>
                 
                 <div class="form-group">
                     <label for="{{ form.approval_notes.id_for_label }}" class="form-label">{{ form.approval_notes.label }}</label>
@@ -431,6 +458,9 @@
                 </a>
                 <button type="button" class="btn-reject" onclick="rejectLoan()">
                     <i class="fas fa-times-circle"></i> Reject
+                </button>
+                <button type="button" class="btn-refer" onclick="referLoan()">
+                    <i class="fas fa-reply"></i> Refer
                 </button>
                 <button type="submit" class="btn-approve">
                     <i class="fas fa-check"></i> Approve Loan
@@ -467,6 +497,10 @@
     // Reject loan function with custom dialog
     function rejectLoan() {
         showRejectDialog();
+    }
+
+    function referLoan() {
+        showReferDialog();
     }
     
     // Custom Alert Dialog
@@ -656,6 +690,121 @@
                 .catch(error => {
                     closeLoadingDialog();
                     showAlert('An error occurred while rejecting the loan', 'error');
+                    console.error('Error:', error);
+                });
+            }
+        );
+    }
+
+    function showReferDialog() {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal referral-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header" style="background: #fff7ed;">
+                    <h3><i class="fas fa-reply"></i> Refer Loan Back</h3>
+                    <button class="modal-close" onclick="closeModal(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="rejection-warning" style="background: #fff7ed; border-color: #fdba74; color: #9a3412;">
+                        <i class="fas fa-info-circle"></i>
+                        This will send the loan back to the original loan officer for correction or clarification.
+                    </p>
+                    {% if loan.created_by %}
+                    <div class="form-group" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Referred To (Original Officer):</label>
+                        <div style="font-size: 1rem; color: #0369a1; font-weight: 600;">
+                            <i class="fas fa-user-circle me-2"></i>{{ loan.created_by.get_full_name }}
+                        </div>
+                        <small class="text-muted" style="display: block; margin-top: 0.25rem;">
+                            Username: {{ loan.created_by.username }}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> No original officer is assigned to this loan. Referral may not reach the intended recipient.
+                    </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="referralReason" class="form-label required">Referral Reason:</label>
+                        <textarea 
+                            id="referralReason" 
+                            class="form-textarea" 
+                            placeholder="Please explain what needs to be corrected or clarified..."
+                            rows="4"
+                            required
+                        ></textarea>
+                        <div class="form-help">The original loan officer will receive this reason as a notification.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-modal-cancel" onclick="closeModal(this)">Cancel</button>
+                    <button class="btn-modal-refer" onclick="processReferral(this)" disabled>
+                        <i class="fas fa-reply"></i> Refer Loan
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const textarea = modal.querySelector('#referralReason');
+        const referBtn = modal.querySelector('.btn-modal-refer');
+
+        textarea.addEventListener('input', function() {
+            referBtn.disabled = this.value.trim().length < 10;
+        });
+
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+            setTimeout(() => textarea.focus(), 100);
+        });
+    }
+
+    function processReferral(button) {
+        const modal = button.closest('.custom-modal');
+        const referralReason = modal.querySelector('#referralReason').value.trim();
+
+        if (referralReason.length < 10) {
+            showAlert('Referral reason must be at least 10 characters long', 'error');
+            return;
+        }
+
+        showConfirmDialog(
+            'Confirm Referral',
+            'Are you sure you want to refer this loan back to the original officer?',
+            function() {
+                closeModal(modal.querySelector('.modal-close'));
+                showLoadingDialog('Referring loan...');
+
+                fetch(`{% url 'loans:loan_referral' loan.id %}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        referral_reason: referralReason
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    closeLoadingDialog();
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url || '{% url "loans:referred_loans" %}';
+                        }, 1800);
+                    } else {
+                        showAlert(data.error || 'Failed to refer loan', 'error');
+                    }
+                })
+                .catch(error => {
+                    closeLoadingDialog();
+                    showAlert('An error occurred while referring the loan', 'error');
                     console.error('Error:', error);
                 });
             }
@@ -877,6 +1026,27 @@
 
 .btn-modal-reject:hover:not(:disabled) {
     background: #b91c1c;
+}
+
+.btn-modal-refer {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-modal-refer:hover:not(:disabled) {
+    background: #d97706;
+}
+
+.btn-modal-refer:disabled {
+    background: #fcd34d;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .btn-modal-reject:disabled {

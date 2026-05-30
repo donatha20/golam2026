@@ -39,6 +39,7 @@ class ExpenditureCategory(models.Model):
 
 class Income(models.Model):
     """Model for tracking income"""
+    # Legacy static choices retained as fallback for migration.
     INCOME_SOURCES = [
         ('loan_interest', 'Loan Interest'),
         ('service_fees', 'Service Fees'),
@@ -64,7 +65,9 @@ class Income(models.Model):
 
     # Core fields
     income_id = models.CharField(max_length=20, unique=True, blank=True)
-    source = models.CharField(max_length=20, choices=INCOME_SOURCES)
+    # Simplified source: foreign key to configured IncomeSource in apps.core
+    from apps.core.models import IncomeSource as CoreIncomeSource
+    source = models.ForeignKey(CoreIncomeSource, on_delete=models.SET_NULL, null=True, blank=True)
     category = models.ForeignKey(IncomeCategory, on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     description = models.TextField()
@@ -95,13 +98,21 @@ class Income(models.Model):
 
     def get_source_display(self):
         """Return source label from Settings (core.IncomeSource) with fallback to static choices."""
-        from apps.core.models import IncomeSource
+        # Prefer the linked IncomeSource object
+        if self.source:
+            return getattr(self.source, 'name', str(self.source))
 
-        source = IncomeSource.objects.filter(code=self.source).first()
-        if source:
-            return source.name
+        # Backward compatibility: try lookup by code on core.IncomeSource
+        try:
+            from apps.core.models import IncomeSource as CoreIncomeSource
+            source = CoreIncomeSource.objects.filter(code=self.source).first()
+            if source:
+                return source.name
+        except Exception:
+            pass
 
-        return dict(self.INCOME_SOURCES).get(self.source, self.source)
+        # Fallback to legacy static choices
+        return dict(self.INCOME_SOURCES).get(self.source, str(self.source))
 
     def save(self, *args, **kwargs):
         if not self.income_id:
@@ -151,7 +162,9 @@ class Expenditure(models.Model):
     ]
 
     expenditure_id = models.CharField(max_length=20, unique=True, blank=True)
-    expenditure_type = models.CharField(max_length=25, choices=EXPENDITURE_TYPES)
+    # Simplified expenditure type: foreign key to configured ExpenseCategory in apps.core
+    from apps.core.models import ExpenseCategory as CoreExpenseCategory
+    expenditure_type = models.ForeignKey(CoreExpenseCategory, on_delete=models.SET_NULL, null=True, blank=True)
     category = models.ForeignKey(ExpenditureCategory, on_delete=models.SET_NULL, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     description = models.TextField()
@@ -185,13 +198,21 @@ class Expenditure(models.Model):
 
     def get_expenditure_type_display(self):
         """Return expenditure type label from Settings (core.ExpenseCategory) with fallback to static choices."""
-        from apps.core.models import ExpenseCategory
+        # Prefer the linked ExpenseCategory object
+        if self.expenditure_type:
+            return getattr(self.expenditure_type, 'name', str(self.expenditure_type))
 
-        category = ExpenseCategory.objects.filter(code=self.expenditure_type).first()
-        if category:
-            return category.name
+        # Backward compatibility: try lookup by code on core.ExpenseCategory
+        try:
+            from apps.core.models import ExpenseCategory as CoreExpenseCategory
+            category = CoreExpenseCategory.objects.filter(code=self.expenditure_type).first()
+            if category:
+                return category.name
+        except Exception:
+            pass
 
-        return dict(self.EXPENDITURE_TYPES).get(self.expenditure_type, self.expenditure_type)
+        # Fallback to legacy static choices
+        return dict(self.EXPENDITURE_TYPES).get(self.expenditure_type, str(self.expenditure_type))
 
     def save(self, *args, **kwargs):
         if not self.expenditure_id:

@@ -31,9 +31,9 @@ class IncomeFilter(django_filters.FilterSet):
         label='Category'
     )
     
-    # Source filter
-    source = django_filters.ChoiceFilter(
-        choices=Income.INCOME_SOURCES,
+    # Source filter (linked to configured IncomeSource)
+    source = django_filters.ModelChoiceFilter(
+        queryset=IncomeSource.objects.filter(is_active=True).order_by('name'),
         widget=forms.Select(attrs={
             'class': 'form-select'
         }),
@@ -111,11 +111,7 @@ class IncomeFilter(django_filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        configured_sources = list(
-            IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
-        )
-        if configured_sources:
-            self.filters['source'].field.choices = [('', 'All Sources')] + configured_sources
+        # ModelChoiceFilter uses configured IncomeSource queryset; leave choices to the queryset.
     
     def filter_search(self, queryset, name, value):
         """Custom search filter."""
@@ -152,9 +148,9 @@ class ExpenditureFilter(django_filters.FilterSet):
         label='Category'
     )
     
-    # Type filter
-    expenditure_type = django_filters.ChoiceFilter(
-        choices=Expenditure.EXPENDITURE_TYPES,
+    # Type filter (linked to configured ExpenseCategory)
+    expenditure_type = django_filters.ModelChoiceFilter(
+        queryset=ExpenseCategory.objects.filter(is_active=True).order_by('name'),
         widget=forms.Select(attrs={
             'class': 'form-select'
         }),
@@ -242,11 +238,7 @@ class ExpenditureFilter(django_filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        configured_types = list(
-            ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
-        )
-        if configured_types:
-            self.filters['expenditure_type'].field.choices = [('', 'All Types')] + configured_types
+        # ModelChoiceFilter uses configured ExpenseCategory queryset; leave choices to the queryset.
     
     def filter_search(self, queryset, name, value):
         """Custom search filter."""

@@ -35,12 +35,8 @@ _LOAN_BALANCE_VIEW_UPDATE_GUARD = set()
 
 def _require_repayment_approver(request):
     """Allow only elevated roles for repayment reversals."""
-    role = getattr(request.user, 'role', None)
-    if role in {'admin', 'manager'}:
-        return None
-
     if any([
-        getattr(request.user, 'is_admin', False),
+        getattr(request.user, 'is_admin_or_manager', False),
         getattr(request.user, 'is_staff', False),
         getattr(request.user, 'is_superuser', False),
     ]):
@@ -1537,7 +1533,7 @@ def record_repayment(request):
     # Get loan officers and admins for the collected_by field
     from apps.accounts.models import CustomUser, UserRole
     loan_officers = CustomUser.objects.filter(
-        role__in=[UserRole.LOAN_OFFICER, UserRole.ADMIN],
+        role__in=[UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT, UserRole.MANAGER, UserRole.ADMIN],
         is_active=True
     ).order_by('first_name', 'last_name')
     

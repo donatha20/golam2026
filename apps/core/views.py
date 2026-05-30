@@ -1607,12 +1607,14 @@ def add_income_source(request):
         code = request.POST.get('code')
         description = request.POST.get('description', '')
         source_type = request.POST.get('source_type', 'operational')
+        is_active = request.POST.get('is_active') == 'on'  # Checkbox value
 
         source = IncomeSource.objects.create(
             name=name,
             code=code,
             description=description,
-            source_type=source_type
+            source_type=source_type,
+            is_active=is_active
         )
 
         messages.success(request, f'Income source "{source.name}" added successfully!')
@@ -1662,6 +1664,7 @@ def edit_income_source(request, source_id):
         source.code = request.POST.get('code', source.code)
         source.description = request.POST.get('description', source.description)
         source.source_type = request.POST.get('source_type', source.source_type)
+        source.is_active = request.POST.get('is_active') == 'on'  # Checkbox value
         source.save()
 
         messages.success(request, f'Income source "{source.name}" updated successfully!')
@@ -1714,12 +1717,14 @@ def add_expense_category(request):
         code = request.POST.get('code')
         description = request.POST.get('description', '')
         category_type = request.POST.get('category_type', 'operational')
+        is_active = request.POST.get('is_active') == 'on'  # Checkbox value
 
         category = ExpenseCategory.objects.create(
             name=name,
             code=code,
             description=description,
-            category_type=category_type
+            category_type=category_type,
+            is_active=is_active
         )
 
         messages.success(request, f'Expense category "{category.name}" added successfully!')
@@ -1769,6 +1774,7 @@ def edit_expense_category(request, category_id):
         category.code = request.POST.get('code', category.code)
         category.description = request.POST.get('description', category.description)
         category.category_type = request.POST.get('category_type', category.category_type)
+        category.is_active = request.POST.get('is_active') == 'on'  # Checkbox value
         category.save()
 
         messages.success(request, f'Expense category "{category.name}" updated successfully!')

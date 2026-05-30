@@ -36,8 +36,9 @@ class DisbursedLoansTable(tables.Table):
 
     # Status and tracking
     status = tables.Column(empty_values=(), verbose_name="Status")
+    created_by = tables.Column(empty_values=(), verbose_name="Registered By")
     outstanding_balance = tables.Column(verbose_name="Outstanding")
-    disbursed_by = tables.Column(empty_values=(), verbose_name="Officer")
+    disbursed_by = tables.Column(empty_values=(), verbose_name="Disbursed By")
 
     # Actions
     actions = tables.Column(empty_values=(), orderable=False, verbose_name="Actions")
@@ -46,7 +47,7 @@ class DisbursedLoansTable(tables.Table):
         model = Loan
         template_name = "django_tables2/bootstrap5.html"
         fields = ("avatar", "borrower", "loan_number", "amount_approved", "duration_months",
-                 "disbursement_date", "loan_category", "status", "outstanding_balance", "disbursed_by", "actions")
+                 "disbursement_date", "loan_category", "status", "created_by", "outstanding_balance", "disbursed_by", "actions")
         attrs = {
             "class": "table table-hover loan-table",
             "id": "disbursed-loans-table"
@@ -124,6 +125,7 @@ class DisbursedLoansTable(tables.Table):
         status_classes = {
             'pending': 'status-pending',
             'approved': 'status-approved',
+            'referred': 'status-referred',
             'disbursed': 'status-active',
             'active': 'status-active',
             'completed': 'status-completed',
@@ -143,6 +145,12 @@ class DisbursedLoansTable(tables.Table):
         if record.disbursed_by:
             return record.disbursed_by.get_full_name()
         return "—"
+
+    def render_created_by(self, record):
+        """Render created by / registered by officer."""
+        if record.created_by:
+            return record.created_by.get_full_name()
+        return "Unassigned"
 
     def render_actions(self, record):
         """Render actions column."""
@@ -452,6 +460,7 @@ class NonPerformingLoansTable(tables.Table):
     maturity_date = tables.DateColumn(format="M d, Y", verbose_name="Maturity")
     days_overdue = tables.Column(empty_values=(), verbose_name="Days Overdue")
     npl_category = tables.Column(empty_values=(), verbose_name="NPL Category")
+    created_by = tables.Column(empty_values=(), verbose_name="Registered By")
 
     # Status
     status = tables.Column(empty_values=(), verbose_name="Status")
@@ -462,7 +471,7 @@ class NonPerformingLoansTable(tables.Table):
         template_name = "django_tables2/bootstrap5.html"
         fields = ("avatar", "borrower", "loan_number", "amount_approved",
                   "outstanding_balance", "disbursement_date", "maturity_date",
-                  "days_overdue", "npl_category", "status", "actions")
+                  "days_overdue", "npl_category", "created_by", "status", "actions")
         attrs = {
             "class": "table table-hover loan-table npl-table",
             "id": "non-performing-loans-table"
@@ -555,6 +564,12 @@ class NonPerformingLoansTable(tables.Table):
             cat_class,
             category
         )
+
+    def render_created_by(self, record):
+        """Render created by / registered by officer."""
+        if record.created_by:
+            return record.created_by.get_full_name()
+        return "Unassigned"
 
     def render_status(self, record):
         """Render loan status with badge."""

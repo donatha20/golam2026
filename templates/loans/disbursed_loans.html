@@ -609,9 +609,11 @@
                             <a class="btn-action btn-view" href="{% url 'loans:loan_detail' loan.id %}" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                             <a class="btn-action btn-edit" href="{% url 'loans:edit_loan' loan.id %}" title="Edit Loan">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            {% endif %}
                             <a class="btn-action btn-repayment" href="{% url 'loans:loan_repayments' loan.id %}" title="Record Repayment">
                                 <i class="fas fa-money-bill"></i>
                             </a>

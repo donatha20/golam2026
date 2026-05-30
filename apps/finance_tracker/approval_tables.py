@@ -5,18 +5,25 @@ from django.urls import reverse
 from .models import Income, Expenditure
 
 
+# Approval tables use a checkbox column to support bulk actions from the UI.
+
+
 class IncomeApprovalTable(tables.Table):
     """Table for displaying income records pending approval."""
+
+    # Selection checkbox for bulk actions
+    select = tables.CheckBoxColumn(accessor='pk', orderable=False, verbose_name='')
 
     # Avatar column for visual consistency
     avatar = tables.Column(empty_values=(), orderable=False, verbose_name="")
     
     # Income details
     income_id = tables.Column(verbose_name="Income ID")
-    source = tables.Column(empty_values=(), verbose_name="Source")
-    category = tables.Column(empty_values=(), verbose_name="Category")
+    source = tables.Column(empty_values=(), verbose_name="Income Name")
+    # category removed from approval view to simplify columns
     amount = tables.Column(verbose_name="Amount")
     income_date = tables.DateColumn(format="M d, Y", verbose_name="Date")
+    status = tables.Column(empty_values=(), verbose_name="Status")
     
     # Additional info
     received_from = tables.Column(verbose_name="Received From")
@@ -28,11 +35,11 @@ class IncomeApprovalTable(tables.Table):
 
     class Meta:
         model = Income
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("avatar", "income_id", "source", "category", "amount", "income_date", 
-                 "received_from", "recorded_by", "created_at", "actions")
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("select", "avatar", "income_id", "source", "amount", "income_date", 
+             "recorded_by", "created_at", "status", "actions")
         attrs = {
-            "class": "table table-hover income-approval-table",
+            "class": "table table-striped table-hover table-sm income-approval-table",
             "id": "income-approval-table"
         }
 
@@ -47,6 +54,9 @@ class IncomeApprovalTable(tables.Table):
     def render_source(self, record):
         """Render income source display name."""
         return record.get_source_display()
+
+    def render_status(self, record):
+        return record.get_status_display()
 
     def render_category(self, record):
         """Render category name or dash if none."""
@@ -92,15 +102,19 @@ class IncomeApprovalTable(tables.Table):
 class ExpenditureApprovalTable(tables.Table):
     """Table for displaying expenditure records pending approval."""
 
+    # Selection checkbox for bulk actions
+    select = tables.CheckBoxColumn(accessor='pk', orderable=False, verbose_name='')
+
     # Avatar column for visual consistency
     avatar = tables.Column(empty_values=(), orderable=False, verbose_name="")
     
     # Expenditure details
     expenditure_id = tables.Column(verbose_name="Expenditure ID")
-    expenditure_type = tables.Column(empty_values=(), verbose_name="Type")
-    category = tables.Column(empty_values=(), verbose_name="Category")
+    expenditure_type = tables.Column(empty_values=(), verbose_name="Expenditure Name")
+    # category removed from approval view to simplify columns
     amount = tables.Column(verbose_name="Amount")
     expenditure_date = tables.DateColumn(format="M d, Y", verbose_name="Date")
+    status = tables.Column(empty_values=(), verbose_name="Status")
     
     # Vendor info
     vendor_name = tables.Column(verbose_name="Vendor")
@@ -112,11 +126,11 @@ class ExpenditureApprovalTable(tables.Table):
 
     class Meta:
         model = Expenditure
-        template_name = "django_tables2/bootstrap4.html"
-        fields = ("avatar", "expenditure_id", "expenditure_type", "category", "amount", 
-                 "expenditure_date", "vendor_name", "recorded_by", "created_at", "actions")
+        template_name = "django_tables2/bootstrap5.html"
+        fields = ("select", "avatar", "expenditure_id", "expenditure_type", "amount", 
+             "expenditure_date", "vendor_name", "recorded_by", "created_at", "status", "actions")
         attrs = {
-            "class": "table table-hover expenditure-approval-table",
+            "class": "table table-striped table-hover table-sm expenditure-approval-table",
             "id": "expenditure-approval-table"
         }
 
@@ -131,6 +145,9 @@ class ExpenditureApprovalTable(tables.Table):
     def render_expenditure_type(self, record):
         """Render expenditure type display name."""
         return record.get_expenditure_type_display()
+
+    def render_status(self, record):
+        return record.get_status_display()
 
     def render_category(self, record):
         """Render category name or dash if none."""

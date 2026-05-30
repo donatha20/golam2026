@@ -26,11 +26,20 @@ def _deny_loan_officer(request, message='You do not have permission to access th
     if request.user.is_superuser:
         return None
 
-    # Loan officers are restricted from sensitive approval/reporting actions.
-    if request.user.role == UserRole.LOAN_OFFICER:
+    # Operational users are restricted from sensitive approval/reporting actions.
+    if getattr(request.user, 'is_officer_or_accountant', False):
         messages.error(request, message)
         return redirect('core:dashboard')
     return None
+
+
+def _sync_legacy_categories_from_core():
+    """Keep legacy finance category tables aligned with core source/category settings."""
+    for source in IncomeSource.objects.filter(is_active=True).only('name'):
+        IncomeCategory.objects.get_or_create(name=source.name)
+
+    for category in ExpenseCategory.objects.filter(is_active=True).only('name'):
+        ExpenditureCategory.objects.get_or_create(name=category.name)
 
 
 @login_required
@@ -145,7 +154,7 @@ def view_income(request):
     ).order_by('-total')[:5]
 
     configured_income_sources = list(
-        IncomeSource.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        IncomeSource.objects.filter(is_active=True).order_by('name').values_list('id', 'name')
     )
 
     context = {
@@ -423,7 +432,7 @@ def view_expenditures(request):
     ).order_by('-total')
 
     configured_expense_types = list(
-        ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('code', 'name')
+        ExpenseCategory.objects.filter(is_active=True).order_by('name').values_list('id', 'name')
     )
 
     context = {
@@ -750,6 +759,8 @@ def dashboard(request):
 @login_required
 def manage_income_categories(request):
     """Manage income categories."""
+    _sync_legacy_categories_from_core()
+
     if request.method == 'POST':
         form = IncomeCategoryForm(request.POST)
         if form.is_valid():
@@ -780,6 +791,8 @@ def manage_income_categories(request):
 @login_required
 def manage_expenditure_categories(request):
     """Manage expenditure categories."""
+    _sync_legacy_categories_from_core()
+
     if request.method == 'POST':
         form = ExpenditureCategoryForm(request.POST)
         if form.is_valid():

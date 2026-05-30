@@ -10,9 +10,9 @@ from apps.core.models import TimeStampedModel
 class UserRole(models.TextChoices):
     """User role choices."""
     ADMIN = 'admin', 'Administrator'
+    MANAGER = 'manager', 'Manager'
     LOAN_OFFICER = 'loan_officer', 'Loan Officer'
     ACCOUNTANT = 'accountant', 'Accountant'
-    MANAGER = 'manager', 'Manager'
 
 
 class Branch(TimeStampedModel):
@@ -104,14 +104,34 @@ class CustomUser(AbstractUser):
         return self.role == UserRole.ADMIN
 
     @property
+    def is_manager(self):
+        """Check if user is a manager."""
+        return self.role == UserRole.MANAGER
+
+    @property
+    def is_admin_or_manager(self):
+        """Check if user is in the elevated management group."""
+        return self.role in {UserRole.ADMIN, UserRole.MANAGER}
+
+    @property
     def is_loan_officer(self):
         """Check if user is a loan officer."""
         return self.role == UserRole.LOAN_OFFICER
 
     @property
+    def is_accountant(self):
+        """Check if user is an accountant."""
+        return self.role == UserRole.ACCOUNTANT
+
+    @property
+    def is_officer_or_accountant(self):
+        """Check if user is in the operational group."""
+        return self.role in {UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT}
+
+    @property
     def has_limited_visibility(self):
         """Check if user should have limited visibility in sensitive modules."""
-        return self.role in {UserRole.LOAN_OFFICER, UserRole.ACCOUNTANT}
+        return self.is_officer_or_accountant
 
     def can_manage_user(self, user):
         """Check if this user can manage another user."""

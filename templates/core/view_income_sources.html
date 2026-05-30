@@ -21,7 +21,7 @@
                     {% endif %}
                 </div>
                 <div class="card-body p-compact">
-                    <form method="get" class="row g-2 align-items-end mb-3">
+                    <form method="get" class="row g-2 align-items-end mb-2">
                         <div class="col-md-3 col-sm-6">
                             <label for="status" class="form-label">Status</label>
                             <select id="status" name="status" class="form-select form-select-sm" onchange="this.form.submit()">
@@ -33,8 +33,8 @@
                     </form>
 
                     {% if income_sources %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-sm">
+                        <div class="table-container">
+                            <table class="table table-striped table-hover table-sm align-middle loans-table">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -48,28 +48,28 @@
                                 <tbody>
                                     {% for source in income_sources %}
                                     <tr>
-                                        <td>{{ source.name }}</td>
-                                        <td>
+                                        <td class="loan-number">{{ source.name }}</td>
+                                        <td class="text-nowrap">
                                             {% if source.source_type == 'operational' %}
-                                                <span class="badge badge-info">Operational Income</span>
+                                                <span class="badge bg-info text-dark">Operational Income</span>
                                             {% elif source.source_type == 'investment' %}
-                                                <span class="badge badge-success">Investment Income</span>
+                                                <span class="badge bg-success">Investment Income</span>
                                             {% else %}
-                                                <span class="badge badge-secondary">Other Income</span>
+                                                <span class="badge bg-secondary">Other Income</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ source.code|default:"—" }}</td>
-                                        <td>
+                                        <td class="text-nowrap">{{ source.code|default:"—" }}</td>
+                                        <td class="text-nowrap">
                                             {% if source.is_active %}
-                                                <span class="badge badge-success">Active</span>
+                                                <span class="badge bg-success">Active</span>
                                             {% else %}
-                                                <span class="badge badge-danger">Inactive</span>
+                                                <span class="badge bg-danger">Inactive</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ source.description|default:"—" }}</td>
-                                        <td>
+                                        <td class="text-wrap" style="min-width:260px; max-width:360px; white-space: normal;">{{ source.description|default:"—" }}</td>
+                                        <td class="text-nowrap">
                                             {% if user.role == 'admin' or user.role == 'manager' %}
-                                            <a href="{% url 'core:edit_income_source' source.id %}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{% url 'core:edit_income_source' source.id %}" class="btn btn-sm btn-outline-primary me-1">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
                                             {% endif %}
@@ -87,7 +87,7 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="text-center py-4">
+                        <div class="text-center py-3">
                             <i class="fas fa-coins fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">No income sources found</h5>
                             <p class="text-muted">No income sources match the selected status filter.</p>

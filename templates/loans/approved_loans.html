@@ -86,10 +86,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if loan.approved_date %}
+                                    {% if loan.approval_date %}
                                         <small class="text-muted">
-                                            {{ loan.approved_date|date:"M d, Y" }}<br>
-                                            {{ loan.approved_date|time:"g:i A" }}
+                                            {{ loan.approval_date|date:"M d, Y" }}<br>
+                                            {{ loan.approval_date|time:"g:i A" }}
                                         </small>
                                     {% else %}
                                         <span class="text-muted">Date not recorded</span>
@@ -105,26 +105,25 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
+                                        {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                                         <a href="{% url 'loans:loan_disbursement' loan.id %}" 
                                            class="btn btn-sm btn-success" 
                                            title="Disburse Loan">
                                             <i class="fas fa-hand-holding-usd me-1"></i>Disburse
                                         </a>
+                                        {% endif %}
                                         <a href="{% url 'loans:loan_detail' loan.id %}"
                                            class="btn btn-sm btn-outline-info"
                                            title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                                         <a href="{% url 'loans:edit_loan' loan.id %}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="Edit Loan">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{% url 'loans:delete_loan' loan.id %}"
-                                           class="btn btn-sm btn-outline-danger"
-                                           title="Delete Loan">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -184,10 +183,10 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if group_loan.loan.approved_date %}
+                                    {% if group_loan.loan.approval_date %}
                                         <small class="text-muted">
-                                            {{ group_loan.loan.approved_date|date:"M d, Y" }}<br>
-                                            {{ group_loan.loan.approved_date|time:"g:i A" }}
+                                            {{ group_loan.loan.approval_date|date:"M d, Y" }}<br>
+                                            {{ group_loan.loan.approval_date|time:"g:i A" }}
                                         </small>
                                     {% else %}
                                         <span class="text-muted">Date not recorded</span>
@@ -203,16 +202,19 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
+                                        {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                                         <a href="{% url 'loans:loan_disbursement' group_loan.loan.id %}" 
                                            class="btn btn-sm btn-success" 
                                            title="Disburse Group Loan">
                                             <i class="fas fa-hand-holding-usd me-1"></i>Disburse
                                         </a>
+                                        {% endif %}
                                         <a href="{% url 'loans:loan_detail' group_loan.loan.id %}"
                                            class="btn btn-sm btn-outline-info"
                                            title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
+                                        {% if user.is_admin_or_manager or user.is_staff or user.is_superuser %}
                                         <a href="{% url 'loans:edit_group_loan' group_loan.id %}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="Edit Group Loan">
@@ -223,6 +225,7 @@
                                            title="Delete Group Loan">
                                             <i class="fas fa-trash"></i>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

@@ -1,16 +1,19 @@
 """
 Views for loan rejection and reversal workflows.
 """
+import json
 import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Q, Prefetch
+from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from .models import Loan, LoanStatusChoices
+from .models import Loan, LoanReferral, LoanStatusChoices
 from .forms_rejection import (
-    LoanRejectionForm, LoanRejectionReversalForm, RejectedLoanEditForm
+    LoanRejectionForm, LoanRejectionReversalForm, RejectedLoanEditForm, LoanReferralForm
 )
 
 logger = logging.getLogger(__name__)
@@ -32,6 +35,9 @@ def reject_loan(request, loan_id):
                 loan.rejected_by = request.user
                 loan.rejection_date = timezone.now().date()
                 loan.rejection_reason = form.cleaned_data['rejection_reason']
+                loan.disbursement_date = None
+                loan.maturity_date = None
+                loan.disbursed_by = None
                 # Clear reversal flag if this is a re-rejection
                 loan.is_rejection_reversed = False
                 loan.reversed_rejection_date = None
@@ -60,6 +66,81 @@ def reject_loan(request, loan_id):
         'action': 'Reject'
     }
     return render(request, 'loans/reject_loan.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def refer_loan(request, loan_id):
+    """Refer a pending loan back to the originating officer."""
+    if not (
+        getattr(request.user, 'is_admin_or_manager', False)
+        or request.user.is_staff
+        or request.user.is_superuser
+    ):
+        return JsonResponse({'success': False, 'error': 'Access denied. Admin privileges required.'})
+
+    loan = get_object_or_404(Loan, id=loan_id, status=LoanStatusChoices.PENDING)
+
+    if not loan.created_by:
+        return JsonResponse({'success': False, 'error': 'This loan has no originating officer to refer to.'})
+
+    try:
+        payload = json.loads(request.body or '{}')
+    except (TypeError, json.JSONDecodeError):
+        return JsonResponse({'success': False, 'error': 'Invalid payload'})
+
+    form = LoanReferralForm(payload)
+    if not form.is_valid():
+        first_error = next(iter(form.errors.values()))[0]
+        return JsonResponse({'success': False, 'error': first_error})
+
+    with transaction.atomic():
+        LoanReferral.objects.create(
+            loan=loan,
+            referred_by=request.user,
+            referred_to=loan.created_by,
+            referral_reason=form.cleaned_data['referral_reason'],
+        )
+        loan.status = LoanStatusChoices.REFERRED
+        loan.save(update_fields=['status'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Loan {loan.loan_number} referred successfully.',
+        'redirect_url': '/loans/referred/',
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+@transaction.atomic
+def resubmit_referred_loan(request, loan_id):
+    """Resubmit an edited referred loan back into the approval queue."""
+    loan = get_object_or_404(Loan, id=loan_id, status=LoanStatusChoices.REFERRED)
+
+    if not loan.can_be_resubmitted_by(request.user):
+        messages.error(request, 'You do not have permission to resubmit this loan.')
+        return redirect('loans:loan_detail', loan_id=loan.id)
+
+    latest_referral = loan.latest_referral_record
+    if not latest_referral:
+        messages.error(request, 'This referred loan is missing its referral record.')
+        return redirect('loans:loan_detail', loan_id=loan.id)
+
+    latest_referral.is_resolved = True
+    latest_referral.resubmitted_date = timezone.now()
+    latest_referral.resubmitted_by = request.user
+    latest_referral.save(update_fields=['is_resolved', 'resubmitted_date', 'resubmitted_by'])
+
+    loan.status = LoanStatusChoices.PENDING
+    loan.updated_by = request.user
+    loan.save(update_fields=['status', 'updated_by', 'updated_at'])
+
+    messages.success(
+        request,
+        f'Loan {loan.loan_number} has been resubmitted for approval.'
+    )
+    return redirect('loans:loan_detail', loan_id=loan.id)
 
 
 @login_required
@@ -222,6 +303,43 @@ def rejected_loans_list(request):
         'current_rejected': current_rejected,
         'reversal_rate': reversal_rate,
         'total_rejections': total_rejections,
+        'can_delete_rejected_loans': (
+            getattr(request.user, 'role', None) in {'admin', 'manager'}
+            or getattr(request.user, 'is_admin', False)
+            or getattr(request.user, 'is_staff', False)
+            or getattr(request.user, 'is_superuser', False)
+        ),
         'title': 'Rejected Loans Management'
     }
     return render(request, 'loans/rejected_loans_list.html', context)
+
+
+@login_required
+def referred_loans_list(request):
+    """View list of referred loans."""
+    loans = Loan.objects.filter(status=LoanStatusChoices.REFERRED)
+
+    if not (
+        getattr(request.user, 'is_admin_or_manager', False)
+        or request.user.is_staff
+        or request.user.is_superuser
+    ):
+        loans = loans.filter(
+            Q(created_by=request.user) |
+            Q(referrals__referred_to=request.user)
+        )
+
+    loans = loans.select_related('borrower', 'created_by').prefetch_related(
+        Prefetch(
+            'referrals',
+            queryset=LoanReferral.objects.select_related('referred_by', 'referred_to', 'resubmitted_by').order_by('-referral_date')
+        )
+    ).distinct().order_by('-updated_at')
+
+    context = {
+        'loans': loans,
+        'unique_officers_count': loans.exclude(created_by__isnull=True).values('created_by').distinct().count(),
+        'resolved_referrals_count': LoanReferral.objects.filter(loan__status=LoanStatusChoices.REFERRED, is_resolved=True).count(),
+        'title': 'Referred Loans',
+    }
+    return render(request, 'loans/referred_loans.html', context)

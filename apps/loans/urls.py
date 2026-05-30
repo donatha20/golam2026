@@ -88,9 +88,12 @@ urlpatterns = [
 
     # Rejection and reversal workflow
     path('<int:loan_id>/reject/', views_rejection.reject_loan, name='reject_loan'),
+    path('<int:loan_id>/refer/', views_rejection.refer_loan, name='loan_referral'),
+    path('<int:loan_id>/resubmit-referred/', views_rejection.resubmit_referred_loan, name='resubmit_referred_loan'),
     path('<int:loan_id>/reverse-rejection/', views_rejection.reverse_loan_rejection, name='reverse_rejection'),
     path('<int:loan_id>/edit-reversed/', views_rejection.edit_reversed_loan, name='edit_rejected_loan'),
     path('<int:loan_id>/resubmit/', views_rejection.resubmit_reversed_loan, name='resubmit_loan'),
+    path('referred/', views_rejection.referred_loans_list, name='referred_loans'),
     path('rejected/', views_rejection.rejected_loans_list, name='rejected_loans'),  # Management view
     path('rejected-simple/', views.rejected_loans_list, name='rejected_loans_simple'),  # Simple view
 
